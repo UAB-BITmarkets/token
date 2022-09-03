@@ -1,0 +1,18 @@
+
+# Env
+.env
+
+# Node JS
+node_modules
+
+# Coverage
+coverage*
+coverage.json
+
+# Typechain
+typechain-types
+
+# Hardhat
+artifacts
+cache
+gasReporterOutput.json
