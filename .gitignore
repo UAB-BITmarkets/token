@@ -1,6 +1,6 @@
 
 # Env
-.env
+.env.prod
 
 # Node JS
 node_modules

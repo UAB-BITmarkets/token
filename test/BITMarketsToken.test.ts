@@ -2,13 +2,31 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-// import { BITMarketsToken__factory } from '../typechain-types/factories/contracts/BITMarketsToken__factory';
+import { BITMarketsToken__factory } from "../typechain-types/factories/contracts/BITMarketsToken__factory";
+
+const initialSupply = 300000000;
+const finalSupply = 200000000;
+const burnRate = 1; // 1/1000 = 0.1%
+const buyBackRate = 1;
+const fundRate = 1;
 
 describe("BITMarkets ERC20 token contract tests", () => {
   const loadContract = async () => {
     const [owner, addr1, addr2] = await ethers.getSigners();
-    const BITMarketsTokenFactory = await ethers.getContractFactory("BITMarketsToken");
-    const token = await BITMarketsTokenFactory.deploy();
+    const BITMarketsTokenFactory = (await ethers.getContractFactory(
+      "BITMarketsToken",
+      owner
+    )) as BITMarketsToken__factory;
+
+    const token = await BITMarketsTokenFactory.deploy(
+      initialSupply,
+      finalSupply,
+      burnRate,
+      buyBackRate,
+      fundRate,
+      addr1.address, // esg fund address
+      addr2.address // pauser address
+    );
     await token.deployed();
 
     return { token, owner, addr1, addr2 };
@@ -73,19 +91,58 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const addr2Balance = await token.balanceOf(addr2.address);
       expect(addr2Balance).to.equal(50);
     });
+
+    it("Should add transaction costs to the esg fund with each transfer", async () => {
+      const { token, owner, addr1, addr2 } = await loadFixture(loadContract);
+
+      const startTime = Date.now();
+      await ethers.provider.send("evm_mine", [startTime]);
+
+      const esgFundBalanceBefore = await token.balanceOf(addr1.address);
+
+      // Transfer 100 tokens from owner to addr2.
+      const addr2Transfer = ethers.utils.parseEther("1.0");
+      await token.transfer(addr2.address, addr2Transfer, { from: owner.address });
+
+      const nextTime = startTime + 10 * 1000; // 10s
+      await ethers.provider.send("evm_mine", [nextTime]);
+
+      const esgFundBalanceAfter = await token.balanceOf(addr1.address);
+      expect(esgFundBalanceBefore).to.be.lessThan(esgFundBalanceAfter);
+    });
+
+    it("Should induce burning with each transfer", async () => {
+      const { token, owner, addr2 } = await loadFixture(loadContract);
+
+      const startTime = Date.now();
+      await ethers.provider.send("evm_mine", [startTime]);
+
+      const totalSupplyBefore = await token.totalSupply();
+
+      // Transfer 100 tokens from owner to addr2.
+      const addr2Transfer = ethers.utils.parseEther("1.0");
+      await token.transfer(addr2.address, addr2Transfer, { from: owner.address });
+
+      const nextTime = startTime + 60 * 1000; // 1min
+      await ethers.provider.send("evm_mine", [nextTime]);
+
+      const totalSupplyAfter = await token.totalSupply();
+
+      expect(totalSupplyAfter).to.be.lessThan(totalSupplyBefore);
+    });
   });
 
   describe("Pausable", () => {
     it("Disallows transfers when paused and allows them when unpaused", async () => {
-      const { token, owner, addr1 } = await loadFixture(loadContract);
+      const { token, owner, addr1, addr2 } = await loadFixture(loadContract);
 
-      await token.pause();
+      await token.connect(addr2).pause();
 
       await expect(token.transfer(addr1.address, 100, { from: owner.address })).to.revertedWith(
-        "Pausable: paused"
+        "ERC20Pausable: token transfer while paused"
       );
 
-      await token.unpause();
+      await token.connect(addr2).unpause();
 
       await token.transfer(addr1.address, 100, { from: owner.address });
 
@@ -99,37 +156,37 @@ describe("BITMarkets ERC20 token contract tests", () => {
 
       await token.approve(addr1.address, allowance, { from: owner.address });
 
-      await token.pause();
+      await token.connect(addr2).pause();
 
       await expect(
         token.connect(addr1).transferFrom(owner.address, addr2.address, 100)
-      ).to.be.revertedWith("Pausable: paused");
+      ).to.be.revertedWith("ERC20Pausable: token transfer while paused");
 
-      await token.unpause();
+      await token.connect(addr2).unpause();
 
       await token.connect(addr1).transferFrom(owner.address, addr2.address, 100);
 
       expect(await token.balanceOf(addr2.address)).to.equal(100);
     });
 
-    // it('Disallows burning when paused and allows when unpaused', async () => {
-    //   const { token, owner } = await loadFixture(loadContract);
-    //
-    //   await token.pause();
-    //
-    //   await expect(token.burn(owner.address, 50)).to.be.revertedWith(
-    //     'Pausable: paused'
-    //   );
-    //
-    //   await token.unpause();
-    //
-    //   const ownerTokenBalance = await token.balanceOf(owner.address);
-    //   await token.burn(owner.address, 50);
-    //
-    //   expect(await token.balanceOf(owner.address)).to.lessThan(
-    //     ownerTokenBalance
-    //   );
-    // });
+    it("Disallows burning when paused and allows when unpaused", async () => {
+      const { token, owner, addr2 } = await loadFixture(loadContract);
+
+      await token.transfer(addr2.address, 10000);
+
+      await token.connect(addr2).pause();
+
+      await expect(token.connect(addr2).burnFrom(owner.address, 50000)).to.be.revertedWith(
+        "Pausable: paused"
+      );
+
+      await token.connect(addr2).unpause();
+
+      const ownerTokenBalance = await token.balanceOf(owner.address);
+      await token.connect(addr2).burnFrom(owner.address, 50000);
+
+      expect(await token.balanceOf(owner.address)).to.lessThan(ownerTokenBalance);
+    });
   });
 
   describe("Snapshots", () => {

@@ -5,9 +5,16 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { BITMarketsToken__factory } from "../typechain-types/factories/contracts/BITMarketsToken__factory";
 import { BITMarketsTokenCrowdsale__factory } from "../typechain-types/factories/contracts/BITMarketsTokenCrowdsale__factory";
 
+const initialSupply = 300000000;
+const finalSupply = 200000000;
+const burnRate = 1; // 1/1000 = 0.1%
+const buyBackRate = 1;
+const fundRate = 1;
+
+const initialRate = 1000;
+const finalRate = 10;
+
 describe("BITMarkets ERC20 token crowdsale contract tests", () => {
-  const initialRate = 1000;
-  const finalRate = 10;
   const openingTime = Date.now() + 60 * 1000; // Starts in one minute
   const closingTime = openingTime + 2 * 60 * 1000; // 2 minutes from start
 
@@ -18,7 +25,16 @@ describe("BITMarkets ERC20 token crowdsale contract tests", () => {
       "BITMarketsToken",
       owner
     )) as BITMarketsToken__factory;
-    const token = await BITMarketsTokenFactory.deploy();
+
+    const token = await BITMarketsTokenFactory.deploy(
+      initialSupply,
+      finalSupply,
+      burnRate,
+      buyBackRate,
+      fundRate,
+      addr1.address,
+      addr2.address
+    );
     await token.deployed();
 
     const totalSupply = await token.totalSupply();
