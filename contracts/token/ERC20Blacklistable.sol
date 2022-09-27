@@ -95,7 +95,7 @@ abstract contract ERC20Blacklistable is ERC20 {
   ) internal virtual override {
     super._beforeTokenTransfer(from, to, amount);
 
-    require(!isBlacklisted(from), "ERC20: from blacklisted");
-    require(!isBlacklisted(to), "ERC20: to blacklisted");
+    require(!isBlacklisted(from), "From is blacklisted");
+    require(!isBlacklisted(to), "To is blacklisted");
   }
 }

@@ -215,4 +215,68 @@ describe("BITMarkets ERC20 token contract tests", () => {
       await expect(token.totalSupplyAt(1)).to.be.revertedWith("ERC20Snapshot: nonexistent id");
     });
   });
+
+  describe("Blacklist", () => {
+    it("Should disallow transfers from blacklisted people.", async () => {
+      const { token, owner, addr1, addr2 } = await loadFixture(loadContract);
+
+      await token.transfer(addr1.address, 100, { from: owner.address });
+
+      await token.addBlacklisted(addr1.address);
+
+      await expect(
+        token.connect(addr1).transfer(addr2.address, 50, { from: addr1.address })
+      ).to.be.revertedWith("From is blacklisted");
+    });
+
+    it("Should disallow transfers to blacklisted people.", async () => {
+      const { token, owner, addr1, addr2 } = await loadFixture(loadContract);
+
+      await token.transfer(addr1.address, 100, { from: owner.address });
+
+      await token.addBlacklisted(addr2.address);
+
+      await expect(
+        token.connect(addr1).transfer(addr2.address, 50, { from: addr1.address })
+      ).to.be.revertedWith("To is blacklisted");
+    });
+
+    it("Should disallow blacklisting from non-admin.", async () => {
+      const { token, addr1, addr2 } = await loadFixture(loadContract);
+
+      await expect(token.connect(addr1).addBlacklisted(addr2.address)).to.be.revertedWith(
+        "Caller not blacklist admin"
+      );
+    });
+
+    it("Should disallow repeated blacklisting.", async () => {
+      const { token, addr1 } = await loadFixture(loadContract);
+
+      await token.addBlacklisted(addr1.address);
+
+      await expect(token.addBlacklisted(addr1.address)).to.be.revertedWith(
+        "Account already blacklisted"
+      );
+    });
+
+    it("Should allow blacklisting.", async () => {
+      const { token, addr1 } = await loadFixture(loadContract);
+
+      expect(await token.addBlacklisted(addr1.address)).to.emit(
+        "BITMarketsToken",
+        "Caller added to blacklist"
+      );
+    });
+
+    it("Should allow de-blacklisting.", async () => {
+      const { token, addr1 } = await loadFixture(loadContract);
+
+      await token.addBlacklisted(addr1.address);
+
+      expect(await token.removeBlacklisted(addr1.address)).to.emit(
+        "BITMarketsToken",
+        "Caller removed from blacklist"
+      );
+    });
+  });
 });

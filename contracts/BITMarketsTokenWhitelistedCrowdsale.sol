@@ -78,6 +78,7 @@ contract BITMarketsTokenWhitelistedCrowdsale is
     super._updatePurchasingState(beneficiary, weiAmount);
   }
 
+  // TODO Disallow from blacklisted accounts
   function _preValidatePurchase(address beneficiary, uint256 weiAmount)
     internal
     view
