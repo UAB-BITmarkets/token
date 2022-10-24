@@ -11,6 +11,8 @@ const burnRate = 1; // 1/1000 = 0.1%
 const buyBackRate = 1;
 const fundRate = 1;
 
+const companyRewardsWallet = ethers.Wallet.createRandom();
+
 const initialRate = 1000;
 const finalRate = 10;
 
@@ -32,6 +34,7 @@ describe("BITMarkets ERC20 token crowdsale contract tests", () => {
       burnRate,
       buyBackRate,
       fundRate,
+      companyRewardsWallet.address,
       addr1.address,
       addr2.address
     );
@@ -56,6 +59,7 @@ describe("BITMarkets ERC20 token crowdsale contract tests", () => {
     await crowdsale.deployed();
 
     await token.approve(crowdsale.address, cap);
+    await token.addFeeless(owner.address);
     // await token.transfer(crowdsale.address, cap);
     // await token.increaseAllowance(crowdsale.address, cap);
 
@@ -111,7 +115,7 @@ describe("BITMarkets ERC20 token crowdsale contract tests", () => {
     it("Should be possible for an address to participate in the crowdsale with the correct rate", async () => {
       const { token, crowdsale, owner, addr1 } = await loadFixture(loadContracts);
 
-      const weiAmount = ethers.utils.parseEther("1.0");
+      const weiAmount = ethers.utils.parseEther("0.2");
 
       const ownerInitialEthBalance = await owner.getBalance();
       const ownerInitialTokenBalance = await token.balanceOf(owner.address);

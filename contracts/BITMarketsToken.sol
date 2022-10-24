@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 // import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 // import "@openzeppelin/contracts/access/Ownable.sol";
 // import "@openzeppelin/contracts/security/Pausable.sol";
@@ -17,6 +18,7 @@ contract BITMarketsToken is
   ERC20,
   ERC20Snapshot,
   ERC20Pausable,
+  ERC20Burnable,
   ERC20Blacklistable,
   ERC20Fees,
   AccessControl
@@ -25,15 +27,14 @@ contract BITMarketsToken is
   bytes32 public constant SNAPSHOT_ROLE = keccak256("SNAPSHOT_ROLE");
   bytes32 public constant ESG_FUND_ROLE = keccak256("ESG_FUND_ROLE");
 
-  //TODO Do we need separate wallet for buyback?
-
   /**
    * @dev Constructor
    * @param initialSupply The total number of tokens to mint without the decimals
    * @param finalSupply The final number of tokens after deflation without the decimals
    * @param burnRate The percentage of every transfer to burn until final supply (0-1000)
-   * @param buyBackRate The percentage of every transfer that goes back to company wallet (0-1000)
+   * @param companyRate The percentage of every transfer that goes back to company wallet (0-1000)
    * @param fundRate The percentage of every transfer that ends up in the ESG fund (0-1000)
+   * @param companyRewards The address that receives the transfer fees for the company
    * @param fund The address that handles the ESG fund from gathered transfer fees
    * @param pauser The address with the authority to pause the ERC20 token
    */
@@ -41,14 +42,15 @@ contract BITMarketsToken is
     uint32 initialSupply,
     uint32 finalSupply,
     uint16 burnRate,
-    uint16 buyBackRate,
+    uint16 companyRate,
     uint16 fundRate,
+    address companyRewards,
     address fund,
     address pauser
   )
     ERC20("BITMarketsToken", "BTMX")
     ERC20Blacklistable(1000000)
-    ERC20Fees(finalSupply, burnRate, buyBackRate, fundRate, msg.sender, fund)
+    ERC20Fees(finalSupply, burnRate, companyRate, fundRate, msg.sender, companyRewards, fund)
   {
     _mint(msg.sender, initialSupply * 10**decimals());
 
@@ -69,10 +71,6 @@ contract BITMarketsToken is
   function unpause() public onlyRole(PAUSER_ROLE) {
     _unpause();
   }
-
-  // function burn(address from, uint256 amount) public whenNotPaused onlyRole(BURNER_ROLE) {
-  //   _burn(from, amount);
-  // }
 
   // function mint(address to, uint256 amount) public onlyOwner {
   //     require(totalSupply() + amount <= cap, "ERC20Capped: Mint will exceed total supply cap");

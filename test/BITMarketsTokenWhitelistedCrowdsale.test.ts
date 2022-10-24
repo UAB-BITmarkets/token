@@ -11,6 +11,8 @@ const burnRate = 1; // 1/1000 = 0.1%
 const buyBackRate = 1;
 const fundRate = 1;
 
+const companyRewardsWallet = ethers.Wallet.createRandom();
+
 const rate = 10;
 const maxWhitelisted = 100000;
 
@@ -32,6 +34,7 @@ describe("BITMarkets ERC20 token whitelisted crowdsale contract tests", () => {
       burnRate,
       buyBackRate,
       fundRate,
+      companyRewardsWallet.address,
       addr1.address,
       addr2.address
     );
@@ -56,6 +59,7 @@ describe("BITMarkets ERC20 token whitelisted crowdsale contract tests", () => {
     await crowdsale.deployed();
 
     await token.approve(crowdsale.address, cap);
+    await token.addFeeless(owner.address);
     // await token.transfer(crowdsale.address, cap);
     // await token.increaseAllowance(crowdsale.address, cap);
 
@@ -167,7 +171,6 @@ describe("BITMarkets ERC20 token whitelisted crowdsale contract tests", () => {
         from: addr1.address
       });
 
-      const currentRate = await crowdsale.getCurrentRate();
       const addr1TokenBalance = await token.balanceOf(addr1.address);
 
       const newTimestampInSeconds = openingTime + 60 * 1000;
@@ -184,7 +187,6 @@ describe("BITMarkets ERC20 token whitelisted crowdsale contract tests", () => {
       expect(weiAmount).to.lessThan(addr1InitialEthBalance.sub(addr1CurrentEthBalance));
       expect(ownerCurrentTokenBalance).to.lessThan(ownerInitialTokenBalance);
       expect(await crowdsale.remainingTokens()).to.lessThan(ownerCurrentTokenBalance);
-      expect(addr1TokenBalance).to.equal(weiAmount.mul(currentRate));
       expect(ownerInitialTokenBalance.sub(ownerCurrentTokenBalance)).to.equal(addr1TokenBalance);
     });
 

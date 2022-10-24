@@ -53,6 +53,7 @@ abstract contract ERC20Blacklistable is ERC20 {
   function addBlacklisted(address account) public virtual onlyBlacklistAdmin {
     // check if the user has already been blacklisted
     require(!_blacklisteds[account], "Account already blacklisted");
+    require(account != address(0), "Account is zero");
     // check if the numAddressesBlacklisted < maxBlacklistedAddresses, if not then throw an error.
     require(_numBlacklisteds < _maxBlacklisteds, "Blacklist limit reached");
     // Add the address which called the function to the blacklistedAddress array
@@ -63,7 +64,9 @@ abstract contract ERC20Blacklistable is ERC20 {
   }
 
   function removeBlacklisted(address account) public virtual onlyBlacklistAdmin {
+    require(account != address(0), "Account is zero");
     _blacklisteds[account] = false;
+    _numBlacklisteds -= 1;
     emit BlacklistedRemoved(account);
   }
 
