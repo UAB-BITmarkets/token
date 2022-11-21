@@ -4,32 +4,46 @@ pragma solidity >=0.8.4;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "./crowdsale/Crowdsale.sol";
-import "./crowdsale/AllowanceCrowdsale.sol";
 import "./crowdsale/CappedCrowdsale.sol";
 import "./crowdsale/InvestorTariffCapCrowdsale.sol";
 import "./crowdsale/PausableCrowdsale.sol";
 import "./crowdsale/TimedCrowdsale.sol";
 import "./crowdsale/WhitelistCrowdsale.sol";
+import "./crowdsale/VestingCrowdsale.sol";
 
 // import "./crowdsale/FinalizableCrowdsale.sol";
 
+struct crowdsaleArgs {
+  uint256 rate;
+  address payable wallet;
+  IERC20 token;
+  uint256 cap;
+  uint32 maxWhitelisted;
+  uint256 openingTime;
+  uint256 closingTime;
+  uint256 investorTariff;
+  uint256 investorCap;
+  uint64 cliff;
+  uint64 vestingDuration;
+}
+
 /// @custom:security-contact security@bitmarkets.com
-contract BITMarketsTokenWhitelistedCrowdsale is
+contract BITMarketsTokenWhitelistedVestingCrowdsale is
   Crowdsale,
-  AllowanceCrowdsale,
   PausableCrowdsale,
   CappedCrowdsale,
   InvestorTariffCapCrowdsale,
   TimedCrowdsale,
-  WhitelistCrowdsale
+  WhitelistCrowdsale,
+  VestingCrowdsale
 {
   using SafeMath for uint256;
 
   // Track investor contributions
-  uint256 public investorTariff = 0.002 * 10 ** 18; // 0.002 ether
-  uint256 public investorCap = 50 * 10 ** 18; // 50 ether
+  // uint256 public investorTariff = 0.002 * 10 ** 18; // 0.002 ether
+  // uint256 public investorCap = 50 * 10 ** 18; // 50 ether
 
-  // // Token Distribution
+  // Token Distribution
   // uint256 public tokenSalePercentage   = 70;
   // uint256 public foundersPercentage    = 20;
   // uint256 public foundationPercentage  = 20;
@@ -37,29 +51,16 @@ contract BITMarketsTokenWhitelistedCrowdsale is
 
   /**
    * @dev Constructor
-   * @param rate Number of token units a buyer gets per wei
-   * @param wallet Address where collected funds will be forwarded to
-   * @param token Address of the token being sold
-   * @param cap Max amount of wei to be contributed
-   * @param maxWhitelisted Max number of whitelisted addresses
-   * @param openingTime Crowdsale opening time
-   * @param closingTime Crowdsale closing time
    */
   constructor(
-    uint256 rate,
-    address payable wallet,
-    IERC20 token,
-    uint256 cap,
-    uint32 maxWhitelisted,
-    uint256 openingTime,
-    uint256 closingTime
+    crowdsaleArgs memory args
   )
-    Crowdsale(rate, wallet, token)
-    AllowanceCrowdsale(wallet)
-    CappedCrowdsale(cap)
-    InvestorTariffCapCrowdsale(investorTariff, investorCap)
-    TimedCrowdsale(openingTime, closingTime)
-    WhitelistCrowdsale(maxWhitelisted)
+    Crowdsale(args.rate, args.wallet, args.token)
+    CappedCrowdsale(args.cap)
+    InvestorTariffCapCrowdsale(args.investorTariff, args.investorCap)
+    TimedCrowdsale(args.openingTime, args.closingTime)
+    WhitelistCrowdsale(args.maxWhitelisted)
+    VestingCrowdsale(args.wallet, args.cliff, args.vestingDuration)
   {
     // solhint-disable-previous-line no-empty-blocks
   }
@@ -67,7 +68,7 @@ contract BITMarketsTokenWhitelistedCrowdsale is
   function _deliverTokens(
     address beneficiary,
     uint256 tokenAmount
-  ) internal override(Crowdsale, AllowanceCrowdsale) {
+  ) internal override(Crowdsale, VestingCrowdsale) {
     super._deliverTokens(beneficiary, tokenAmount);
   }
 

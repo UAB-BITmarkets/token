@@ -84,13 +84,11 @@ abstract contract WhitelistCrowdsale is Crowdsale {
    * @param _beneficiary Token beneficiary
    * @param _weiAmount Amount of wei contributed
    */
-  function _preValidatePurchase(address _beneficiary, uint256 _weiAmount)
-    internal
-    view
-    virtual
-    override
-  {
-    require(isWhitelisted(_beneficiary), "Beneficiary not whitelisted");
+  function _preValidatePurchase(
+    address _beneficiary,
+    uint256 _weiAmount
+  ) internal view virtual override {
     super._preValidatePurchase(_beneficiary, _weiAmount);
+    require(isWhitelisted(_beneficiary), "Beneficiary not whitelisted");
   }
 }

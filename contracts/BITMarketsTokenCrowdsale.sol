@@ -29,8 +29,8 @@ contract BITMarketsTokenCrowdsale is
   using SafeMath for uint256;
 
   // Track investor contributions
-  uint256 public investorTariff = 0.002 * 10**18; // 0.002 ether
-  uint256 public investorCap = 50 * 10**18; // 50 ether
+  uint256 public investorTariff = 0.002 * 10 ** 18; // 0.002 ether
+  uint256 public investorCap = 50 * 10 ** 18; // 50 ether
 
   // // Token Distribution
   // uint256 public tokenSalePercentage   = 70;
@@ -64,24 +64,27 @@ contract BITMarketsTokenCrowdsale is
     TimedCrowdsale(openingTime, closingTime)
     IncreasingPriceCrowdsale(initialRate, finalRate)
   {
-    // no actions needed
+    // solhint-disable-previous-line no-empty-blocks
   }
 
-  function _deliverTokens(address beneficiary, uint256 tokenAmount)
-    internal
-    override(Crowdsale, AllowanceCrowdsale)
-  {
+  function _deliverTokens(
+    address beneficiary,
+    uint256 tokenAmount
+  ) internal override(Crowdsale, AllowanceCrowdsale) {
     super._deliverTokens(beneficiary, tokenAmount);
   }
 
-  function _updatePurchasingState(address beneficiary, uint256 weiAmount)
-    internal
-    override(Crowdsale, InvestorTariffCapCrowdsale)
-  {
+  function _updatePurchasingState(
+    address beneficiary,
+    uint256 weiAmount
+  ) internal override(Crowdsale, InvestorTariffCapCrowdsale) {
     super._updatePurchasingState(beneficiary, weiAmount);
   }
 
-  function _preValidatePurchase(address beneficiary, uint256 weiAmount)
+  function _preValidatePurchase(
+    address beneficiary,
+    uint256 weiAmount
+  )
     internal
     view
     override(
@@ -104,12 +107,9 @@ contract BITMarketsTokenCrowdsale is
   //     return getCurrentRate();
   // }
 
-  function _getTokenAmount(uint256 weiAmount)
-    internal
-    view
-    override(Crowdsale, IncreasingPriceCrowdsale)
-    returns (uint256)
-  {
+  function _getTokenAmount(
+    uint256 weiAmount
+  ) internal view override(Crowdsale, IncreasingPriceCrowdsale) returns (uint256) {
     return super._getTokenAmount(weiAmount);
   }
 }

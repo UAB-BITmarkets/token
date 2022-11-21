@@ -2,14 +2,17 @@
 pragma solidity >=0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
+import "hardhat/console.sol";
+
 /// @custom:security-contact security@bitmarkets.com
-abstract contract ERC20Fees is
-  ERC20 //, ERC20Burnable {
-{
-  uint256 private _final;
-  uint16 private _burnR;
+abstract contract ERC20Fees is ERC20 {
+  using SafeMath for uint256;
+  using SafeERC20 for IERC20;
+
   uint16 private _companyR;
   uint16 private _fundR;
 
@@ -27,36 +30,34 @@ abstract contract ERC20Fees is
 
   /**
    * @dev Constructor
-   * @param finalSupply The final number of tokens after deflation without the decimals
-   * @param burnRate The percentage of every transfer to burn until final supply (0-1000)
    * @param companyRate The percentage of every transfer to the company wallet (0-1000)
-   * @param fundRate The percentage of every transfer that ends up in the ESG fund (0-1000)
-   * @param company The company wallet address that gets tokens burned
+   * @param esgFundRate The percentage of every transfer that ends up in the ESG fund (0-1000)
+   * @param companyWallet The company wallet address that gets tokens burned
    * @param companyRewards The company wallet address that receives transfer fees (can be address(0))
-   * @param fund Fund wallet address that gathers transfer fees (can be address(0))
+   * @param esgFund Fund wallet address that gathers transfer fees (can be address(0))
    */
   constructor(
-    uint32 finalSupply,
-    uint16 burnRate,
     uint16 companyRate,
-    uint16 fundRate,
-    address company,
+    uint16 esgFundRate,
+    address companyWallet,
     address companyRewards,
-    address fund
+    address esgFund
   ) {
-    require(burnRate >= 0 && burnRate < 1000, "Burn rate out of bounds");
     require(companyRate >= 0 && companyRate < 1000, "Company rate out of bounds");
-    require(fundRate >= 0 && fundRate < 1000, "Fund rate out of bounds");
+    require(esgFundRate >= 0 && esgFundRate < 1000, "ESG Fund rate out of bounds");
 
-    _final = finalSupply * 10**decimals();
-    _burnR = burnRate;
     _companyR = companyRate;
-    _fundR = fundRate;
-    _companyBurnWallet = company;
+    _fundR = esgFundRate;
+    _companyBurnWallet = companyWallet; // is also feeless admin
     _companyRewardsWallet = companyRewards;
-    _fundWallet = fund;
+    _fundWallet = esgFund;
 
-    _maxFeeless = 1;
+    _maxFeeless = 4; // company wallet, company gains, esg fund and crowdsale.
+
+    _feeless[_companyBurnWallet] = true;
+    _feeless[_companyRewardsWallet] = true;
+    _feeless[_fundWallet] = true;
+    _numFeeless = 3;
   }
 
   function addFeeless(address account) public virtual {
@@ -88,24 +89,28 @@ abstract contract ERC20Fees is
   ) internal virtual override {
     super._beforeTokenTransfer(from, to, amount);
 
-    if (from != address(0) && to != address(0) && amount > 1000 && !isFeeless(from) && !isFeeless(to)) {
-      uint256 feesAmount = 0;
-
+    if (
+      from != address(0) &&
+      to != address(0) &&
+      amount > 1000 &&
+      !isFeeless(from) && // to not go through this if condition many times.
+      !isFeeless(to) && // same
+      balanceOf(from) >= amount
+    ) {
       uint256 companyFee = SafeMath.div(SafeMath.mul(amount, _companyR), 1000);
-      _transfer(_msgSender(), _companyRewardsWallet, companyFee);
-      feesAmount += companyFee;
-
       uint256 fundFee = SafeMath.div(SafeMath.mul(amount, _fundR), 1000);
-      _transfer(_msgSender(), _fundWallet, fundFee);
-      feesAmount += fundFee;
 
-      uint256 burnFee = SafeMath.div(SafeMath.mul(amount, _burnR), 1000);
-      if (totalSupply() >= _final + burnFee) {
-        // TODO Burn from sender or company fund?
-        _burn(_companyBurnWallet, burnFee);
-      }
+      amount -= companyFee + fundFee;
 
-      amount -= feesAmount;
+      // SafeERC20.safeTransferFrom(this, from, _companyRewardsWallet, companyFee);
+      // balances[_companyRewardsWallet] += companyFee;
+      // SafeERC20.safeTransfer(this, _companyRewardsWallet, companyFee);
+      _transfer(from, _companyRewardsWallet, companyFee);
+
+      // SafeERC20.safeTransferFrom(this, from, _fundWallet, fundFee);
+      // balances[_fundWallet] += fundFee;
+      // SafeERC20.safeTransfer(this, _fundWallet, fundFee);
+      _transfer(from, _fundWallet, fundFee);
     }
   }
 }

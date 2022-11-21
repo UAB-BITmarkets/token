@@ -6,9 +6,9 @@ import { BITMarketsToken__factory } from "../typechain-types/factories/contracts
 import { BITMarketsTokenCrowdsale__factory } from "../typechain-types/factories/contracts/BITMarketsTokenCrowdsale__factory";
 
 const initialSupply = 300000000;
-const finalSupply = 200000000;
-const burnRate = 1; // 1/1000 = 0.1%
-const buyBackRate = 1;
+// const finalSupply = 200000000;
+// const burnRate = 1; // 1/1000 = 0.1%
+const companyRate = 1; // over 1000
 const fundRate = 1;
 
 const companyRewardsWallet = ethers.Wallet.createRandom();
@@ -30,11 +30,11 @@ describe("BITMarkets ERC20 token crowdsale contract tests", () => {
 
     const token = await BITMarketsTokenFactory.deploy(
       initialSupply,
-      finalSupply,
-      burnRate,
-      buyBackRate,
-      fundRate,
+      // finalSupply,
+      // burnRate,
+      companyRate,
       companyRewardsWallet.address,
+      fundRate,
       addr1.address,
       addr2.address
     );
@@ -59,7 +59,7 @@ describe("BITMarkets ERC20 token crowdsale contract tests", () => {
     await crowdsale.deployed();
 
     await token.approve(crowdsale.address, cap);
-    await token.addFeeless(owner.address);
+    // await token.addFeeless(owner.address);
     // await token.transfer(crowdsale.address, cap);
     // await token.increaseAllowance(crowdsale.address, cap);
 

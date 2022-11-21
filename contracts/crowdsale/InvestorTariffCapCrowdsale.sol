@@ -62,12 +62,12 @@ abstract contract InvestorTariffCapCrowdsale is Crowdsale {
    * @param beneficiary Token purchaser
    * @param weiAmount Amount of wei contributed
    */
-  function _updatePurchasingState(address beneficiary, uint256 weiAmount)
-    internal
-    virtual
-    override
-  {
+  function _updatePurchasingState(
+    address beneficiary,
+    uint256 weiAmount
+  ) internal virtual override {
     super._updatePurchasingState(beneficiary, weiAmount);
+
     _contributions[beneficiary] = _contributions[beneficiary].add(weiAmount);
   }
 
@@ -76,13 +76,12 @@ abstract contract InvestorTariffCapCrowdsale is Crowdsale {
    * @param beneficiary Token purchaser
    * @param weiAmount Amount of wei contributed
    */
-  function _preValidatePurchase(address beneficiary, uint256 weiAmount)
-    internal
-    view
-    virtual
-    override
-  {
+  function _preValidatePurchase(
+    address beneficiary,
+    uint256 weiAmount
+  ) internal view virtual override {
     super._preValidatePurchase(beneficiary, weiAmount);
+
     require(weiAmount >= _tariff, "Crowdsale: wei < tariff");
     require(weiAmount <= _cap, "Crowdsale: wei > cap");
     require(_contributions[beneficiary].add(weiAmount) <= _cap, "Crowdsale: cap >= hardCap");

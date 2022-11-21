@@ -50,6 +50,8 @@ abstract contract AllowanceCrowdsale is Crowdsale {
    * @param tokenAmount Amount of tokens purchased
    */
   function _deliverTokens(address beneficiary, uint256 tokenAmount) internal virtual override {
+    // super._deliverTokens(beneficiary, tokenAmount);
+
     token().safeTransferFrom(_tokenWallet, beneficiary, tokenAmount);
   }
 }

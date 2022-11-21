@@ -42,8 +42,8 @@ abstract contract ERC20Blacklistable is ERC20 {
   }
 
   /**
-   * @dev Constructor, takes crowdsale blacklist limit.
-   * @param max Crowdsale max number of blacklisted addresses.
+   * @dev Constructor, takes token blacklist limit.
+   * @param max Token max number of blacklisted addresses.
    */
   constructor(uint32 max) {
     _blacklistAdmin = _msgSender();

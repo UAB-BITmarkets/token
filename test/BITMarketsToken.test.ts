@@ -5,12 +5,14 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { BITMarketsToken__factory } from "../typechain-types/factories/contracts/BITMarketsToken__factory";
 
 const initialSupply = 300000000;
-const finalSupply = 200000000;
-const burnRate = 1; // 1/1000 = 0.1%
+// const finalSupply = 200000000;
+// const burnRate = 1; // 1/1000 = 0.1%
 const companyRate = 1;
 const fundRate = 1;
 
 const companyRewardsWallet = ethers.Wallet.createRandom();
+
+const someRandomWallet = ethers.Wallet.createRandom();
 
 describe("BITMarkets ERC20 token contract tests", () => {
   const loadContract = async () => {
@@ -22,11 +24,11 @@ describe("BITMarkets ERC20 token contract tests", () => {
 
     const token = await BITMarketsTokenFactory.deploy(
       initialSupply,
-      finalSupply,
-      burnRate,
+      // finalSupply,
+      // burnRate,
       companyRate,
-      fundRate,
       companyRewardsWallet.address,
+      fundRate,
       addr1.address, // esg fund address
       addr2.address // pauser address
     );
@@ -105,12 +107,23 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const companyRewardsBalanceBefore = await token.balanceOf(companyRewardsWallet.address);
       const companyWalletBalanceBefore = await token.balanceOf(owner.address);
 
-      // Transfer 100 tokens from owner to addr2.
-      const addr2Transfer = ethers.utils.parseEther("1.0");
-      await token.transfer(addr2.address, addr2Transfer, { from: owner.address });
+      await owner.sendTransaction({
+        to: someRandomWallet.address,
+        value: ethers.utils.parseEther("1.0")
+      });
+
+      // Transfer 100 tokens from owner to addr2. Does not induce fees because owner is feeless.
+      await token.transfer(addr2.address, ethers.utils.parseEther("1.0"), { from: owner.address });
 
       const nextTime = startTime + 10 * 1000; // 10s
       await ethers.provider.send("evm_mine", [nextTime]);
+
+      // Transfer 40 tokens from addr2 to someRandomWallet. Should induce fees.
+      await token
+        .connect(addr2)
+        .transfer(someRandomWallet.address, ethers.utils.parseEther("0.4"), {
+          from: addr2.address
+        });
 
       const esgFundBalanceAfter = await token.balanceOf(addr1.address);
       expect(esgFundBalanceBefore).to.be.lessThan(esgFundBalanceAfter);
@@ -122,25 +135,25 @@ describe("BITMarkets ERC20 token contract tests", () => {
       expect(companyWalletBalanceAfter).to.be.lessThan(companyWalletBalanceBefore);
     });
 
-    it("Should induce burning with each transfer", async () => {
-      const { token, owner, addr2 } = await loadFixture(loadContract);
-
-      const startTime = Date.now();
-      await ethers.provider.send("evm_mine", [startTime]);
-
-      const totalSupplyBefore = await token.totalSupply();
-
-      // Transfer 100 tokens from owner to addr2.
-      const addr2Transfer = ethers.utils.parseEther("1.0");
-      await token.transfer(addr2.address, addr2Transfer, { from: owner.address });
-
-      const nextTime = startTime + 60 * 1000; // 1min
-      await ethers.provider.send("evm_mine", [nextTime]);
-
-      const totalSupplyAfter = await token.totalSupply();
-
-      expect(totalSupplyAfter).to.be.lessThan(totalSupplyBefore);
-    });
+    // it("Should induce burning with each transfer", async () => {
+    //   const { token, owner, addr2 } = await loadFixture(loadContract);
+    //
+    //   const startTime = Date.now();
+    //   await ethers.provider.send("evm_mine", [startTime]);
+    //
+    //   const totalSupplyBefore = await token.totalSupply();
+    //
+    //   // Transfer 100 tokens from owner to addr2.
+    //   const addr2Transfer = ethers.utils.parseEther("1.0");
+    //   await token.transfer(addr2.address, addr2Transfer, { from: owner.address });
+    //
+    //   const nextTime = startTime + 60 * 1000; // 1min
+    //   await ethers.provider.send("evm_mine", [nextTime]);
+    //
+    //   const totalSupplyAfter = await token.totalSupply();
+    //
+    //   expect(totalSupplyAfter).to.be.lessThan(totalSupplyBefore);
+    // });
 
     it("Should be possible to do feeless transfers", async () => {
       const { token, owner, addr1, addr2 } = await loadFixture(loadContract);
@@ -148,7 +161,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const startTime = Date.now();
       await ethers.provider.send("evm_mine", [startTime]);
 
-      expect(await token.addFeeless(addr1.address)).to.emit(
+      expect(await token.addFeeless(someRandomWallet.address)).to.emit(
         "BITMarketsToken",
         "Caller added to feeless"
       );
@@ -161,11 +174,13 @@ describe("BITMarkets ERC20 token contract tests", () => {
         "Account is zero"
       );
 
-      await expect(token.addFeeless(addr1.address)).to.revertedWith("Account already feeless");
+      await expect(token.addFeeless(someRandomWallet.address)).to.revertedWith(
+        "Account already feeless"
+      );
 
       await expect(token.addFeeless(addr2.address)).to.revertedWith("Feeless limit reached");
 
-      expect(await token.removeFeeless(addr1.address)).to.emit(
+      expect(await token.removeFeeless(someRandomWallet.address)).to.emit(
         "BITMarketsToken",
         "Caller removed from feeless"
       );

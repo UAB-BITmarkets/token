@@ -60,11 +60,7 @@ abstract contract Crowdsale is Context, ReentrancyGuard {
    * @param w Address where collected funds will be forwarded to (wallet)
    * @param t Address of the token being sold (token)
    */
-  constructor(
-    uint256 r,
-    address payable w,
-    IERC20 t
-  ) {
+  constructor(uint256 r, address payable w, IERC20 t) {
     require(r > 0, "Crowdsale: 0 rate");
     require(w != address(0), "Crowdsale: wallet 0 address");
     require(address(t) != address(0), "Crowdsale: token 0 address");
@@ -89,7 +85,7 @@ abstract contract Crowdsale is Context, ReentrancyGuard {
 
     _preValidatePurchase(beneficiary, weiAmount);
 
-    // calculate token amount to be created
+    // calculate token amount to be bought
     uint256 tokens = _getTokenAmount(weiAmount);
 
     // update state

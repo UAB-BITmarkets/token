@@ -28,13 +28,10 @@ abstract contract PausableCrowdsale is Crowdsale, Pausable {
    * @param beneficiary Address performing the token purchase
    * @param weiAmount Value in wei involved in the purchase
    */
-  function _preValidatePurchase(address beneficiary, uint256 weiAmount)
-    internal
-    view
-    virtual
-    override
-    whenNotPaused
-  {
-    return super._preValidatePurchase(beneficiary, weiAmount);
+  function _preValidatePurchase(
+    address beneficiary,
+    uint256 weiAmount
+  ) internal view virtual override whenNotPaused {
+    super._preValidatePurchase(beneficiary, weiAmount);
   }
 }
