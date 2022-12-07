@@ -8,15 +8,28 @@ import "./crowdsale/CappedCrowdsale.sol";
 import "./crowdsale/InvestorTariffCapCrowdsale.sol";
 import "./crowdsale/PausableCrowdsale.sol";
 import "./crowdsale/TimedCrowdsale.sol";
-import "./crowdsale/WhitelistCrowdsale.sol";
+import "./crowdsale/IncreasingPriceCrowdsale.sol";
 import "./crowdsale/VestingCrowdsale.sol";
 
+/**
+ * @param initialRate Number of token units a buyer gets per wei in the beginning
+ * @param finalRate Number of tokens a buyer gets per wei at the end of the crowdsale
+ * @param wallet Address where collected funds will be forwarded to
+ * @param token Address of the token being sold
+ * @param cap Max amount of wei to be contributed
+ * @param openingTime Crowdsale opening time
+ * @param closingTime Crowdsale closing time
+ * @param investorTariff Minimum amount that participant can deposit
+ * @param investorCap Maximum amount that participant can deposit
+ * @param cliff Tokens stay locked in vesting wallet until that time
+ * @param vestingDuration Tokens are released linearly until then
+ */
 struct CrowdsaleArgs {
-  uint256 rate;
+  uint256 initialRate;
+  uint256 finalRate;
   address payable wallet;
   IERC20 token;
   uint256 cap;
-  uint32 maxWhitelisted;
   uint256 openingTime;
   uint256 closingTime;
   uint256 investorTariff;
@@ -26,16 +39,20 @@ struct CrowdsaleArgs {
 }
 
 /// @custom:security-contact security@bitmarkets.com
-contract BITMarketsTokenWhitelistedVestingCrowdsale is
+contract BITMarketsTokenICOVestingCrowdsale is
   Crowdsale,
   PausableCrowdsale,
   CappedCrowdsale,
   InvestorTariffCapCrowdsale,
   TimedCrowdsale,
-  WhitelistCrowdsale,
+  IncreasingPriceCrowdsale,
   VestingCrowdsale
 {
   using SafeMath for uint256;
+
+  // Track investor contributions
+  // uint256 public investorTariff = 0.002 * 10 ** 18; // 0.002 ether
+  // uint256 public investorCap = 50 * 10 ** 18; // 50 ether
 
   /**
    * @dev Constructor
@@ -43,16 +60,19 @@ contract BITMarketsTokenWhitelistedVestingCrowdsale is
   constructor(
     CrowdsaleArgs memory args
   )
-    Crowdsale(args.rate, args.wallet, args.token)
+    Crowdsale(args.initialRate, args.wallet, args.token)
     CappedCrowdsale(args.cap)
     InvestorTariffCapCrowdsale(args.investorTariff, args.investorCap)
     TimedCrowdsale(args.openingTime, args.closingTime)
-    WhitelistCrowdsale(args.maxWhitelisted)
+    IncreasingPriceCrowdsale(args.initialRate, args.finalRate)
     VestingCrowdsale(args.wallet, args.cliff, args.vestingDuration)
   {
     // solhint-disable-previous-line no-empty-blocks
   }
 
+  /**
+   * @dev
+   */
   function _deliverTokens(
     address beneficiary,
     uint256 tokenAmount
@@ -67,7 +87,6 @@ contract BITMarketsTokenWhitelistedVestingCrowdsale is
     super._updatePurchasingState(beneficiary, weiAmount);
   }
 
-  // TODO Disallow from blacklisted accounts
   function _preValidatePurchase(
     address beneficiary,
     uint256 weiAmount
@@ -79,19 +98,15 @@ contract BITMarketsTokenWhitelistedVestingCrowdsale is
       PausableCrowdsale,
       CappedCrowdsale,
       TimedCrowdsale,
-      InvestorTariffCapCrowdsale,
-      WhitelistCrowdsale
+      InvestorTariffCapCrowdsale
     )
   {
     super._preValidatePurchase(beneficiary, weiAmount);
   }
 
-  // function _getTokenAmount(uint256 weiAmount)
-  //   internal
-  //   view
-  //   override(Crowdsale, IncreasingPriceCrowdsale)
-  //   returns (uint256)
-  // {
-  //   return super._getTokenAmount(weiAmount);
-  // }
+  function _getTokenAmount(
+    uint256 weiAmount
+  ) internal view override(Crowdsale, IncreasingPriceCrowdsale) returns (uint256) {
+    return super._getTokenAmount(weiAmount);
+  }
 }

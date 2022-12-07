@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.8.0) (finance/VestingWallet.sol)
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.14;
 
 /**
  * @title VestingWallet
@@ -15,6 +15,20 @@ pragma solidity ^0.8.0;
 interface IVestingWallet {
   event EtherReleased(uint256 amount);
   event ERC20Released(address indexed token, uint256 amount);
+
+  /**
+   * @dev Release the native token (ether) that have already vested.
+   *
+   * Emits a {EtherReleased} event.
+   */
+  function release() external;
+
+  /**
+   * @dev Release the tokens that have already vested.
+   *
+   * Emits a {ERC20Released} event.
+   */
+  function release(address token) external;
 
   /**
    * @dev Getter for the beneficiary address.
@@ -51,20 +65,6 @@ interface IVestingWallet {
    * IERC20 contract.
    */
   function releasable(address token) external view returns (uint256);
-
-  /**
-   * @dev Release the native token (ether) that have already vested.
-   *
-   * Emits a {EtherReleased} event.
-   */
-  function release() external;
-
-  /**
-   * @dev Release the tokens that have already vested.
-   *
-   * Emits a {ERC20Released} event.
-   */
-  function release(address token) external;
 
   /**
    * @dev Calculates the amount of ether that has already vested. Default implementation is a linear vesting curve.

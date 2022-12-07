@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.4;
+pragma solidity >=0.8.14;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -44,6 +44,19 @@ abstract contract VestingCrowdsale is Crowdsale {
     _vestingDurationAfterCliffMilliseconds = vestingDuration;
   }
 
+  /**
+   * @dev Function to withdraw already vested tokens.
+   */
+  function withdrawTokens() public {
+    address vwalletAddress = vestingWallets[msg.sender];
+    IVestingWallet vwallet = IVestingWallet(vwalletAddress);
+    vwallet.release(address(token()));
+
+    if (remainingTokens() == 0) {
+      delete vestingWallets[msg.sender];
+    }
+  }
+
   // AllowanceCrowdsale related
 
   /**
@@ -76,19 +89,6 @@ abstract contract VestingCrowdsale is Crowdsale {
   function vestedAmount(address beneficiary) public view returns (uint256) {
     IVestingWallet vwallet = IVestingWallet(vestingWallets[beneficiary]);
     return vwallet.vestedAmount(address(token()), uint64(block.timestamp));
-  }
-
-  /**
-   * @dev Function to withdraw already vested tokens.
-   */
-  function withdrawTokens() public {
-    address vwalletAddress = vestingWallets[msg.sender];
-    IVestingWallet vwallet = IVestingWallet(vwalletAddress);
-    vwallet.release(address(token()));
-
-    if (remainingTokens() == 0) {
-      delete vestingWallets[msg.sender];
-    }
   }
 
   /**
