@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { BITMarketsToken__factory } from "../typechain-types/factories/contracts/BITMarketsToken__factory";
-import { BITMarketsTokenICOVestingCrowdsale__factory } from "../typechain-types/factories/contracts/BITMarketsTokenICOVestingCrowdsale__factory";
+import { BITMarketsTokenCrowdsale__factory } from "../typechain-types/factories/contracts/BITMarketsTokenCrowdsale__factory";
 
 const initialSupply = 300000000;
 // const finalSupply = 200000000;
@@ -15,12 +15,6 @@ const companyRewardsWallet = ethers.Wallet.createRandom();
 
 const initialRate = 1000;
 const finalRate = 10;
-
-const investorTariff = ethers.utils.parseEther("100.0");
-const investorCap = ethers.utils.parseEther("10000.0");
-
-const cliff = 1000; // milliseconds locked
-const vestingDuration = 2000; // milliseconds after cliff for full vesting
 
 describe("BITMarkets ERC20 token crowdsale contract tests", () => {
   const openingTime = Date.now() + 60 * 1000; // Starts in one minute
@@ -49,23 +43,19 @@ describe("BITMarkets ERC20 token crowdsale contract tests", () => {
     const totalSupply = await token.totalSupply();
     const cap = totalSupply.div(5);
 
-    const BITMarketsTokenICOVestingCrowdsaleFactory = (await ethers.getContractFactory(
-      "BITMarketsTokenICOVestingCrowdsale",
+    const BITMarketsTokenCrowdsaleFactory = (await ethers.getContractFactory(
+      "BITMarketsTokenCrowdsale",
       owner
-    )) as BITMarketsTokenICOVestingCrowdsale__factory;
-    const crowdsale = await BITMarketsTokenICOVestingCrowdsaleFactory.deploy({
+    )) as BITMarketsTokenCrowdsale__factory;
+    const crowdsale = await BITMarketsTokenCrowdsaleFactory.deploy(
       initialRate,
-      finalRate,
-      wallet: owner.address,
-      token: token.address,
+      owner.address,
+      token.address,
       cap,
       openingTime,
       closingTime,
-      investorTariff,
-      investorCap,
-      cliff,
-      vestingDuration
-    });
+      finalRate
+    );
     await crowdsale.deployed();
 
     await token.approve(crowdsale.address, cap);

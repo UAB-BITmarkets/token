@@ -37,6 +37,8 @@ contract BITMarketsTokenWhitelistedVestingCrowdsale is
 {
   using SafeMath for uint256;
 
+  uint256 private _rate;
+
   /**
    * @dev Constructor
    */
@@ -50,7 +52,7 @@ contract BITMarketsTokenWhitelistedVestingCrowdsale is
     WhitelistCrowdsale(args.maxWhitelisted)
     VestingCrowdsale(args.wallet, args.cliff, args.vestingDuration)
   {
-    // solhint-disable-previous-line no-empty-blocks
+    _rate = args.rate;
   }
 
   function _deliverTokens(
@@ -84,6 +86,10 @@ contract BITMarketsTokenWhitelistedVestingCrowdsale is
     )
   {
     super._preValidatePurchase(beneficiary, weiAmount);
+  }
+
+  function getCurrentRate() public view returns (uint256) {
+    return _rate;
   }
 
   // function _getTokenAmount(uint256 weiAmount)

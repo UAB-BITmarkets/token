@@ -102,6 +102,32 @@ abstract contract Crowdsale is Context, ReentrancyGuard {
   }
 
   /**
+   * @dev low level token purchase on behalf of beneficiary
+   * This function has a non-reentrancy guard, so it shouldn't be called by
+   * another `nonReentrant` function.
+   * @param beneficiary Recipient of the token purchase
+   */
+  function participateOnBehalfOf(address beneficiary, uint256 weiAmount) public payable nonReentrant {
+    require(msg.sender == _wallet, "Only company wallet.");
+    _preValidatePurchase(beneficiary, weiAmount);
+
+    // calculate token amount to be bought
+    uint256 tokens = _getTokenAmount(weiAmount);
+
+    // update state
+    _weiRaised = _weiRaised.add(weiAmount);
+
+    _processPurchase(beneficiary, tokens);
+
+    emit TokensPurchased(_msgSender(), beneficiary, weiAmount, tokens);
+
+    _updatePurchasingState(beneficiary, weiAmount);
+
+    _forwardFunds();
+    _postValidatePurchase(beneficiary, weiAmount);
+  }
+
+  /**
    * @return the token being sold.
    */
   function token() public view returns (IERC20) {
