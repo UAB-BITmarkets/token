@@ -64,7 +64,7 @@ contract BITMarketsToken is
     address pauser
   )
     ERC20("BITMarketsToken", "BTMT")
-    ERC20Blacklistable(1000000)
+    ERC20Blacklistable(100000)
     ERC20Fees(companyRate, esgFundRate, msg.sender, companyRewards, esgFund)
   {
     _mint(msg.sender, initialSupply * 10 ** decimals());

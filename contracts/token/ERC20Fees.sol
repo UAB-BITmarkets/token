@@ -52,7 +52,7 @@ abstract contract ERC20Fees is ERC20 {
     _companyRewardsWallet = companyRewards;
     _fundWallet = esgFund;
 
-    _maxFeeless = 4; // company wallet, company gains, esg fund and crowdsale.
+    _maxFeeless = 5; // company wallet, company gains, esg fund, whitelisted crowdsale and ico.
 
     _feeless[_companyBurnWallet] = true;
     _feeless[_companyRewardsWallet] = true;

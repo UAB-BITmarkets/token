@@ -51,6 +51,10 @@
     "lint": "solhint -f table contracts/*.sol contracts/**/*.sol",
     "lint:fix": "prettier --write contracts/*.sol contracts/**/*.sol test/**/*.ts test/*.ts",
     "test": "npx hardhat test",
-    "coverage": "npx hardhat coverage"
+    "coverage": "npx hardhat coverage",
+    "deploy:dev": "npx hardhat deploy",
+    "deploy:test": "npx hardhat deploy",
+    "deploy:prod": "npx hardhat deploy",
+    "start": "npx hardhat node"
   }
 }

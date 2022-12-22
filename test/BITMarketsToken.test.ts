@@ -178,7 +178,11 @@ describe("BITMarkets ERC20 token contract tests", () => {
         "Account already feeless"
       );
 
-      await expect(token.addFeeless(addr2.address)).to.revertedWith("Feeless limit reached");
+      await token.addFeeless(addr2.address);
+      const someOtherRandomWallet = ethers.Wallet.createRandom();
+      await expect(token.addFeeless(someOtherRandomWallet.address)).to.revertedWith(
+        "Feeless limit reached"
+      );
 
       expect(await token.removeFeeless(someRandomWallet.address)).to.emit(
         "BITMarketsToken",
