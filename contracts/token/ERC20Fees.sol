@@ -15,13 +15,17 @@ abstract contract ERC20Fees is ERC20 {
 
   uint16 private _companyR;
   uint16 private _fundR;
+  uint16 private _burnR;
 
   uint32 private _maxFeeless;
   uint32 private _numFeeless;
 
+  uint256 private _initialSupply;
+  uint256 private _minimalSupply;
+
   mapping(address => bool) private _feeless;
 
-  address private _companyBurnWallet;
+  address private _companyWallet;
   address private _companyRewardsWallet;
   address private _fundWallet;
 
@@ -37,6 +41,7 @@ abstract contract ERC20Fees is ERC20 {
    * @param esgFund Fund wallet address that gathers transfer fees (can be address(0))
    */
   constructor(
+    uint32 initialSupply,
     uint16 companyRate,
     uint16 esgFundRate,
     address companyWallet,
@@ -46,22 +51,27 @@ abstract contract ERC20Fees is ERC20 {
     require(companyRate >= 0 && companyRate < 1000, "Company rate out of bounds");
     require(esgFundRate >= 0 && esgFundRate < 1000, "ESG Fund rate out of bounds");
 
+    _initialSupply = initialSupply * 10 ** decimals();
+    _minimalSupply = _initialSupply.div(3); 
+
     _companyR = companyRate;
     _fundR = esgFundRate;
-    _companyBurnWallet = companyWallet; // is also feeless admin
+    _burnR = _companyR;
+
+    _companyWallet = companyWallet; // is also feeless admin
     _companyRewardsWallet = companyRewards;
     _fundWallet = esgFund;
 
     _maxFeeless = 5; // company wallet, company gains, esg fund, whitelisted crowdsale and ico.
 
-    _feeless[_companyBurnWallet] = true;
+    _feeless[_companyWallet] = true;
     _feeless[_companyRewardsWallet] = true;
     _feeless[_fundWallet] = true;
     _numFeeless = 3;
   }
 
   function addFeeless(address account) public virtual {
-    require(_msgSender() == _companyBurnWallet, "Not feeless admin");
+    require(_msgSender() == _companyWallet, "Not feeless admin");
     require(account != address(0), "Account is zero");
     require(!_feeless[account], "Account already feeless");
     require(_numFeeless < _maxFeeless, "Feeless limit reached");
@@ -71,7 +81,7 @@ abstract contract ERC20Fees is ERC20 {
   }
 
   function removeFeeless(address account) public virtual {
-    require(_msgSender() == _companyBurnWallet, "Not feeless admin");
+    require(_msgSender() == _companyWallet, "Not feeless admin");
     require(account != address(0), "Account is zero");
     _feeless[account] = false;
     _numFeeless -= 1;
@@ -99,6 +109,7 @@ abstract contract ERC20Fees is ERC20 {
     ) {
       uint256 companyFee = SafeMath.div(SafeMath.mul(amount, _companyR), 1000);
       uint256 fundFee = SafeMath.div(SafeMath.mul(amount, _fundR), 1000);
+      uint256 burnFee = SafeMath.div(SafeMath.mul(amount, _burnR), 1000);
 
       amount -= companyFee + fundFee;
 
@@ -111,6 +122,11 @@ abstract contract ERC20Fees is ERC20 {
       // balances[_fundWallet] += fundFee;
       // SafeERC20.safeTransfer(this, _fundWallet, fundFee);
       _transfer(from, _fundWallet, fundFee);
+
+      if (totalSupply() - burnFee > _minimalSupply) {
+         amount -= burnFee;
+         _burn(from, burnFee);
+      }
     }
   }
 }

@@ -49,11 +49,6 @@ contract BITMarketsToken is
    * @param esgFundRate The percentage of every transfer that ends up in the ESG fund (0-1000)
    * @param esgFund The address that handles the ESG fund from gathered transfer fees
    * @param pauser The address with the authority to pause the ERC20 token
-   *
-   * address[] memory companyWallets,
-   * uint16[] memory companyPercentages,
-   * uint64 cliff,
-   * uint64 vestingDuration
    */
   constructor(
     uint32 initialSupply,
@@ -65,7 +60,7 @@ contract BITMarketsToken is
   )
     ERC20("BITMarketsToken", "BTMT")
     ERC20Blacklistable(100000)
-    ERC20Fees(companyRate, esgFundRate, msg.sender, companyRewards, esgFund)
+    ERC20Fees(initialSupply, companyRate, esgFundRate, msg.sender, companyRewards, esgFund)
   {
     _mint(msg.sender, initialSupply * 10 ** decimals());
 
@@ -104,7 +99,7 @@ contract BITMarketsToken is
    * only if totalSupply + 10% > amount
    */
   function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) onlyAfter6Months {
-    require(totalSupply() + amount <= totalSupply().div(100).mul(111), "Mint >10% total supply");
+    require(totalSupply() + amount <= totalSupply().div(100).mul(110), "Mint >10% total supply");
     super._mint(to, amount);
   }
 
