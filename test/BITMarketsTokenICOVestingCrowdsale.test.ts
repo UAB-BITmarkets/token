@@ -22,7 +22,7 @@ const investorCap = ethers.utils.parseEther("1000.0");
 const cliff = 1000; // milliseconds locked
 const vestingDuration = 2000; // milliseconds after cliff for full vesting
 
-describe("BITMarkets ERC20 token crowdsale contract tests", () => {
+describe("BITMarkets ERC20 token ICO vesting crowdsale contract tests", () => {
   const openingTime = Date.now() + 60 * 1000; // Starts in one minute
   const closingTime = openingTime + 2 * 60 * 1000; // 2 minutes from start
 
@@ -203,8 +203,6 @@ describe("BITMarkets ERC20 token crowdsale contract tests", () => {
       const overCap = ethers.utils.parseEther("1000.0001");
       expect(await crowdsale.getInvestorCap()).to.equal(investorCap);
 
-      const oneWei = ethers.utils.parseEther("1");
-
       await ethers.provider.send("evm_mine", [openingTime]);
 
       await expect(
@@ -216,12 +214,11 @@ describe("BITMarkets ERC20 token crowdsale contract tests", () => {
 
       await crowdsale.connect(addr2).buyTokens(addr2.address, { value: investorCap });
       const currentRate = await crowdsale.getCurrentRate();
-      expect(await token.balanceOf(addr2.address)).to.equal(investorCap.mul(currentRate));
-      expect(await crowdsale.getContribution(addr2.address)).to.equal(investorCap);
 
-      await expect(
-        crowdsale.connect(addr2).buyTokens(addr2.address, { value: oneWei })
-      ).to.be.revertedWith("Crowdsale: cap >= hardCap");
+      const addr2VestingWallet = await crowdsale.vestingWallet(addr2.address);
+
+      expect(await token.balanceOf(addr2VestingWallet)).to.equal(investorCap.mul(currentRate));
+      expect(await crowdsale.getContribution(addr2.address)).to.equal(investorCap);
     });
   });
 });

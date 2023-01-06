@@ -262,5 +262,35 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
         crowdsale.connect(addr2).buyTokens(addr2.address, { value: oneWei })
       ).to.be.revertedWith("Crowdsale: cap >= hardCap");
     });
+
+    it("Should allow participation on behalf of investors", async () => {
+      const { token, crowdsale, owner, addr1, addr2 } = await loadFixture(loadContracts);
+
+      const oneWei = ethers.utils.parseEther("1");
+
+      await ethers.provider.send("evm_mine", [openingTime]);
+
+      await crowdsale.addWhitelisted(addr1.address);
+      await crowdsale.participateOnBehalfOf(addr1.address, oneWei);
+
+      const ownerCurrentTokenBalance = await token.balanceOf(owner.address);
+
+      const addr1VestingWallet = await crowdsale.vestingWallet(addr1.address);
+      const addr1VestingAmount = await token.balanceOf(addr1VestingWallet);
+
+      const rate = await crowdsale.getCurrentRate();
+
+      expect(await crowdsale.remainingTokens()).to.lessThan(ownerCurrentTokenBalance);
+      expect(0).to.lessThan(addr1VestingAmount);
+      expect(addr1VestingAmount).to.be.equal(rate.mul(oneWei));
+
+      await expect(crowdsale.participateOnBehalfOf(addr2.address, oneWei)).to.be.revertedWith(
+        "Beneficiary not whitelisted"
+      );
+
+      await expect(
+        crowdsale.connect(addr1).participateOnBehalfOf(addr2.address, oneWei)
+      ).to.be.revertedWith("Only company wallet.");
+    });
   });
 });

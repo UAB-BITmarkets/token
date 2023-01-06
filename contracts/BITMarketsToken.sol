@@ -100,6 +100,8 @@ contract BITMarketsToken is
    */
   function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) onlyAfter6Months {
     require(totalSupply() + amount <= totalSupply().div(100).mul(110), "Mint >10% total supply");
+    _lastMintTime = block.timestamp;
+
     super._mint(to, amount);
   }
 

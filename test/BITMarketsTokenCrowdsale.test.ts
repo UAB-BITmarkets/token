@@ -16,7 +16,7 @@ const companyRewardsWallet = ethers.Wallet.createRandom();
 const initialRate = 1000;
 const finalRate = 10;
 
-describe("BITMarkets ERC20 token crowdsale contract tests", () => {
+describe("BITMarkets ERC20 token ICO crowdsale contract tests", () => {
   const openingTime = Date.now() + 60 * 1000; // Starts in one minute
   const closingTime = openingTime + 2 * 60 * 1000; // 2 minutes from start
 

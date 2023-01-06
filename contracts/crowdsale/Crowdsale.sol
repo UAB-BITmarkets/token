@@ -106,6 +106,7 @@ abstract contract Crowdsale is Context, ReentrancyGuard {
    * This function has a non-reentrancy guard, so it shouldn't be called by
    * another `nonReentrant` function.
    * @param beneficiary Recipient of the token purchase
+   * @param weiAmount Amount of matic
    */
   function participateOnBehalfOf(address beneficiary, uint256 weiAmount) public payable nonReentrant returns (uint256) {
     require(msg.sender == _wallet, "Only company wallet.");

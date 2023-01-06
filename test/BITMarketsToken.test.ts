@@ -97,15 +97,15 @@ describe("BITMarkets ERC20 token contract tests", () => {
       expect(addr2Balance).to.equal(50);
     });
 
-    it("Should add transaction fees to the esg fund, the company rewards and burn from company wallet with each transfer", async () => {
+    it("Should add transaction fees to the esg fund and the company rewards and induce burning with each transfer", async () => {
       const { token, owner, addr1, addr2 } = await loadFixture(loadContract);
 
       const startTime = Date.now();
       await ethers.provider.send("evm_mine", [startTime]);
 
+      const totalSupplyBefore = await token.totalSupply();
       const esgFundBalanceBefore = await token.balanceOf(addr1.address);
       const companyRewardsBalanceBefore = await token.balanceOf(companyRewardsWallet.address);
-      const companyWalletBalanceBefore = await token.balanceOf(owner.address);
 
       await owner.sendTransaction({
         to: someRandomWallet.address,
@@ -125,35 +125,38 @@ describe("BITMarkets ERC20 token contract tests", () => {
           from: addr2.address
         });
 
+      const totalSupplyAfter = await token.totalSupply();
+
       const esgFundBalanceAfter = await token.balanceOf(addr1.address);
       expect(esgFundBalanceBefore).to.be.lessThan(esgFundBalanceAfter);
 
       const companyRewardsBalanceAfter = await token.balanceOf(companyRewardsWallet.address);
       expect(companyRewardsBalanceBefore).to.be.lessThan(companyRewardsBalanceAfter);
-
-      const companyWalletBalanceAfter = await token.balanceOf(owner.address);
-      expect(companyWalletBalanceAfter).to.be.lessThan(companyWalletBalanceBefore);
+      expect(totalSupplyAfter).to.be.lessThan(totalSupplyBefore);
     });
 
-    // it("Should induce burning with each transfer", async () => {
-    //   const { token, owner, addr2 } = await loadFixture(loadContract);
-    //
-    //   const startTime = Date.now();
-    //   await ethers.provider.send("evm_mine", [startTime]);
-    //
-    //   const totalSupplyBefore = await token.totalSupply();
-    //
-    //   // Transfer 100 tokens from owner to addr2.
-    //   const addr2Transfer = ethers.utils.parseEther("1.0");
-    //   await token.transfer(addr2.address, addr2Transfer, { from: owner.address });
-    //
-    //   const nextTime = startTime + 60 * 1000; // 1min
-    //   await ethers.provider.send("evm_mine", [nextTime]);
-    //
-    //   const totalSupplyAfter = await token.totalSupply();
-    //
-    //   expect(totalSupplyAfter).to.be.lessThan(totalSupplyBefore);
-    // });
+    it("Should be possible to mint more tokens once every six months", async () => {
+      const { token, owner } = await loadFixture(loadContract);
+
+      const startTime = Date.now();
+      await ethers.provider.send("evm_mine", [startTime]);
+
+      const tokenSupplyBeginning = await token.totalSupply();
+
+      await expect(token.mint(owner.address, tokenSupplyBeginning.div(9))).to.revertedWith(
+        "Mint >10% total supply"
+      );
+
+      await token.mint(owner.address, tokenSupplyBeginning.div(10));
+
+      const tokenSupplyAfterFirst = await token.totalSupply();
+
+      expect(tokenSupplyBeginning).to.lessThan(tokenSupplyAfterFirst);
+
+      await expect(token.mint(owner.address, tokenSupplyBeginning.div(10))).to.revertedWith(
+        "Last mint <6m"
+      );
+    });
 
     it("Should be possible to do feeless transfers", async () => {
       const { token, owner, addr1, addr2 } = await loadFixture(loadContract);
