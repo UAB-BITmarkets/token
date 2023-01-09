@@ -1,7 +1,6 @@
-
 # Env
-.env.prod
-.env.test
+.env_prod
+.env_test
 
 # Node JS
 node_modules

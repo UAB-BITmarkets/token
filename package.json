@@ -25,6 +25,7 @@
     "@typescript-eslint/eslint-plugin": "^5.30.7",
     "@typescript-eslint/parser": "^5.30.7",
     "chai": "^4.2.0",
+    "cross-env": "^7.0.3",
     "dotenv": "^16.0.1",
     "eslint": "^8.20.0",
     "eslint-config-prettier": "^8.3.0",
@@ -52,9 +53,9 @@
     "lint:fix": "prettier --write contracts/*.sol contracts/**/*.sol test/**/*.ts test/*.ts",
     "test": "npx hardhat test",
     "coverage": "npx hardhat coverage",
-    "deploy:dev": "npx hardhat deploy",
-    "deploy:test": "npx hardhat deploy",
-    "deploy:prod": "npx hardhat deploy",
-    "start": "npx hardhat node"
+    "deploy:dev": "cross-env NODE_ENV=development npx hardhat deploy --network localhost",
+    "deploy:test": "cross-env NODE_ENV=testing npx hardhat deploy",
+    "deploy:prod": "cross-env NODE_ENV=production npx hardhat deploy",
+    "start": "cross-env NODE_ENV=development npx hardhat node"
   }
 }

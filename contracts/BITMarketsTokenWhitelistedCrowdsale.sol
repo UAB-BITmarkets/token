@@ -59,7 +59,7 @@ contract BITMarketsTokenWhitelistedCrowdsale is
     CappedCrowdsale(cap)
     InvestorTariffCapCrowdsale(investorTariff, investorCap)
     TimedCrowdsale(openingTime, closingTime)
-    WhitelistCrowdsale(maxWhitelisted)
+    WhitelistCrowdsale(wallet, maxWhitelisted)
   {
     // solhint-disable-previous-line no-empty-blocks
   }

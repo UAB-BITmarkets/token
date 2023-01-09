@@ -4,11 +4,11 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 const initialRate = 10;
 const finalRate = 3;
-const whitelistedCrowdsaleOpeningTime = new Date("2023-02-01T09:00:00").valueOf();
-const whitelistedCrowdsaleClosingTime = new Date("2023-03-31T17:00:00").valueOf();
+const whitelistedCrowdsaleOpeningTime = new Date("2022-02-01T09:00:00").valueOf();
+const whitelistedCrowdsaleClosingTime = new Date("2023-06-30T17:00:00").valueOf();
 
-const icoCrowdsaleOpeningTime = new Date("2023-04-01T09:00:00").valueOf();
-const icoCrowdsaleClosingTime = new Date("2023-06-23T17:00:00").valueOf();
+const icoCrowdsaleOpeningTime = new Date("2023-09-01T09:00:00").valueOf();
+const icoCrowdsaleClosingTime = new Date("2023-12-23T17:00:00").valueOf();
 
 const initialSupply = 300000000;
 const companyRate = 1; // over 1000 = 0.1%
@@ -31,7 +31,7 @@ const maxWhitelisted = 100000;
 
 task("deploy", "Deploy contracts").setAction(
   async (_, hre: HardhatRuntimeEnvironment): Promise<void> => {
-    const [owner] = await hre.ethers.getSigners();
+    const [owner, whitelister] = await hre.ethers.getSigners();
 
     const BTMT = await hre.ethers.getContractFactory("BITMarketsToken");
     const btmt = await BTMT.deploy(
@@ -46,7 +46,7 @@ task("deploy", "Deploy contracts").setAction(
     );
     await btmt.deployed();
 
-    console.log("BITMarketsToken deployed to:", btmt.address);
+    console.log("TOKEN_CONTRACT_ADDRESS=", btmt.address);
 
     const btmtTotalSupply = await btmt.totalSupply();
     const totalCrowdsalesSupply = btmtTotalSupply.div(3);
@@ -60,6 +60,7 @@ task("deploy", "Deploy contracts").setAction(
       rate,
       wallet: owner.address,
       token: btmt.address,
+      whitelister: whitelister.address,
       cap: whitelistedCrowdsaleCap,
       maxWhitelisted,
       openingTime: whitelistedCrowdsaleOpeningTime,
@@ -73,7 +74,7 @@ task("deploy", "Deploy contracts").setAction(
     await btmt.approve(whitelisted.address, whitelistedCrowdsaleCap);
     await btmt.addFeeless(whitelisted.address);
 
-    console.log("BITMarketsTokenWhitelistedVestingCrowdsale deployed to:", whitelisted.address);
+    console.log("WHITELISTED_CONTRACT_ADDRESS=", whitelisted.address);
 
     const ICO = await hre.ethers.getContractFactory("BITMarketsTokenICOVestingCrowdsale");
     const ico = await ICO.deploy({
@@ -93,6 +94,6 @@ task("deploy", "Deploy contracts").setAction(
     await btmt.approve(ico.address, icoCrowdsaleCap);
     await btmt.addFeeless(ico.address);
 
-    console.log("BITMarketsTokenICOVestingCrowdsale deployed to:", ico.address);
+    console.log("ICO_CONTRACT_ADDRESS=", ico.address);
   }
 );

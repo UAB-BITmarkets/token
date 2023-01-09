@@ -15,47 +15,23 @@ import { HardhatUserConfig } from "hardhat/config";
 
 import "./tasks/deploy";
 
-dotenvConfig({ path: resolve(__dirname, ".env.dev") });
-
-// const chainIds = {
-//   'arbitrum-mainnet': 42161,
-//   avalanche: 43114,
-//   bsc: 56,
-//   hardhat: 31337,
-//   mainnet: 1,
-//   'optimism-mainnet': 10,
-//   'polygon-mainnet': 137,
-//   'polygon-mumbai': 80001,
-//   rinkeby: 4
-// };
-
-// const getChainConfig = (chain: keyof typeof chainIds): NetworkUserConfig => {
-//   let jsonRpcUrl: string;
-//   switch (chain) {
-//     case 'avalanche':
-//       jsonRpcUrl = 'https://api.avax.network/ext/bc/C/rpc';
-//       break;
-//     case 'bsc':
-//       jsonRpcUrl = 'https://bsc-dataseed1.binance.org';
-//       break;
-//     default:
-//       jsonRpcUrl = 'https://' + chain + '.infura.io/v3/' + infuraApiKey;
-//   }
-//
-//   return {
-//     accounts: {
-//       count: 10,
-//       mnemonic,
-//       path: "m/44'/60'/0'/0"
-//     },
-//     chainId: chainIds[chain],
-//     url: jsonRpcUrl
-//   };
-// };
+dotenvConfig({
+  path: resolve(
+    __dirname,
+    `.env_${
+      process.env.NODE_ENV === "development"
+        ? "dev"
+        : process.env.NODE_ENV === "production"
+        ? "prod"
+        : "test"
+    }`
+  )
+});
 
 const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.14",
+    allowUnlimitedContractSize: true,
     settings: {
       metadata: {
         // Not including the metadata hash
@@ -74,7 +50,7 @@ const config: HardhatUserConfig = {
     artifacts: "./frontend/src/artifacts"
   },
   networks: {
-    ...(process.env.LEVEL === "dev" && {
+    ...(process.env.NODE_ENV === "development" && {
       hardhat: {
         accounts: [
           {
@@ -104,20 +80,24 @@ const config: HardhatUserConfig = {
         // gasPrice: 2100000
       }
     }),
-    ...(process.env.LEVEL === "test" && {
-      ropsten: {
-        url: process.env.ROPSTEN_URL || "",
-        accounts:
-          process.env.TEST_ACCOUNT_PRIVATE_KEY !== undefined
-            ? [process.env.TEST_ACCOUNT_PRIVATE_KEY]
-            : []
-      },
+    ...(process.env.NODE_ENV === "testing" && {
       polygon_mumbai: {
-        url: process.env.POLYGON_MUMBAI_URL || "",
-        accounts:
-          process.env.TEST_ACCOUNT_PRIVATE_KEY !== undefined
-            ? [process.env.TEST_ACCOUNT_PRIVATE_KEY]
-            : []
+        url: process.env.ALCHEMY_POLYGON_URL_TEST || "",
+        accounts: [
+          process.env.COMPANY_WALLET_PRIVATE_KEY || "",
+          process.env.WHITELISTER_WALLET_PRIVATE_KEY || "",
+          process.env.BLACKLISTER_WALLET_PRIVATE_KEY || ""
+        ]
+      }
+    }),
+    ...(process.env.NODE_ENV === "production" && {
+      polygon_mumbai: {
+        url: process.env.ALCHEMY_POLYGON_URL_PROD || "",
+        accounts: [
+          process.env.COMPANY_WALLET_PRIVATE_KEY || "",
+          process.env.WHITELISTER_WALLET_PRIVATE_KEY || "",
+          process.env.BLACKLISTER_WALLET_PRIVATE_KEY || ""
+        ]
       }
     })
   },

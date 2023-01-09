@@ -15,6 +15,7 @@ struct CrowdsaleArgs {
   uint256 rate;
   address payable wallet;
   IERC20 token;
+  address whitelister;
   uint256 cap;
   uint32 maxWhitelisted;
   uint256 openingTime;
@@ -49,7 +50,7 @@ contract BITMarketsTokenWhitelistedVestingCrowdsale is
     CappedCrowdsale(args.cap)
     InvestorTariffCapCrowdsale(args.investorTariff, args.investorCap)
     TimedCrowdsale(args.openingTime, args.closingTime)
-    WhitelistCrowdsale(args.maxWhitelisted)
+    WhitelistCrowdsale(args.whitelister, args.maxWhitelisted)
     VestingCrowdsale(args.wallet, args.cliff, args.vestingDuration)
   {
     _rate = args.rate;

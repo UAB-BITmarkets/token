@@ -42,8 +42,8 @@ abstract contract WhitelistCrowdsale is Crowdsale {
    * @dev Constructor, takes crowdsale whitelist limit.
    * @param max Crowdsale max number of whitelisted addresses.
    */
-  constructor(uint32 max) {
-    _whitelistAdmin = _msgSender();
+  constructor(address whitelister, uint32 max) {
+    _whitelistAdmin = whitelister;
     _maxWhitelisteds = max;
   }
 
