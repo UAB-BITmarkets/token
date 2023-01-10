@@ -52,7 +52,7 @@ abstract contract ERC20Fees is ERC20 {
     require(esgFundRate >= 0 && esgFundRate < 1000, "ESG Fund rate out of bounds");
 
     _initialSupply = initialSupply * 10 ** decimals();
-    _minimalSupply = _initialSupply.div(3); 
+    _minimalSupply = _initialSupply.div(3);
 
     _companyR = companyRate;
     _fundR = esgFundRate;
@@ -124,8 +124,8 @@ abstract contract ERC20Fees is ERC20 {
       _transfer(from, _fundWallet, fundFee);
 
       if (totalSupply() - burnFee > _minimalSupply) {
-         amount -= burnFee;
-         _burn(from, burnFee);
+        amount -= burnFee;
+        _burn(from, burnFee);
       }
     }
   }

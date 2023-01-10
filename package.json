@@ -54,7 +54,7 @@
     "test": "npx hardhat test",
     "coverage": "npx hardhat coverage",
     "deploy:dev": "cross-env NODE_ENV=development npx hardhat deploy --network localhost",
-    "deploy:test": "cross-env NODE_ENV=testing npx hardhat deploy",
+    "deploy:test": "cross-env NODE_ENV=testing npx hardhat deploy --network polygon_mumbai",
     "deploy:prod": "cross-env NODE_ENV=production npx hardhat deploy",
     "start": "cross-env NODE_ENV=development npx hardhat node"
   }

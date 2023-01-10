@@ -2,31 +2,35 @@ import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-const initialRate = 10;
-const finalRate = 3;
-const whitelistedCrowdsaleOpeningTime = new Date("2022-02-01T09:00:00").valueOf();
+const icoInitialRate = 10;
+const icoFinalRate = 3;
+const whitelistedCrowdsaleOpeningTime = new Date(
+  `202${process.env.NODE_ENV === "production" ? "3" : "2"}-02-01T09:00:00`
+).valueOf();
 const whitelistedCrowdsaleClosingTime = new Date("2023-06-30T17:00:00").valueOf();
 
-const icoCrowdsaleOpeningTime = new Date("2023-09-01T09:00:00").valueOf();
+const icoCrowdsaleOpeningTime = new Date(
+  `202${process.env.NODE_ENV === "production" ? "3" : "2"}-09-01T09:00:00`
+).valueOf();
 const icoCrowdsaleClosingTime = new Date("2023-12-23T17:00:00").valueOf();
 
 const initialSupply = 300000000;
 const companyRate = 1; // over 1000 = 0.1%
 const fundRate = 1;
 
-const investorTariff = ethers.utils.parseEther("200.0"); // 200 matic
-const investorCap = ethers.utils.parseEther("10000.0"); // 10000 matic
+const investorTariff = ethers.utils.parseEther("100.0"); // 100 matic
+const investorCap = ethers.utils.parseEther("30000.0"); // 30000 matic
 
 // TODO fix cliff and vesting to happen until specific dates
-const cliff = 1000; // milliseconds locked
-const vestingDuration = 2000; // milliseconds after cliff for full vesting
+const cliff = 60 * 1000; // one minute = 60000 milliseconds locked
+const vestingDuration = 60 * 1000; // one minute = 60000 milliseconds after cliff for full vesting
 
 const companyRewardsWallet = ethers.Wallet.createRandom();
 const esgFundWallet = ethers.Wallet.createRandom();
 const pauserWallet = ethers.Wallet.createRandom();
 // const whitelisterWallet = ethers.Wallet.createRandom();
 
-const rate = 19;
+const whitelistedRate = 19;
 const maxWhitelisted = 100000;
 
 task("deploy", "Deploy contracts").setAction(
@@ -57,7 +61,7 @@ task("deploy", "Deploy contracts").setAction(
       "BITMarketsTokenWhitelistedVestingCrowdsale"
     );
     const whitelisted = await WHITELISTED.deploy({
-      rate,
+      rate: whitelistedRate,
       wallet: owner.address,
       token: btmt.address,
       whitelister: whitelister.address,
@@ -78,8 +82,8 @@ task("deploy", "Deploy contracts").setAction(
 
     const ICO = await hre.ethers.getContractFactory("BITMarketsTokenICOVestingCrowdsale");
     const ico = await ICO.deploy({
-      initialRate,
-      finalRate,
+      initialRate: icoInitialRate,
+      finalRate: icoFinalRate,
       wallet: owner.address,
       token: btmt.address,
       cap: icoCrowdsaleCap,

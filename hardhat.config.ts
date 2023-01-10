@@ -31,7 +31,6 @@ dotenvConfig({
 const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.14",
-    allowUnlimitedContractSize: true,
     settings: {
       metadata: {
         // Not including the metadata hash
@@ -72,21 +71,22 @@ const config: HardhatUserConfig = {
             balance: "10000000000000000000000"
           }
         ],
-        chainId: 1337 // for metamask
-        // mining: {
-        //   auto: false,
-        //   interval: 1000
-        // },
-        // gasPrice: 2100000
+        chainId: 1337, // for metamask
+        mining: {
+          auto: true,
+          interval: 10000
+        },
+        gasPrice: 21
       }
     }),
     ...(process.env.NODE_ENV === "testing" && {
       polygon_mumbai: {
-        url: process.env.ALCHEMY_POLYGON_URL_TEST || "",
+        url: process.env.ALCHEMY_POLYGON_MUMBAI_URL || "",
         accounts: [
-          process.env.COMPANY_WALLET_PRIVATE_KEY || "",
-          process.env.WHITELISTER_WALLET_PRIVATE_KEY || "",
-          process.env.BLACKLISTER_WALLET_PRIVATE_KEY || ""
+          process.env.DEV_ACCOUNT_PRIVATE_KEY_1 ||
+            "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+          process.env.DEV_ACCOUNT_PRIVATE_KEY_2 ||
+            "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
         ]
       }
     }),

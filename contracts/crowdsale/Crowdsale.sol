@@ -108,7 +108,10 @@ abstract contract Crowdsale is Context, ReentrancyGuard {
    * @param beneficiary Recipient of the token purchase
    * @param weiAmount Amount of matic
    */
-  function participateOnBehalfOf(address beneficiary, uint256 weiAmount) public payable nonReentrant returns (uint256) {
+  function participateOnBehalfOf(
+    address beneficiary,
+    uint256 weiAmount
+  ) public payable nonReentrant {
     require(msg.sender == _wallet, "Only company wallet.");
     _preValidatePurchase(beneficiary, weiAmount);
 
@@ -126,8 +129,6 @@ abstract contract Crowdsale is Context, ReentrancyGuard {
 
     _forwardFunds();
     _postValidatePurchase(beneficiary, weiAmount);
-
-    return tokens;
   }
 
   /**

@@ -63,7 +63,7 @@ abstract contract TimedCrowdsale is Crowdsale {
    */
   function isOpen() public view returns (bool) {
     // solhint-disable-next-line not-rely-on-time
-    return block.timestamp >= _openingTime && block.timestamp <= _closingTime;
+    return block.timestamp >= _openingTime && block.timestamp < _closingTime;
   }
 
   /**
