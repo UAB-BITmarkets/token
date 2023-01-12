@@ -4,15 +4,19 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 const icoInitialRate = 10;
 const icoFinalRate = 3;
-const whitelistedCrowdsaleOpeningTime = new Date(
-  `202${process.env.NODE_ENV === "production" ? "3" : "2"}-02-01T09:00:00`
-).valueOf();
-const whitelistedCrowdsaleClosingTime = new Date("2023-06-30T17:00:00").valueOf();
+const whitelistedCrowdsaleOpeningTime =
+  process.env.NODE_ENV === "production"
+    ? Math.trunc(new Date(`2023-02-01T09:00:00`).valueOf() / 1000)
+    : Math.trunc((Date.now() + 60 * 1000) / 1000);
+const whitelistedCrowdsaleClosingTime = Math.trunc(
+  new Date("2023-06-30T17:00:00").valueOf() / 1000
+);
 
-const icoCrowdsaleOpeningTime = new Date(
-  `202${process.env.NODE_ENV === "production" ? "3" : "2"}-09-01T09:00:00`
-).valueOf();
-const icoCrowdsaleClosingTime = new Date("2023-12-23T17:00:00").valueOf();
+const icoCrowdsaleOpeningTime =
+  process.env.NODE_ENV === "production"
+    ? Math.trunc(new Date(`2023-09-01T09:00:00`).valueOf() / 1000)
+    : Math.trunc((Date.now() + 60 * 1000) / 1000);
+const icoCrowdsaleClosingTime = Math.trunc(new Date("2023-12-23T17:00:00").valueOf() / 1000);
 
 const initialSupply = 300000000;
 const companyRate = 1; // over 1000 = 0.1%
