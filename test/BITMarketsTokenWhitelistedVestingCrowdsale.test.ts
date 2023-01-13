@@ -272,7 +272,8 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       await ethers.provider.send("evm_mine", [openingTime]);
 
       await crowdsale.connect(addr1).addWhitelisted(addr1.address);
-      await crowdsale.participateOnBehalfOf(addr1.address, oneWei);
+      // await crowdsale.participateOnBehalfOf(addr1.address, oneWei);
+      await crowdsale.connect(owner).buyTokens(addr1.address, { value: oneWei });
 
       const ownerCurrentTokenBalance = await token.balanceOf(owner.address);
 
@@ -285,13 +286,15 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       expect(0).to.lessThan(addr1VestingAmount);
       expect(addr1VestingAmount).to.be.equal(rate.mul(oneWei));
 
-      await expect(crowdsale.participateOnBehalfOf(addr2.address, oneWei)).to.be.revertedWith(
-        "Beneficiary not whitelisted"
-      );
+      await expect(
+        crowdsale.connect(owner).buyTokens(addr2.address, { value: oneWei })
+      ).to.be.revertedWith("Beneficiary not whitelisted");
+
+      await crowdsale.connect(addr1).addWhitelisted(addr2.address);
 
       await expect(
-        crowdsale.connect(addr1).participateOnBehalfOf(addr2.address, oneWei)
-      ).to.be.revertedWith("Only company wallet.");
+        crowdsale.connect(addr1).buyTokens(addr2.address, { value: oneWei })
+      ).to.be.revertedWith("Only company wallet");
     });
   });
 });

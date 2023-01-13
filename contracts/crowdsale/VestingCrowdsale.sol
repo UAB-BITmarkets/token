@@ -27,6 +27,7 @@ abstract contract VestingCrowdsale is Crowdsale {
   uint64 private _vestingDurationAfterCliffMilliseconds;
 
   mapping(address => address) public vestingWallets;
+  mapping(address => bool) public vestingWalletExists;
 
   /**
    * @dev Constructor, takes token wallet address.
@@ -48,12 +49,15 @@ abstract contract VestingCrowdsale is Crowdsale {
    * @dev Function to withdraw already vested tokens.
    */
   function withdrawTokens() public {
+    require(vestingWalletExists[msg.sender], "No vesting wallet");
+
     address vwalletAddress = vestingWallets[msg.sender];
     IVestingWallet vwallet = IVestingWallet(vwalletAddress);
     vwallet.release(address(token()));
 
     if (remainingTokens() == 0) {
       delete vestingWallets[msg.sender];
+      delete vestingWalletExists[msg.sender];
     }
   }
 
@@ -79,6 +83,8 @@ abstract contract VestingCrowdsale is Crowdsale {
    * @return the address of the vesting wallet.
    */
   function vestingWallet(address beneficiary) public view returns (address) {
+    require(vestingWalletExists[beneficiary], "No vesting wallet");
+
     return vestingWallets[beneficiary];
   }
 
@@ -87,7 +93,10 @@ abstract contract VestingCrowdsale is Crowdsale {
    * @return Amount of retrievable tokens from vesting wallet.
    */
   function vestedAmount(address beneficiary) public view returns (uint256) {
+    require(vestingWalletExists[beneficiary], "No vesting wallet");
+
     IVestingWallet vwallet = IVestingWallet(vestingWallets[beneficiary]);
+
     return vwallet.vestedAmount(address(token()), uint64(block.timestamp));
   }
 
@@ -102,12 +111,26 @@ abstract contract VestingCrowdsale is Crowdsale {
     uint64 cliff = uint64(SafeMath.add(block.timestamp, uint256(_cliffAfterMilliseconds)));
     uint64 vesting = uint64(SafeMath.add(cliff, uint256(_vestingDurationAfterCliffMilliseconds)));
 
-    VestingWallet vwallet = new VestingWallet(beneficiary, cliff, vesting);
-    vestingWallets[beneficiary] = address(vwallet);
+    bool exists = vestingWalletExists[beneficiary];
+
+    address vestingWalletAddress;
+
+    if (!exists) {
+      VestingWallet vwallet = new VestingWallet(beneficiary, cliff, vesting);
+      vestingWalletAddress = address(vwallet);
+    } else {
+      vestingWalletAddress = vestingWallets[beneficiary]; 
+    }
+
     // No fees here since _tokenWallet is feeless
-    token().safeTransferFrom(_tokenWallet, address(vwallet), tokenAmount);
+    token().safeTransferFrom(_tokenWallet, vestingWalletAddress, tokenAmount);
 
     tokenAmount = 0;
+
+    if (!exists) {
+      vestingWallets[beneficiary] = vestingWalletAddress;
+      vestingWalletExists[beneficiary] = true;
+    }
 
     super._deliverTokens(beneficiary, tokenAmount);
   }
