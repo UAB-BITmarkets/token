@@ -27,7 +27,6 @@ abstract contract VestingCrowdsale is Crowdsale {
   uint64 private _vestingDurationAfterCliffMilliseconds;
 
   mapping(address => address) public vestingWallets;
-  mapping(address => bool) public vestingWalletExists;
 
   /**
    * @dev Constructor, takes token wallet address.
@@ -49,15 +48,14 @@ abstract contract VestingCrowdsale is Crowdsale {
    * @dev Function to withdraw already vested tokens.
    */
   function withdrawTokens() public {
-    require(vestingWalletExists[msg.sender], "No vesting wallet");
+    address vestingWalletAddress = vestingWallets[msg.sender];
+    require(vestingWalletAddress != address(0), "No vesting wallet");
 
-    address vwalletAddress = vestingWallets[msg.sender];
-    IVestingWallet vwallet = IVestingWallet(vwalletAddress);
+    IVestingWallet vwallet = IVestingWallet(vestingWalletAddress);
     vwallet.release(address(token()));
 
     if (remainingTokens() == 0) {
       delete vestingWallets[msg.sender];
-      delete vestingWalletExists[msg.sender];
     }
   }
 
@@ -83,9 +81,10 @@ abstract contract VestingCrowdsale is Crowdsale {
    * @return the address of the vesting wallet.
    */
   function vestingWallet(address beneficiary) public view returns (address) {
-    require(vestingWalletExists[beneficiary], "No vesting wallet");
+    address vestingWalletAddress = vestingWallets[beneficiary];
+    require(vestingWalletAddress != address(0), "No vesting wallet");
 
-    return vestingWallets[beneficiary];
+    return vestingWalletAddress;
   }
 
   /**
@@ -93,9 +92,10 @@ abstract contract VestingCrowdsale is Crowdsale {
    * @return Amount of retrievable tokens from vesting wallet.
    */
   function vestedAmount(address beneficiary) public view returns (uint256) {
-    require(vestingWalletExists[beneficiary], "No vesting wallet");
+    address vestingWalletAddress = vestingWallets[beneficiary];
+    require(vestingWalletAddress != address(0), "No vesting wallet");
 
-    IVestingWallet vwallet = IVestingWallet(vestingWallets[beneficiary]);
+    IVestingWallet vwallet = IVestingWallet(vestingWalletAddress);
 
     return vwallet.vestedAmount(address(token()), uint64(block.timestamp));
   }
@@ -108,29 +108,23 @@ abstract contract VestingCrowdsale is Crowdsale {
   function _deliverTokens(address beneficiary, uint256 tokenAmount) internal virtual override {
     require(remainingTokens() >= tokenAmount, "Allowance too low");
 
-    uint64 cliff = uint64(SafeMath.add(block.timestamp, uint256(_cliffAfterMilliseconds)));
-    uint64 vesting = uint64(SafeMath.add(cliff, uint256(_vestingDurationAfterCliffMilliseconds)));
+    address vestingWalletAddress = vestingWallets[beneficiary];
 
-    bool exists = vestingWalletExists[beneficiary];
-
-    address vestingWalletAddress;
+    bool exists = vestingWalletAddress != address(0);
 
     if (!exists) {
+      uint64 cliff = uint64(SafeMath.add(block.timestamp, uint256(_cliffAfterMilliseconds)));
+      uint64 vesting = uint64(SafeMath.add(cliff, uint256(_vestingDurationAfterCliffMilliseconds)));
+
       VestingWallet vwallet = new VestingWallet(beneficiary, cliff, vesting);
       vestingWalletAddress = address(vwallet);
-    } else {
-      vestingWalletAddress = vestingWallets[beneficiary]; 
+      vestingWallets[beneficiary] = vestingWalletAddress;
     }
 
     // No fees here since _tokenWallet is feeless
     token().safeTransferFrom(_tokenWallet, vestingWalletAddress, tokenAmount);
 
     tokenAmount = 0;
-
-    if (!exists) {
-      vestingWallets[beneficiary] = vestingWalletAddress;
-      vestingWalletExists[beneficiary] = true;
-    }
 
     super._deliverTokens(beneficiary, tokenAmount);
   }

@@ -37,12 +37,12 @@ const config: HardhatUserConfig = {
         // https://github.com/paulrberg/hardhat-template/issues/31
         bytecodeHash: "none"
       },
-      ...(process.env.PRODUCTION === "true" && {
-        optimizer: {
-          enabled: true,
-          runs: 800
-        }
-      })
+      // ...(process.env.NODE_ENV !== "development" && {
+      optimizer: {
+        enabled: true,
+        runs: 800
+      }
+      // })
     }
   },
   paths: {
@@ -83,10 +83,8 @@ const config: HardhatUserConfig = {
       polygon_mumbai: {
         url: process.env.ALCHEMY_POLYGON_MUMBAI_URL || "",
         accounts: [
-          process.env.DEV_ACCOUNT_PRIVATE_KEY_1 ||
-            "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
-          process.env.DEV_ACCOUNT_PRIVATE_KEY_2 ||
-            "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
+          process.env.DEV_ACCOUNT_PRIVATE_KEY_1 || "",
+          process.env.DEV_ACCOUNT_PRIVATE_KEY_2 || ""
         ]
       }
     }),
