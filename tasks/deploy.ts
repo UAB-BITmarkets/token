@@ -26,8 +26,8 @@ const investorTariff = ethers.utils.parseEther("100.0"); // 100 matic
 const investorCap = ethers.utils.parseEther("30000.0"); // 30000 matic
 
 // TODO fix cliff and vesting to happen until specific dates
-const cliff = 60 * 1000; // one minute = 60000 milliseconds locked
-const vestingDuration = 60 * 1000; // one minute = 60000 milliseconds after cliff for full vesting
+const cliff = 60; // one minute = 60 seconds locked
+const vestingDuration = 60; // one minute = 60 seconds after cliff for full vesting
 
 const companyRewardsWallet = ethers.Wallet.createRandom();
 const esgFundWallet = ethers.Wallet.createRandom();

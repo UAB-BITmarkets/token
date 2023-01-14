@@ -47,15 +47,17 @@ abstract contract VestingCrowdsale is Crowdsale {
   /**
    * @dev Function to withdraw already vested tokens.
    */
-  function withdrawTokens() public {
-    address vestingWalletAddress = vestingWallets[msg.sender];
+  function withdrawTokens(address beneficiary) public {
+    address vestingWalletAddress = vestingWallets[beneficiary];
     require(vestingWalletAddress != address(0), "No vesting wallet");
+    require(token().balanceOf(vestingWalletAddress) >= 5 * 10 ** 18, "Not enough vested");
+    require(_msgSender() == beneficiary || _msgSender() == _tokenWallet, "Invalid msg sender");
 
     IVestingWallet vwallet = IVestingWallet(vestingWalletAddress);
     vwallet.release(address(token()));
 
     if (remainingTokens() == 0) {
-      delete vestingWallets[msg.sender];
+      delete vestingWallets[beneficiary];
     }
   }
 
@@ -113,8 +115,8 @@ abstract contract VestingCrowdsale is Crowdsale {
     bool exists = vestingWalletAddress != address(0);
 
     if (!exists) {
-      uint64 cliff = uint64(SafeMath.add(block.timestamp, uint256(_cliffAfterMilliseconds)));
-      uint64 vesting = uint64(SafeMath.add(cliff, uint256(_vestingDurationAfterCliffMilliseconds)));
+      uint64 cliff = uint64(block.timestamp + _cliffAfterMilliseconds);
+      uint64 vesting = cliff + _vestingDurationAfterCliffMilliseconds;
 
       VestingWallet vwallet = new VestingWallet(beneficiary, cliff, vesting);
       vestingWalletAddress = address(vwallet);

@@ -97,11 +97,33 @@ abstract contract Crowdsale is Context, ReentrancyGuard {
 
     _updatePurchasingState(beneficiary, weiAmount);
 
-    if (msg.sender == beneficiary) {
-      _forwardFunds();
-    } else {
-      require(msg.sender == _wallet, "Only company wallet");
-    }
+    _forwardFunds(weiAmount);
+
+    _postValidatePurchase(beneficiary, weiAmount);
+  }
+
+  /**
+   * @dev low level token purchase ***DO NOT OVERRIDE***
+   * This function has a non-reentrancy guard, so it shouldn't be called by
+   * another `nonReentrant` function.
+   * @param beneficiary Recipient of the token purchase
+   */
+  function participateOnBehalfOf(address beneficiary, uint256 weiAmount) public payable nonReentrant {
+    require(_msgSender() == _wallet, "Only company wallet");
+
+    _preValidatePurchase(beneficiary, weiAmount);
+
+    // calculate token amount to be bought
+    uint256 tokens = _getTokenAmount(weiAmount);
+
+    // update state
+    _weiRaised = _weiRaised.add(weiAmount);
+
+    _processPurchase(beneficiary, tokens);
+
+    emit TokensPurchased(_msgSender(), beneficiary, weiAmount, tokens);
+
+    _updatePurchasingState(beneficiary, weiAmount);
 
     _postValidatePurchase(beneficiary, weiAmount);
   }
@@ -176,8 +198,8 @@ abstract contract Crowdsale is Context, ReentrancyGuard {
   /**
    * @dev Determines how ETH is stored/forwarded on purchases.
    */
-  function _forwardFunds() internal virtual {
-    _wallet.transfer(msg.value);
+  function _forwardFunds(uint256 weiAmount) internal virtual {
+    _wallet.transfer(weiAmount);
   }
 
   /**

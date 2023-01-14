@@ -203,13 +203,13 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       const addr2TokenBalanceAfterCliffBeforeCompleteVestingNoWithdraw = await token.balanceOf(
         addr2.address
       );
-      await crowdsale.connect(addr2).withdrawTokens();
+      await crowdsale.connect(addr2).withdrawTokens(addr2.address);
       const addr2TokenBalanceAfterCliffBeforeCompleteVesting = await token.balanceOf(addr2.address);
 
       const newNewTimestampInSeconds = openingTime + cliff + vestingDuration;
       await ethers.provider.send("evm_mine", [newNewTimestampInSeconds]);
 
-      await crowdsale.connect(addr2).withdrawTokens();
+      await crowdsale.connect(addr2).withdrawTokens(addr2.address);
       const addr2TokenBalanceAfterCliffCompleteVesting = await token.balanceOf(addr2.address);
 
       expect(await crowdsale.weiRaised()).to.equal(weiAmount);
@@ -272,8 +272,8 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       await ethers.provider.send("evm_mine", [openingTime]);
 
       await crowdsale.connect(addr1).addWhitelisted(addr1.address);
-      // await crowdsale.participateOnBehalfOf(addr1.address, oneWei);
-      await crowdsale.connect(owner).buyTokens(addr1.address, { value: oneWei });
+      await crowdsale.connect(owner).participateOnBehalfOf(addr1.address, oneWei);
+      // await crowdsale.connect(owner).buyTokens(addr1.address, { value: oneWei });
 
       const ownerCurrentTokenBalance = await token.balanceOf(owner.address);
 
@@ -293,7 +293,8 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       await crowdsale.connect(addr1).addWhitelisted(addr2.address);
 
       await expect(
-        crowdsale.connect(addr1).buyTokens(addr2.address, { value: oneWei })
+        // crowdsale.connect(addr1).buyTokens(addr2.address, { value: oneWei })
+        crowdsale.connect(addr1).participateOnBehalfOf(addr2.address, oneWei)
       ).to.be.revertedWith("Only company wallet");
     });
   });
