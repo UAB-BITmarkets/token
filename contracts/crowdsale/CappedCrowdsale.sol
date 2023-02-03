@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.14;
+pragma solidity ^0.8.14;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
@@ -48,6 +48,7 @@ abstract contract CappedCrowdsale is Crowdsale {
     uint256 weiAmount
   ) internal view virtual override {
     super._preValidatePurchase(beneficiary, weiAmount);
+
     require(weiRaised().add(weiAmount) <= _cap, "CappedCrowdsale: cap exceeded");
   }
 }

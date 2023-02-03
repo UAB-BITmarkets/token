@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.14;
+pragma solidity ^0.8.14;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
@@ -28,6 +28,9 @@ abstract contract Crowdsale is Context, ReentrancyGuard {
 
   // Address where funds are collected
   address payable private _wallet;
+
+  // Address that can purchase tokens on behalf of beneficiaries
+  address payable private _purchaser;
 
   // How many token units a buyer gets per wei.
   // The rate is the conversion between wei and the smallest and indivisible token unit.
@@ -58,15 +61,18 @@ abstract contract Crowdsale is Context, ReentrancyGuard {
    * with 3 decimals called TOK, 1 wei will give you 1 unit, or 0.001 TOK.
    * @param r Number of token units a buyer gets per wei (rate)
    * @param w Address where collected funds will be forwarded to (wallet)
+   * @param purchaser Address that can purchase tokens on behalf of clients
    * @param t Address of the token being sold (token)
    */
-  constructor(uint256 r, address payable w, IERC20 t) {
+  constructor(uint256 r, address payable w, address payable purchaser, IERC20 t) {
     require(r > 0, "Crowdsale: 0 rate");
     require(w != address(0), "Crowdsale: wallet 0 address");
+    require(purchaser != address(0), "Crowdsale: wallet 0 address");
     require(address(t) != address(0), "Crowdsale: token 0 address");
 
     _rate = r;
     _wallet = w;
+    _purchaser = purchaser;
     _token = t;
   }
 
@@ -108,8 +114,11 @@ abstract contract Crowdsale is Context, ReentrancyGuard {
    * another `nonReentrant` function.
    * @param beneficiary Recipient of the token purchase
    */
-  function participateOnBehalfOf(address beneficiary, uint256 weiAmount) public payable nonReentrant {
-    require(_msgSender() == _wallet, "Only company wallet");
+  function participateOnBehalfOf(
+    address beneficiary,
+    uint256 weiAmount
+  ) public payable nonReentrant {
+    require(_msgSender() == _purchaser, "Only purchaser wallet");
 
     _preValidatePurchase(beneficiary, weiAmount);
 

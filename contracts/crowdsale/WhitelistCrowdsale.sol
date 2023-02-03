@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.14;
+pragma solidity ^0.8.14;
 
 import "./Crowdsale.sol";
 
@@ -27,14 +27,6 @@ abstract contract WhitelistCrowdsale is Crowdsale {
    */
   modifier onlyWhitelistAdmin() {
     require(isWhitelistAdmin(_msgSender()), "Caller not whitelist admin");
-    _;
-  }
-
-  /**
-   * @dev Throws if called by any account that is not whitelisted.
-   */
-  modifier onlyWhitelisted() {
-    require(isWhitelisted(_msgSender()), "Caller not whitelisted");
     _;
   }
 
@@ -89,6 +81,7 @@ abstract contract WhitelistCrowdsale is Crowdsale {
     uint256 _weiAmount
   ) internal view virtual override {
     super._preValidatePurchase(_beneficiary, _weiAmount);
+
     require(isWhitelisted(_beneficiary), "Beneficiary not whitelisted");
   }
 }

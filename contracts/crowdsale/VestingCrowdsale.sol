@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.14;
+pragma solidity ^0.8.14;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -8,6 +8,8 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/finance/VestingWallet.sol";
 
 import "./Crowdsale.sol";
+
+import "../BITMarketsToken.sol";
 
 import "../utils/IVestingWallet.sol";
 
@@ -23,8 +25,8 @@ abstract contract VestingCrowdsale is Crowdsale {
 
   address private _tokenWallet;
 
-  uint64 private _cliffAfterMilliseconds;
-  uint64 private _vestingDurationAfterCliffMilliseconds;
+  uint64 private _cliffAfterPurchaseSeconds;
+  uint64 private _vestingDurationSeconds;
 
   mapping(address => address) public vestingWallets;
 
@@ -40,8 +42,8 @@ abstract contract VestingCrowdsale is Crowdsale {
     require(wallet != address(0), "Crowdsale: wallet 0 address");
 
     _tokenWallet = wallet;
-    _cliffAfterMilliseconds = cliff;
-    _vestingDurationAfterCliffMilliseconds = vestingDuration;
+    _cliffAfterPurchaseSeconds = cliff;
+    _vestingDurationSeconds = vestingDuration;
   }
 
   /**
@@ -50,15 +52,11 @@ abstract contract VestingCrowdsale is Crowdsale {
   function withdrawTokens(address beneficiary) public {
     address vestingWalletAddress = vestingWallets[beneficiary];
     require(vestingWalletAddress != address(0), "No vesting wallet");
-    require(token().balanceOf(vestingWalletAddress) >= 5 * 10 ** 18, "Not enough vested");
     require(_msgSender() == beneficiary || _msgSender() == _tokenWallet, "Invalid msg sender");
 
     IVestingWallet vwallet = IVestingWallet(vestingWalletAddress);
-    vwallet.release(address(token()));
 
-    if (remainingTokens() == 0) {
-      delete vestingWallets[beneficiary];
-    }
+    vwallet.release(address(token()));
   }
 
   // AllowanceCrowdsale related
@@ -115,12 +113,16 @@ abstract contract VestingCrowdsale is Crowdsale {
     bool exists = vestingWalletAddress != address(0);
 
     if (!exists) {
-      uint64 cliff = uint64(block.timestamp + _cliffAfterMilliseconds);
-      uint64 vesting = cliff + _vestingDurationAfterCliffMilliseconds;
+      uint64 cliff = uint64(block.timestamp + _cliffAfterPurchaseSeconds);
+      uint64 vesting = _vestingDurationSeconds;
 
       VestingWallet vwallet = new VestingWallet(beneficiary, cliff, vesting);
       vestingWalletAddress = address(vwallet);
       vestingWallets[beneficiary] = vestingWalletAddress;
+
+      BITMarketsToken tk = BITMarketsToken(address(token()));
+
+      tk.addFeeless(address(vwallet));
     }
 
     // No fees here since _tokenWallet is feeless

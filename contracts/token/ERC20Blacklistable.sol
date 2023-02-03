@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.14;
+pragma solidity ^0.8.14;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
@@ -10,6 +10,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  * that do not adhere to the community guidelines.
  */
 abstract contract ERC20Blacklistable is ERC20 {
+  bytes32 public constant BLACKLISTER_ROLE = keccak256("BLACKLISTER_ROLE");
+
   // Max number of blacklisted addresses allowed
   uint32 private _maxBlacklisteds;
 
@@ -26,18 +28,10 @@ abstract contract ERC20Blacklistable is ERC20 {
   event BlacklistedRemoved(address indexed account);
 
   /**
-   * @dev Throws if called by any account other than the blacklist admin.
+   * @dev Throws if called by any account that is not the blacklister.
    */
-  modifier onlyBlacklistAdmin() {
-    require(isBlacklistAdmin(_msgSender()), "Caller not blacklist admin");
-    _;
-  }
-
-  /**
-   * @dev Throws if called by any account that is blacklisted.
-   */
-  modifier onlyNotBlacklisted() {
-    require(!isBlacklisted(_msgSender()), "Caller blacklisted");
+  modifier onlyBlacklister() {
+    require(_blacklistAdmin == _msgSender(), "Caller not blacklister");
     _;
   }
 
@@ -45,12 +39,12 @@ abstract contract ERC20Blacklistable is ERC20 {
    * @dev Constructor, takes token blacklist limit.
    * @param max Token max number of blacklisted addresses.
    */
-  constructor(uint32 max) {
-    _blacklistAdmin = _msgSender();
+  constructor(address blacklisterWallet, uint32 max) {
+    _blacklistAdmin = blacklisterWallet;
     _maxBlacklisteds = max;
   }
 
-  function addBlacklisted(address account) public virtual onlyBlacklistAdmin {
+  function addBlacklisted(address account) public virtual onlyBlacklister {
     // check if the user has already been blacklisted
     require(!_blacklisteds[account], "Account already blacklisted");
     require(account != address(0), "Account is zero");
@@ -63,7 +57,7 @@ abstract contract ERC20Blacklistable is ERC20 {
     emit BlacklistedAdded(account);
   }
 
-  function removeBlacklisted(address account) public virtual onlyBlacklistAdmin {
+  function removeBlacklisted(address account) public virtual onlyBlacklister {
     require(account != address(0), "Account is zero");
     _blacklisteds[account] = false;
     _numBlacklisteds -= 1;
@@ -100,5 +94,6 @@ abstract contract ERC20Blacklistable is ERC20 {
 
     require(!isBlacklisted(from), "From is blacklisted");
     require(!isBlacklisted(to), "To is blacklisted");
+    require(!isBlacklisted(_msgSender()), "Sender is blacklisted");
   }
 }

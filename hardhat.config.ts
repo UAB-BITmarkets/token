@@ -15,6 +15,23 @@ import { HardhatUserConfig } from "hardhat/config";
 
 import "./tasks/deploy";
 
+import {
+  companyLiquidityWallet,
+  allocationsWallet,
+  crowdsalesWallet,
+  companyRewardsWallet,
+  esgFundWallet,
+  minterWallet,
+  pauserWallet,
+  blacklisterWallet,
+  feelessAdminWallet,
+  companyRestrictionWhitelistWallet,
+  whitelisterWallet,
+  crowdsalesClientPurchaserWallet,
+  randomAccountWithLiquidity1,
+  randomAccountWithLiquidity2
+} from "./utils/testAccounts";
+
 dotenvConfig({
   path: resolve(
     __dirname,
@@ -53,28 +70,66 @@ const config: HardhatUserConfig = {
       hardhat: {
         accounts: [
           {
-            privateKey:
-              process.env.DEV_ACCOUNT_PRIVATE_KEY_1 ||
-              "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
-            balance: "10000000000000000000000"
+            privateKey: companyLiquidityWallet.privateKey,
+            balance: `${10000 * 10 ** 18}`
           },
           {
-            privateKey:
-              process.env.DEV_ACCOUNT_PRIVATE_KEY_2 ||
-              "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d",
-            balance: "10000000000000000000000"
+            privateKey: randomAccountWithLiquidity1.privateKey,
+            balance: `${10000 * 10 ** 18}`
           },
           {
-            privateKey:
-              process.env.DEV_ACCOUNT_PRIVATE_KEY_3 ||
-              "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a",
-            balance: "10000000000000000000000"
+            privateKey: randomAccountWithLiquidity2.privateKey,
+            balance: `${10000 * 10 ** 18}`
+          },
+          {
+            privateKey: allocationsWallet.privateKey,
+            balance: `${10000 * 10 ** 18}`
+          },
+          {
+            privateKey: crowdsalesWallet.privateKey,
+            balance: `${10000 * 10 ** 18}`
+          },
+          {
+            privateKey: companyRewardsWallet.privateKey,
+            balance: `${10000 * 10 ** 18}`
+          },
+          {
+            privateKey: esgFundWallet.privateKey,
+            balance: `${10000 * 10 ** 18}`
+          },
+          {
+            privateKey: minterWallet.privateKey,
+            balance: `${10000 * 10 ** 18}`
+          },
+          {
+            privateKey: pauserWallet.privateKey,
+            balance: `${10000 * 10 ** 18}`
+          },
+          {
+            privateKey: blacklisterWallet.privateKey,
+            balance: `${10000 * 10 ** 18}`
+          },
+          {
+            privateKey: feelessAdminWallet.privateKey,
+            balance: `${10000 * 10 ** 18}`
+          },
+          {
+            privateKey: companyRestrictionWhitelistWallet.privateKey,
+            balance: `${10000 * 10 ** 18}`
+          },
+          {
+            privateKey: whitelisterWallet.privateKey,
+            balance: `${10000 * 10 ** 18}`
+          },
+          {
+            privateKey: crowdsalesClientPurchaserWallet.privateKey,
+            balance: `${10000 * 10 ** 18}`
           }
         ],
         chainId: 1337, // for metamask
         mining: {
           auto: true,
-          interval: 10000
+          interval: 10
         },
         gasPrice: 21
       }

@@ -5,45 +5,74 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { BITMarketsToken__factory } from "../typechain-types/factories/contracts/BITMarketsToken__factory";
 import { BITMarketsTokenICOVestingCrowdsale__factory } from "../typechain-types/factories/contracts/BITMarketsTokenICOVestingCrowdsale__factory";
 
-const initialSupply = 300000000;
-// const finalSupply = 200000000;
-// const burnRate = 1; // 1/1000 = 0.1%
-const companyRate = 1; // over 1000
-const fundRate = 1;
-
-const companyRewardsWallet = ethers.Wallet.createRandom();
-
 const initialRate = 1000;
 const finalRate = 10;
 
 const investorTariff = ethers.utils.parseEther("200.0");
 const investorCap = ethers.utils.parseEther("1000.0");
 
-const cliff = 1000; // milliseconds locked
-const vestingDuration = 2000; // milliseconds after cliff for full vesting
+const cliff = 1; // milliseconds locked
+const vestingDuration = 1; // milliseconds after cliff for full vesting
+
+const initialSupply = 300000000;
+const finalSupply = 200000000;
+
+const companyWalletTokens = initialSupply / 3;
+const allocationsWalletTokens = initialSupply / 3;
+const crowdsalesWalletTokens = initialSupply / 3;
+
+const maxCompanyWalletTransfer = companyWalletTokens / 20;
+
+const companyRate = 1;
+const esgFundRate = 1;
+const burnRate = 1; // 1/1000 = 0.1%
 
 describe("BITMarkets ERC20 token ICO vesting crowdsale contract tests", () => {
-  const openingTime = Date.now() + 60 * 1000; // Starts in one minute
-  const closingTime = openingTime + 2 * 60 * 1000; // 2 minutes from start
+  const openingTime = Date.now() + 60; // Starts in one minute
+  const closingTime = openingTime + 2 * 60; // 2 minutes from start
 
   const loadContracts = async () => {
-    const [owner, addr1, addr2] = await ethers.getSigners();
+    const [
+      companyLiquidityWallet,
+      addr1,
+      addr2,
+      allocationsWallet,
+      crowdsalesWallet,
+      companyRewardsWallet,
+      esgFundWallet,
+      minterWallet,
+      pauserWallet,
+      blacklisterWallet,
+      feelessAdminWallet,
+      companyRestrictionWhitelistWallet,
+      crowdsalesClientPurchaserWallet
+    ] = await ethers.getSigners();
 
     const BITMarketsTokenFactory = (await ethers.getContractFactory(
       "BITMarketsToken",
-      owner
+      companyLiquidityWallet
     )) as BITMarketsToken__factory;
 
-    const token = await BITMarketsTokenFactory.deploy(
+    const token = await BITMarketsTokenFactory.deploy({
       initialSupply,
-      // finalSupply,
-      // burnRate,
+      finalSupply,
+      allocationsWalletTokens,
+      crowdsalesWalletTokens,
+      maxCompanyWalletTransfer,
       companyRate,
-      companyRewardsWallet.address,
-      fundRate,
-      addr1.address,
-      addr2.address
-    );
+      esgFundRate,
+      burnRate,
+      allocationsWallet: allocationsWallet.address,
+      crowdsalesWallet: crowdsalesWallet.address,
+      companyRewardsWallet: companyRewardsWallet.address,
+      esgFundWallet: esgFundWallet.address,
+      minterWallet: minterWallet.address,
+      pauserWallet: pauserWallet.address,
+      blacklisterWallet: blacklisterWallet.address,
+      feelessAdminWallet: feelessAdminWallet.address,
+      companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
+    });
+
     await token.deployed();
 
     const totalSupply = await token.totalSupply();
@@ -51,12 +80,13 @@ describe("BITMarkets ERC20 token ICO vesting crowdsale contract tests", () => {
 
     const BITMarketsTokenICOVestingCrowdsaleFactory = (await ethers.getContractFactory(
       "BITMarketsTokenICOVestingCrowdsale",
-      owner
+      companyLiquidityWallet
     )) as BITMarketsTokenICOVestingCrowdsale__factory;
     const crowdsale = await BITMarketsTokenICOVestingCrowdsaleFactory.deploy({
       initialRate,
       finalRate,
-      wallet: owner.address,
+      wallet: crowdsalesWallet.address,
+      purchaser: crowdsalesClientPurchaserWallet.address,
       token: token.address,
       cap,
       openingTime,
@@ -68,25 +98,66 @@ describe("BITMarkets ERC20 token ICO vesting crowdsale contract tests", () => {
     });
     await crowdsale.deployed();
 
-    await token.approve(crowdsale.address, cap);
-    // await token.addFeeless(owner.address);
+    await token.connect(feelessAdminWallet).addFeeless(crowdsale.address);
+    await token.connect(feelessAdminWallet).addFeeless(crowdsalesWallet.address);
+    await token
+      .connect(companyRestrictionWhitelistWallet)
+      .addUnrestrictedReceiver(
+        companyLiquidityWallet.address,
+        crowdsalesWallet.address,
+        ethers.utils.parseEther(`${crowdsalesWalletTokens}`)
+      );
+    await token.transfer(
+      crowdsalesWallet.address,
+      ethers.utils.parseEther(`${crowdsalesWalletTokens}`)
+    );
+    await token
+      .connect(companyRestrictionWhitelistWallet)
+      .addUnrestrictedReceiver(
+        crowdsalesWallet.address,
+        crowdsale.address,
+        ethers.utils.parseEther(`${crowdsalesWalletTokens}`)
+      );
+    await token.connect(feelessAdminWallet).addFeelessAdmin(crowdsale.address);
+
+    await token.connect(crowdsalesWallet).approve(crowdsale.address, cap);
+
+    // await token.approve(crowdsale.address, cap);
+    // await token.addFeeless(companyLiquidityWallet.address);
     // await token.transfer(crowdsale.address, cap);
     // await token.increaseAllowance(crowdsale.address, cap);
 
-    return { token, crowdsale, owner, addr1, addr2 };
+    return {
+      token,
+      crowdsale,
+      companyLiquidityWallet,
+      addr1,
+      addr2,
+      allocationsWallet,
+      crowdsalesWallet,
+      companyRewardsWallet,
+      esgFundWallet,
+      minterWallet,
+      pauserWallet,
+      blacklisterWallet,
+      feelessAdminWallet,
+      crowdsalesClientPurchaserWallet
+    };
   };
 
   describe("Deployment", () => {
     it("Should assign a percentage of the total supply of the token to the crowdsale contract and all initial stuff should be ok", async () => {
-      const { token, crowdsale, owner } = await loadFixture(loadContracts);
+      const { token, crowdsale, crowdsalesWallet } = await loadFixture(loadContracts);
 
       const totalSupply = await token.totalSupply();
       const icoSupply = totalSupply.div(5); // 1/5th of total supply
       expect(await crowdsale.token()).to.equal(token.address);
-      expect(await crowdsale.tokenWallet()).to.equal(owner.address);
-      expect(await crowdsale.wallet()).to.equal(owner.address);
+      expect(await crowdsale.tokenWallet()).to.equal(crowdsalesWallet.address);
+      expect(await crowdsale.wallet()).to.equal(crowdsalesWallet.address);
       expect(await crowdsale.cap()).to.equal(icoSupply);
-      expect(await token.allowance(owner.address, crowdsale.address)).to.equal(icoSupply);
+      expect(await token.allowance(crowdsalesWallet.address, crowdsale.address)).to.equal(
+        icoSupply
+      );
       expect(await crowdsale.initialRate()).to.equal(initialRate);
       expect(await crowdsale.finalRate()).to.equal(finalRate);
     });
@@ -104,7 +175,7 @@ describe("BITMarkets ERC20 token ICO vesting crowdsale contract tests", () => {
       expect(await crowdsale.isOpen()).to.equal(true);
       expect(await crowdsale.hasClosed()).to.equal(false);
 
-      const newNewTimestampInSeconds = openingTime + 2.001 * 60 * 1000;
+      const newNewTimestampInSeconds = openingTime + 3 * 60;
       await ethers.provider.send("evm_mine", [newNewTimestampInSeconds]);
       expect(await crowdsale.isOpen()).to.equal(false);
       expect(await crowdsale.hasClosed()).to.equal(true);
@@ -113,7 +184,7 @@ describe("BITMarkets ERC20 token ICO vesting crowdsale contract tests", () => {
 
     it("ICO after opening should have a lower rate than the initial", async () => {
       const { crowdsale } = await loadFixture(loadContracts);
-      const newTimestampInSeconds = openingTime + 60 * 1000;
+      const newTimestampInSeconds = openingTime + 60;
       await ethers.provider.send("evm_mine", [newTimestampInSeconds]);
       const rate = await crowdsale.getCurrentRate();
       expect(rate).to.lessThanOrEqual(initialRate);
@@ -123,12 +194,12 @@ describe("BITMarkets ERC20 token ICO vesting crowdsale contract tests", () => {
 
   describe("Participation", () => {
     it("Should be possible for an address to participate in the crowdsale with the correct rate", async () => {
-      const { token, crowdsale, owner, addr1 } = await loadFixture(loadContracts);
+      const { token, crowdsale, crowdsalesWallet, addr1 } = await loadFixture(loadContracts);
 
       const weiAmount = ethers.utils.parseEther("200");
 
-      const ownerInitialEthBalance = await owner.getBalance();
-      const ownerInitialTokenBalance = await token.balanceOf(owner.address);
+      const crowdsalesWalletInitialEthBalance = await crowdsalesWallet.getBalance();
+      const crowdsalesWalletInitialTokenBalance = await token.balanceOf(crowdsalesWallet.address);
       const addr1InitialEthBalance = await addr1.getBalance();
 
       await ethers.provider.send("evm_mine", [openingTime]);
@@ -143,24 +214,28 @@ describe("BITMarkets ERC20 token ICO vesting crowdsale contract tests", () => {
       const addr1VestingWallet = await crowdsale.vestingWallet(addr1.address);
       const addr1VestingWalletBalance = await token.balanceOf(addr1VestingWallet);
 
-      const newTimestampInSeconds = openingTime + 60 * 1000;
+      const newTimestampInSeconds = openingTime + 60;
       await ethers.provider.send("evm_mine", [newTimestampInSeconds]);
 
-      const ownerCurrentEthBalance = await owner.getBalance();
-      const ownerCurrentTokenBalance = await token.balanceOf(owner.address);
+      const crowdsalesWalletCurrentEthBalance = await crowdsalesWallet.getBalance();
+      const crowdsalesWalletCurrentTokenBalance = await token.balanceOf(crowdsalesWallet.address);
       const addr1CurrentEthBalance = await addr1.getBalance();
 
       expect(await crowdsale.weiRaised()).to.equal(weiAmount);
-      expect(ownerInitialEthBalance).to.lessThan(ownerCurrentEthBalance);
-      expect(ownerCurrentEthBalance.sub(ownerInitialEthBalance)).to.equal(weiAmount);
+      expect(crowdsalesWalletInitialEthBalance).to.lessThan(crowdsalesWalletCurrentEthBalance);
+      expect(crowdsalesWalletCurrentEthBalance.sub(crowdsalesWalletInitialEthBalance)).to.equal(
+        weiAmount
+      );
       expect(addr1CurrentEthBalance).to.lessThan(addr1InitialEthBalance);
       expect(weiAmount).to.lessThan(addr1InitialEthBalance.sub(addr1CurrentEthBalance));
-      expect(ownerCurrentTokenBalance).to.lessThan(ownerInitialTokenBalance);
-      expect(await crowdsale.remainingTokens()).to.lessThan(ownerCurrentTokenBalance);
+      expect(crowdsalesWalletCurrentTokenBalance).to.lessThan(crowdsalesWalletInitialTokenBalance);
+      expect(await crowdsale.remainingTokens()).to.lessThan(crowdsalesWalletCurrentTokenBalance);
       expect(addr1TokenBalance).to.equal(ethers.utils.parseEther("0.0")); // weiAmount.mul(currentRate));
-      expect(ownerInitialTokenBalance.sub(ownerCurrentTokenBalance)).to.equal(
-        addr1VestingWalletBalance
-      ); // addr1TokenBalance);
+      expect(
+        crowdsalesWalletInitialTokenBalance
+          .sub(crowdsalesWalletCurrentTokenBalance)
+          .eq(addr1VestingWalletBalance)
+      ).to.equal(true);
     });
 
     it("Should reduce the amount of tokens that two users can raise in different times", async () => {
@@ -179,7 +254,7 @@ describe("BITMarkets ERC20 token ICO vesting crowdsale contract tests", () => {
 
       // const addr1TokenBalance = await token.balanceOf(addr1.address);
 
-      const newTimestampInSeconds = openingTime + 60 * 1000;
+      const newTimestampInSeconds = openingTime + 60;
       await ethers.provider.send("evm_mine", [newTimestampInSeconds]);
 
       await crowdsale.connect(addr2).buyTokens(addr2.address, { value: weiAmount });

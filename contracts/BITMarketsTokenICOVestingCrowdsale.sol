@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.14;
+pragma solidity ^0.8.14;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
@@ -28,6 +28,7 @@ struct CrowdsaleArgs {
   uint256 initialRate;
   uint256 finalRate;
   address payable wallet;
+  address payable purchaser;
   IERC20 token;
   uint256 cap;
   uint256 openingTime;
@@ -60,7 +61,7 @@ contract BITMarketsTokenICOVestingCrowdsale is
   constructor(
     CrowdsaleArgs memory args
   )
-    Crowdsale(args.initialRate, args.wallet, args.token)
+    Crowdsale(args.initialRate, args.wallet, args.purchaser, args.token)
     CappedCrowdsale(args.cap)
     InvestorTariffCapCrowdsale(args.investorTariff, args.investorCap)
     TimedCrowdsale(args.openingTime, args.closingTime)

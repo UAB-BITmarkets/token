@@ -19,13 +19,14 @@ const icoCrowdsaleOpeningTime =
 const icoCrowdsaleClosingTime = Math.trunc(new Date("2023-12-23T17:00:00").valueOf() / 1000);
 
 const initialSupply = 300000000;
+const finalSupply = 200000000;
 const companyRate = 1; // over 1000 = 0.1%
 const fundRate = 1;
+const burnRate = 1;
 
 const investorTariff = ethers.utils.parseEther("100.0"); // 100 matic
 const investorCap = ethers.utils.parseEther("30000.0"); // 30000 matic
 
-// TODO fix cliff and vesting to happen until specific dates
 const cliff = 60; // one minute = 60 seconds locked
 const vestingDuration = 60; // one minute = 60 seconds after cliff for full vesting
 
@@ -44,17 +45,22 @@ task("deploy", "Deploy contracts").setAction(
     const BTMT = await hre.ethers.getContractFactory("BITMarketsToken");
     const btmt = await BTMT.deploy(
       initialSupply,
-      // finalSupply,
-      // burnRate,
+      finalSupply,
       companyRate,
-      companyRewardsWallet.address,
       fundRate,
+      burnRate,
+      companyRewardsWallet.address,
       esgFundWallet.address, // esg fund address
       pauserWallet.address // pauser address
     );
     await btmt.deployed();
 
-    console.log("TOKEN_CONTRACT_ADDRESS=", btmt.address);
+    console.log(`INVESTOR_TARIFF=${investorTariff.toHexString()}`);
+    console.log(`INVESTOR_CAP=${investorCap.toHexString()}`);
+    console.log(`COMPANY_REWARDS_WALLET_ADDRESS=${companyRewardsWallet.getAddress()}`);
+    console.log(`ESG_FUND_WALLET_ADDRESS=${esgFundWallet.getAddress()}`);
+
+    console.log(`TOKEN_CONTRACT_ADDRESS=${btmt.address}`);
 
     const btmtTotalSupply = await btmt.totalSupply();
     const totalCrowdsalesSupply = btmtTotalSupply.div(3);
@@ -82,7 +88,7 @@ task("deploy", "Deploy contracts").setAction(
     await btmt.approve(whitelisted.address, whitelistedCrowdsaleCap);
     await btmt.addFeeless(whitelisted.address);
 
-    console.log("WHITELISTED_CONTRACT_ADDRESS=", whitelisted.address);
+    console.log(`WHITELISTED_CONTRACT_ADDRESS=${whitelisted.address}`);
 
     const ICO = await hre.ethers.getContractFactory("BITMarketsTokenICOVestingCrowdsale");
     const ico = await ICO.deploy({
@@ -102,6 +108,6 @@ task("deploy", "Deploy contracts").setAction(
     await btmt.approve(ico.address, icoCrowdsaleCap);
     await btmt.addFeeless(ico.address);
 
-    console.log("ICO_CONTRACT_ADDRESS=", ico.address);
+    console.log(`ICO_CONTRACT_ADDRESS=${ico.address}`);
   }
 );

@@ -1,8 +1,8 @@
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
-import type { Greeter } from "../typechain-types/contracts/Greeter";
 import type { BITMarketsToken } from "../typechain-types/contracts/BITMarketsToken";
-import type { BITMarketsTokenCrowdsale } from "../typechain-types/contracts/BITMarketsTokenCrowdsale";
+import type { BITMarketsTokenWhitelistedVestingCrowdsale } from "../typechain-types/contracts/BITMarketsTokenWhitelistedVestingCrowdsale";
+import type { BITMarketsTokenICOVestingCrowdsale } from "../typechain-types/contracts/BITMarketsTokenICOVestingCrowdsale";
 
 type Fixture<T> = () => Promise<T>;
 
@@ -12,9 +12,9 @@ export interface Signers {
 
 declare module "mocha" {
   export interface Context {
-    greeter: Greeter;
     token: BITMarketsToken;
-    ico: BITMarketsTokenCrowdsale;
+    whitelisted: BITMarketsTokenWhitelistedVestingCrowdsale;
+    ico: BITMarketsTokenICOVestingCrowdsale;
     loadFixture: <T>(fixture: Fixture<T>) => Promise<T>;
     signers: Signers;
   }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.14;
+pragma solidity ^0.8.14;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
@@ -14,6 +14,7 @@ import "./crowdsale/VestingCrowdsale.sol";
 struct CrowdsaleArgs {
   uint256 rate;
   address payable wallet;
+  address payable purchaser;
   IERC20 token;
   address whitelister;
   uint256 cap;
@@ -46,7 +47,7 @@ contract BITMarketsTokenWhitelistedVestingCrowdsale is
   constructor(
     CrowdsaleArgs memory args
   )
-    Crowdsale(args.rate, args.wallet, args.token)
+    Crowdsale(args.rate, args.wallet, args.purchaser, args.token)
     CappedCrowdsale(args.cap)
     InvestorTariffCapCrowdsale(args.investorTariff, args.investorCap)
     TimedCrowdsale(args.openingTime, args.closingTime)
@@ -54,6 +55,10 @@ contract BITMarketsTokenWhitelistedVestingCrowdsale is
     VestingCrowdsale(args.wallet, args.cliff, args.vestingDuration)
   {
     _rate = args.rate;
+  }
+
+  function getCurrentRate() public view virtual returns (uint256) {
+    return _rate;
   }
 
   function _deliverTokens(
@@ -88,17 +93,4 @@ contract BITMarketsTokenWhitelistedVestingCrowdsale is
   {
     super._preValidatePurchase(beneficiary, weiAmount);
   }
-
-  function getCurrentRate() public view returns (uint256) {
-    return _rate;
-  }
-
-  // function _getTokenAmount(uint256 weiAmount)
-  //   internal
-  //   view
-  //   override(Crowdsale, IncreasingPriceCrowdsale)
-  //   returns (uint256)
-  // {
-  //   return super._getTokenAmount(weiAmount);
-  // }
 }
