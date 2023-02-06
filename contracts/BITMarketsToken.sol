@@ -66,7 +66,6 @@ contract BITMarketsToken is
   bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
   bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
   bytes32 public constant SNAPSHOT_ROLE = keccak256("SNAPSHOT_ROLE");
-  bytes32 public constant ESG_FUND_ROLE = keccak256("ESG_FUND_ROLE");
 
   constructor(
     BTMTArgs memory args
@@ -106,7 +105,6 @@ contract BITMarketsToken is
 
     // Setup roles
     _setupRole(MINTER_ROLE, args.minterWallet);
-    _setupRole(ESG_FUND_ROLE, args.esgFundWallet);
     _setupRole(PAUSER_ROLE, args.pauserWallet);
     _setupRole(SNAPSHOT_ROLE, msg.sender);
   }

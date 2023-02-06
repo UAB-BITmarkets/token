@@ -37,8 +37,8 @@ abstract contract TimedCrowdsale is Crowdsale {
    */
   constructor(uint256 oTime, uint256 cTime) {
     // solhint-disable-next-line not-rely-on-time
-    require(oTime >= block.timestamp, "Crowdsale: opening early");
-    require(cTime > oTime, "Crowdsale: opening > closing");
+    require(oTime > block.timestamp, "Crowdsale: opening early");
+    require(cTime > oTime, "Crowdsale: opening < closing");
 
     _openingTime = oTime;
     _closingTime = cTime;

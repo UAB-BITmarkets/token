@@ -2,110 +2,18 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { BITMarketsToken__factory } from "../typechain-types/factories/contracts/BITMarketsToken__factory";
+import { loadContract } from "./token/fixture";
+import { allocationsWallet } from "../utils/testAccounts";
 
 const initialSupply = 300000000;
-const finalSupply = 200000000;
 
 const companyWalletTokens = initialSupply / 3;
-const allocationsWalletTokens = initialSupply / 3;
-const crowdsalesWalletTokens = initialSupply / 3;
 
 const maxCompanyWalletTransfer = companyWalletTokens / 10;
-
-const companyRate = 1;
-const esgFundRate = 1;
-const burnRate = 1; // 1/1000 = 0.1%
 
 const someRandomWallet = ethers.Wallet.createRandom();
 
 describe("BITMarkets ERC20 token contract tests", () => {
-  const loadContract = async () => {
-    const [
-      companyLiquidityWallet,
-      addr1,
-      addr2,
-      allocationsWallet,
-      crowdsalesWallet,
-      companyRewardsWallet,
-      esgFundWallet,
-      minterWallet,
-      pauserWallet,
-      blacklisterWallet,
-      feelessAdminWallet,
-      companyRestrictionWhitelistWallet
-    ] = await ethers.getSigners();
-
-    // companyLiquidityWallet is the signer
-    const BITMarketsTokenFactory = (await ethers.getContractFactory(
-      "BITMarketsToken",
-      companyLiquidityWallet
-    )) as BITMarketsToken__factory;
-
-    const token = await BITMarketsTokenFactory.deploy({
-      initialSupply,
-      finalSupply,
-      allocationsWalletTokens,
-      crowdsalesWalletTokens,
-      maxCompanyWalletTransfer,
-      companyRate,
-      esgFundRate,
-      burnRate,
-      allocationsWallet: allocationsWallet.address,
-      crowdsalesWallet: crowdsalesWallet.address,
-      companyRewardsWallet: companyRewardsWallet.address,
-      esgFundWallet: esgFundWallet.address,
-      minterWallet: minterWallet.address,
-      pauserWallet: pauserWallet.address,
-      blacklisterWallet: blacklisterWallet.address,
-      feelessAdminWallet: feelessAdminWallet.address,
-      companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
-    });
-    await token.deployed();
-
-    return {
-      token,
-      companyLiquidityWallet,
-      addr1,
-      addr2,
-      allocationsWallet,
-      crowdsalesWallet,
-      companyRewardsWallet,
-      esgFundWallet,
-      minterWallet,
-      pauserWallet,
-      blacklisterWallet,
-      feelessAdminWallet,
-      companyRestrictionWhitelistWallet
-    };
-  };
-
-  describe("Deployment", () => {
-    it("Should assign one third of the total supply of tokens to the companyLiquidityWallet", async () => {
-      const { token, companyLiquidityWallet } = await loadFixture(loadContract);
-      const companyLiquidityBalance = await token.balanceOf(companyLiquidityWallet.address);
-      expect(await token.totalSupply()).to.equal(companyLiquidityBalance);
-    });
-
-    it("Should assign one third of the total supply of tokens to the allocations wallet.", async () => {
-      const { token, companyLiquidityWallet, allocationsWallet } = await loadFixture(loadContract);
-      const balance = await token.allowance(
-        companyLiquidityWallet.address,
-        allocationsWallet.address
-      );
-      expect(await token.totalSupply()).to.equal(balance.mul(3));
-    });
-
-    it("Should assign one third of the total supply of tokens to the crowdsales wallet.", async () => {
-      const { token, companyLiquidityWallet, crowdsalesWallet } = await loadFixture(loadContract);
-      const balance = await token.allowance(
-        companyLiquidityWallet.address,
-        crowdsalesWallet.address
-      );
-      expect(await token.totalSupply()).to.equal(balance.mul(3));
-    });
-  });
-
   describe("Transactions", () => {
     it("Should transfer tokens between accounts", async () => {
       const { token, companyLiquidityWallet, addr1, addr2 } = await loadFixture(loadContract);
@@ -203,6 +111,8 @@ describe("BITMarkets ERC20 token contract tests", () => {
         "BITMarketsToken",
         "Caller added to feeless"
       );
+
+      expect(await token.isFeeless(someRandomWallet.address)).to.be.equal(true);
 
       await expect(token.connect(addr1).addFeeless(addr2.address)).to.revertedWith(
         "Caller not in feeless admins"
@@ -364,6 +274,13 @@ describe("BITMarkets ERC20 token contract tests", () => {
 
       expect(tokenSupplyAfterFirst).to.lessThan(tokenSupplyAfterSecond);
     });
+
+    it("Reverts when minting called by a non-mint admin", async () => {
+      const { token, addr1 } = await loadFixture(loadContract);
+      await expect(token.connect(addr1).mint(addr1.address, 1)).to.revertedWith(
+        `AccessControl: account ${addr1.address.toLowerCase()} is missing role 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6`
+      );
+    });
   });
 
   describe("Strategic wallet transfer restrictions", () => {
@@ -371,9 +288,11 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const {
         token,
         companyLiquidityWallet,
+        allocationsWallet,
         feelessAdminWallet,
         companyRestrictionWhitelistWallet,
-        addr1
+        addr1,
+        addr2
       } = await loadFixture(loadContract);
 
       const startTime = Date.now();
@@ -409,6 +328,38 @@ describe("BITMarkets ERC20 token contract tests", () => {
           .connect(companyRestrictionWhitelistWallet)
           .removeUnrestrictedReceiver(companyLiquidityWallet.address)
       ).not.to.be.reverted;
+
+      await expect(
+        token
+          .connect(companyRestrictionWhitelistWallet)
+          .addUnrestrictedReceiver(
+            companyLiquidityWallet.address,
+            companyRestrictionWhitelistWallet.address,
+            1
+          )
+      ).to.revertedWith("Unrestrictor corruption guard");
+
+      await expect(
+        token
+          .connect(companyRestrictionWhitelistWallet)
+          .addUnrestrictedReceiver(addr1.address, addr2.address, 1)
+      ).to.revertedWith("Unrestricted wallet");
+
+      await token
+        .connect(companyRestrictionWhitelistWallet)
+        .addUnrestrictedReceiver(allocationsWallet.address, addr2.address, 1);
+
+      await expect(
+        token
+          .connect(companyRestrictionWhitelistWallet)
+          .addUnrestrictedReceiver(allocationsWallet.address, addr1.address, 1)
+      ).to.revertedWith("Cannot set unrestricted");
+
+      await expect(
+        token
+          .connect(companyRestrictionWhitelistWallet)
+          .removeUnrestrictedReceiver(allocationsWallet.address)
+      ).to.revertedWith("Cannot remove allowance");
     });
 
     it("Should not be possible to transfer more than 5m tokens for at least 1 month from the company wallet", async () => {
@@ -666,22 +617,32 @@ describe("BITMarkets ERC20 token contract tests", () => {
       expect(await token.balanceOf(addr2.address)).to.equal(100);
     });
 
-    // it("Disallows burning when paused and allows when unpaused", async () => {
-    //   const { token, companyLiquidityWallet, addr2 } = await loadFixture(loadContract);
-    //
-    //   await token.transfer(addr2.address, 10000);
-    //
-    //   await token.connect(addr2).pause();
-    //
-    //   await expect(token.burn(5000)).to.be.revertedWith("Pausable: paused");
-    //
-    //   await token.connect(addr2).unpause();
-    //
-    //   const companyLiquidityWalletTokenBalance = await token.balanceOf(companyLiquidityWallet.address);
-    //   await token.connect(addr2).burnFrom(companyLiquidityWallet.address, 50000);
-    //
-    //   expect(await token.balanceOf(companyLiquidityWallet.address)).to.lessThan(companyLiquidityWalletTokenBalance);
-    // });
+    it("Disallows burning when paused and allows when unpaused", async () => {
+      const { token, addr2, pauserWallet } = await loadFixture(loadContract);
+
+      await token.transfer(addr2.address, 10000);
+
+      await token.connect(pauserWallet).pause();
+
+      await expect(token.burn(5000)).to.be.revertedWith(
+        "ERC20Pausable: token transfer while paused"
+      );
+    });
+
+    it("Reverts when pause called by a non-pause admin", async () => {
+      const { token, addr1 } = await loadFixture(loadContract);
+      await expect(token.connect(addr1).pause()).to.revertedWith(
+        `AccessControl: account ${addr1.address.toLowerCase()} is missing role 0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a`
+      );
+    });
+
+    it("Reverts when unpaused called by a non-pause admin", async () => {
+      const { token, addr1, pauserWallet } = await loadFixture(loadContract);
+      await token.connect(pauserWallet).pause();
+      await expect(token.connect(addr1).pause()).to.revertedWith(
+        `AccessControl: account ${addr1.address.toLowerCase()} is missing role 0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a`
+      );
+    });
   });
 
   describe("Snapshots", () => {
@@ -708,6 +669,13 @@ describe("BITMarkets ERC20 token contract tests", () => {
     it("Reverts with a not-yet-created snapshot id", async () => {
       const { token } = await loadFixture(loadContract);
       await expect(token.totalSupplyAt(1)).to.be.revertedWith("ERC20Snapshot: nonexistent id");
+    });
+
+    it("Reverts when snapshot called by a non-snapshot admin", async () => {
+      const { token, addr1 } = await loadFixture(loadContract);
+      await expect(token.connect(addr1).snapshot()).to.revertedWith(
+        `AccessControl: account ${addr1.address.toLowerCase()} is missing role 0x5fdbd35e8da83ee755d5e62a539e5ed7f47126abede0b8b10f9ea43dc6eed07f`
+      );
     });
   });
 
@@ -740,6 +708,20 @@ describe("BITMarkets ERC20 token contract tests", () => {
       ).to.be.revertedWith("To is blacklisted");
     });
 
+    it("Should disallow transfers with blacklisted people as msg sender.", async () => {
+      const { token, addr1, addr2, blacklisterWallet } = await loadFixture(loadContract);
+
+      await token.transfer(addr1.address, 100);
+
+      await token.connect(addr1).approve(addr2.address, 50);
+
+      await token.connect(blacklisterWallet).addBlacklisted(addr2.address);
+
+      await expect(
+        token.connect(addr2).transferFrom(addr1.address, blacklisterWallet.address, 50)
+      ).to.be.revertedWith("Sender is blacklisted");
+    });
+
     it("Should disallow blacklisting from non-admin.", async () => {
       const { token, addr1, addr2 } = await loadFixture(loadContract);
 
@@ -748,6 +730,32 @@ describe("BITMarkets ERC20 token contract tests", () => {
       );
 
       expect(await token.connect(addr1).isBlacklistAdmin(addr1.address)).to.be.equal(false);
+    });
+
+    it("Should disallow unblacklisting from non-admin.", async () => {
+      const { token, addr1, addr2 } = await loadFixture(loadContract);
+
+      await expect(token.connect(addr1).removeBlacklisted(addr2.address)).to.be.revertedWith(
+        "Caller not blacklister"
+      );
+
+      expect(await token.connect(addr1).isBlacklistAdmin(addr1.address)).to.be.equal(false);
+    });
+
+    it("Should disallow blacklisting of zero address.", async () => {
+      const { token, blacklisterWallet } = await loadFixture(loadContract);
+
+      await expect(
+        token.connect(blacklisterWallet).addBlacklisted(ethers.constants.AddressZero)
+      ).to.be.revertedWith("Account is zero");
+    });
+
+    it("Should disallow unblacklisting of zero address.", async () => {
+      const { token, blacklisterWallet } = await loadFixture(loadContract);
+
+      await expect(
+        token.connect(blacklisterWallet).removeBlacklisted(ethers.constants.AddressZero)
+      ).to.be.revertedWith("Account is zero");
     });
 
     it("Should disallow repeated blacklisting.", async () => {

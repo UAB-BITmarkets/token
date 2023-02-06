@@ -1,6 +1,6 @@
 {
   "name": "bitmarkets",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "MIT",
   "description": "Crypto made simple",
   "engines": {
@@ -34,7 +34,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-promise": "^6.0.0",
-    "ethers": "^5.0.0",
+    "ethers": "^5.7.2",
     "hardhat": "^2.10.1",
     "hardhat-gas-reporter": "^1.0.4",
     "prettier": "^2.3.2",
@@ -56,6 +56,10 @@
     "deploy:dev": "cross-env NODE_ENV=development npx hardhat deploy --network localhost",
     "deploy:test": "cross-env NODE_ENV=testing npx hardhat deploy --network polygon_mumbai",
     "deploy:prod": "cross-env NODE_ENV=production npx hardhat deploy",
-    "start": "cross-env NODE_ENV=development npx hardhat node"
+    "start": "cross-env NODE_ENV=development npx hardhat node",
+    "generateAddresses": "node scripts/generateWallets.mjs"
+  },
+  "dependencies": {
+    "@deliberative/crypto": "^0.8.3"
   }
 }

@@ -26,9 +26,9 @@ abstract contract InvestorTariffCapCrowdsale is Crowdsale {
    */
   constructor(uint256 t, uint256 c) {
     require(t > 0, "Crowdsale: tariff 0");
-    _tariff = t;
-
     require(c > t, "Crowdsale: cap < tariff");
+
+    _tariff = t;
     _cap = c;
   }
 

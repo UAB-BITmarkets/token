@@ -122,7 +122,7 @@ abstract contract VestingCrowdsale is Crowdsale {
 
       BITMarketsToken tk = BITMarketsToken(address(token()));
 
-      tk.addFeeless(address(vwallet));
+      tk.addFeeless(vestingWalletAddress);
     }
 
     // No fees here since _tokenWallet is feeless

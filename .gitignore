@@ -1,6 +1,9 @@
 # Env
+.env
 .env_prod
 .env_test
+
+*shamir*
 
 # Node JS
 node_modules

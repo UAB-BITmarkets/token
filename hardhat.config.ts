@@ -23,10 +23,11 @@ import {
   esgFundWallet,
   minterWallet,
   pauserWallet,
+  whitelisterWallet,
   blacklisterWallet,
   feelessAdminWallet,
+  allocationsAdminWallet,
   companyRestrictionWhitelistWallet,
-  whitelisterWallet,
   crowdsalesClientPurchaserWallet,
   randomAccountWithLiquidity1,
   randomAccountWithLiquidity2
@@ -106,6 +107,10 @@ const config: HardhatUserConfig = {
             balance: `${10000 * 10 ** 18}`
           },
           {
+            privateKey: whitelisterWallet.privateKey,
+            balance: `${10000 * 10 ** 18}`
+          },
+          {
             privateKey: blacklisterWallet.privateKey,
             balance: `${10000 * 10 ** 18}`
           },
@@ -118,7 +123,7 @@ const config: HardhatUserConfig = {
             balance: `${10000 * 10 ** 18}`
           },
           {
-            privateKey: whitelisterWallet.privateKey,
+            privateKey: allocationsAdminWallet.privateKey,
             balance: `${10000 * 10 ** 18}`
           },
           {
@@ -138,8 +143,19 @@ const config: HardhatUserConfig = {
       polygon_mumbai: {
         url: process.env.ALCHEMY_POLYGON_MUMBAI_URL || "",
         accounts: [
-          process.env.DEV_ACCOUNT_PRIVATE_KEY_1 || "",
-          process.env.DEV_ACCOUNT_PRIVATE_KEY_2 || ""
+          process.env.COMPANY_LIQUIDITY_WALLET_PRIVATE_KEY || "", // needed
+          process.env.ALLOCATIONS_WALLET_PRIVATE_KEY || "", // needed
+          process.env.CROWDSALES_WALLET_PRIVATE_KEY || "", // needed
+          process.env.COMPANY_REWARDS_WALLET_PRIVATE_KEY || "",
+          process.env.ESG_FUND_WALLET_PRIVATE_KEY || "",
+          process.env.MINTER_WALLET_PRIVATE_KEY || "",
+          process.env.PAUSER_WALLET_PRIVATE_KEY || "",
+          process.env.WHITELISTER_WALLET_PRIVATE_KEY || "",
+          process.env.BLACKLISTER_WALLET_PRIVATE_KEY || "",
+          process.env.FEELESS_ADMIN_WALLET_PRIVATE_KEY || "", // needed
+          process.env.COMPANY_RESTRICTION_WHITELIST_WALLET_PRIVATE_KEY || "", // needed
+          process.env.ALLOCATIONS_ADMIN_WALLET_PRIVATE_KEY || "", // needed
+          process.env.CROWDSALES_CLIENT_PURCHASER_WALLET_PRIVATE_KEY || ""
         ]
       }
     }),
@@ -147,7 +163,7 @@ const config: HardhatUserConfig = {
       polygon_mumbai: {
         url: process.env.ALCHEMY_POLYGON_URL_PROD || "",
         accounts: [
-          process.env.COMPANY_WALLET_PRIVATE_KEY || "",
+          process.env.COMPANY_LIQUIDITY_WALLET_PRIVATE_KEY || "",
           process.env.WHITELISTER_WALLET_PRIVATE_KEY || "",
           process.env.BLACKLISTER_WALLET_PRIVATE_KEY || ""
         ]
@@ -161,7 +177,7 @@ const config: HardhatUserConfig = {
   mocha: {
     timeout: 60000
   },
-  ...(process.env.LEVEL === "test" && {
+  ...(process.env.LEVEL === "testing" && {
     etherscan: {
       apiKey: process.env.ETHERSCAN_API_KEY
     }
