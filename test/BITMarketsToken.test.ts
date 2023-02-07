@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { loadContract } from "./token/fixture";
-import { allocationsWallet } from "../utils/testAccounts";
+// import { allocationsWallet } from "../utils/testAccounts";
 
 const initialSupply = 300000000;
 

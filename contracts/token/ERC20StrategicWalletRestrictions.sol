@@ -6,6 +6,12 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "hardhat/console.sol";
 
+struct StrategicWallet {
+  address approvedReceiver;
+  uint256 amountTransferred;
+  uint256 amountTransferredLimit;
+}
+
 /**
  * @dev ERC20 token with company wallet anti-corruption restrictions.
  *
@@ -29,9 +35,7 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
    * This transfer can only happen once and then the approved receiver is removed.
    */
   mapping(address => bool) private _isStrategicWallet;
-  mapping(address => address) private _strategicWalletApprovedReceiver;
-  mapping(address => uint256) private _strategicWalletApprovedReceiverAmountTransferred;
-  mapping(address => uint256) private _strategicWalletApprovedReceiverAmountTransferredLimit;
+  mapping(address => StrategicWallet) private _strategicWallet;
 
   /**
    * @dev This is specific to the company liquidity wallet for universal transfers.
@@ -64,51 +68,45 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
   ) {
     // If minting or burning or non-strategic sender we do not care
     if (to != address(0) && _isStrategicWallet[from]) {
-      // This is an approval and not a transfer
-      if (from != _msgSender()) {
-        // "from" is not the company liquidity wallet so either "to" or msgSender needs to be approved
-        if (from != _companyLiquidityWallet) {
-          require(
-            (_strategicWalletApprovedReceiver[from] == to) ||
-              (_strategicWalletApprovedReceiver[from] == _msgSender()),
-            "Receiver not approved"
-          );
+      bool isTransfer = from == _msgSender();
+      bool fromIsCompanyLiquidityWallet = from == _companyLiquidityWallet;
+      StrategicWallet memory strategicWallet = _strategicWallet[from];
 
-          // "to" needs to be able to receive some non-zero amount from "from"
-          require(
-            _strategicWalletApprovedReceiverAmountTransferred[from] <
-              _strategicWalletApprovedReceiverAmountTransferredLimit[from],
-            "Sender surpassed approved limit"
-          );
-        } else {
-          // Require unlocked company liquidity
-          require(
-            block.timestamp >
-              _companyLiquidityTransfersLockStartTime.add(_companyLiquidityTransfersLockPeriod),
-            "Last max transfer too close"
-          );
-        }
-      } else {
-        // this is a transfer since from == _msgSender()
-        if (_strategicWalletApprovedReceiver[_msgSender()] != to) {
-          // If crowdsales or allocations wallets then this was a transfer to some wallet
-          // that is not the approved smart contract.
-          // Only company liquidity is allowed to send to unapproved addresses.
-          require(_msgSender() == _companyLiquidityWallet, "Illegal transfer");
+      if (isTransfer && fromIsCompanyLiquidityWallet && strategicWallet.approvedReceiver != to) {
+        // Only company liquidity is allowed to send to unapproved addresses.
+        require(_msgSender() == _companyLiquidityWallet, "Illegal transfer");
 
-          // Require unlocked company liquidity
-          require(
-            block.timestamp >
-              _companyLiquidityTransfersLockStartTime.add(_companyLiquidityTransfersLockPeriod),
-            "Last max transfer too close"
-          );
-        } else {
-          require(
-            _strategicWalletApprovedReceiverAmountTransferred[_msgSender()] <
-              _strategicWalletApprovedReceiverAmountTransferredLimit[_msgSender()],
-            "Surpassed approved limit"
-          );
-        }
+        // Require unlocked company liquidity
+        require(
+          block.timestamp >
+            _companyLiquidityTransfersLockStartTime.add(_companyLiquidityTransfersLockPeriod),
+          "Last max transfer too close"
+        );
+      } else if (isTransfer && strategicWallet.approvedReceiver == to) {
+        // Require the approved amount to be less than the total transfered
+        require(
+          strategicWallet.amountTransferred < strategicWallet.amountTransferredLimit,
+          "Surpassed approved limit"
+        );
+      } else if (!isTransfer && fromIsCompanyLiquidityWallet) {
+        // Require unlocked company liquidity
+        require(
+          block.timestamp >
+            _companyLiquidityTransfersLockStartTime.add(_companyLiquidityTransfersLockPeriod),
+          "Last max transfer too close"
+        );
+      } else if (!isTransfer && !fromIsCompanyLiquidityWallet) {
+        require(
+          (strategicWallet.approvedReceiver == to) ||
+            (strategicWallet.approvedReceiver == _msgSender()),
+          "Receiver not approved"
+        );
+
+        // "to" needs to be able to receive some non-zero amount from "from"
+        require(
+          strategicWallet.amountTransferred < strategicWallet.amountTransferredLimit,
+          "Sender surpassed approved limit"
+        );
       }
     }
     _;
@@ -154,14 +152,16 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
   ) public virtual onlyRestrictionsAdmin {
     require(receiver != _restrictionAdminWallet, "Unrestrictor corruption guard");
     require(_isStrategicWallet[wallet], "Unrestricted wallet");
+
+    StrategicWallet storage strategicWallet = _strategicWallet[wallet];
     require(
-      (wallet == _companyLiquidityWallet) ||
-        (_strategicWalletApprovedReceiver[wallet] == address(0)),
+      (wallet == _companyLiquidityWallet) || (strategicWallet.approvedReceiver == address(0)),
       "Cannot set unrestricted"
     );
 
-    _strategicWalletApprovedReceiver[wallet] = receiver;
-    _strategicWalletApprovedReceiverAmountTransferredLimit[wallet] = amountLimit;
+    strategicWallet.approvedReceiver = receiver;
+    strategicWallet.amountTransferred = 0;
+    strategicWallet.amountTransferredLimit = amountLimit;
 
     emit UnrestrictedReceiverAdded(wallet, receiver, amountLimit);
   }
@@ -169,8 +169,11 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
   function removeUnrestrictedReceiver(address wallet) public virtual onlyRestrictionsAdmin {
     require(wallet == _companyLiquidityWallet, "Cannot remove allowance");
 
-    _strategicWalletApprovedReceiver[wallet] = address(0);
-    _strategicWalletApprovedReceiverAmountTransferredLimit[wallet] = 0;
+    StrategicWallet storage strategicWallet = _strategicWallet[wallet];
+
+    strategicWallet.approvedReceiver = address(0);
+    strategicWallet.amountTransferred = 0;
+    strategicWallet.amountTransferredLimit = 0;
 
     emit UnrestrictedReceiverRemoved(wallet);
   }
@@ -180,11 +183,11 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
   }
 
   function getApprovedReceiver(address wallet) public view returns (address) {
-    return _strategicWalletApprovedReceiver[wallet];
+    return _strategicWallet[wallet].approvedReceiver;
   }
 
   function getApprovedReceiverLimit(address wallet) public view returns (uint256) {
-    return _strategicWalletApprovedReceiverAmountTransferredLimit[wallet];
+    return _strategicWallet[wallet].amountTransferredLimit;
   }
 
   function companyLiquidityTransfersLimit() public view returns (uint256) {
@@ -216,80 +219,50 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
     super._beforeTokenTransfer(from, to, amount);
 
     if (to != address(0) && _isStrategicWallet[from]) {
-      if (from != _msgSender()) {
-        // approval
-        if (
-          from != _companyLiquidityWallet ||
-          (from == _companyLiquidityWallet && _strategicWalletApprovedReceiver[from] == to)
-        ) {
-          // either "to" or _msgSender approved
-          uint256 diff = _strategicWalletApprovedReceiverAmountTransferredLimit[from].sub(
-            _strategicWalletApprovedReceiverAmountTransferred[from]
-          );
+      bool isTransfer = from == _msgSender();
+      bool fromIsCompanyLiquidityWallet = from == _companyLiquidityWallet;
+      StrategicWallet storage strategicWallet = _strategicWallet[from];
 
-          if (amount < diff) {
-            _strategicWalletApprovedReceiverAmountTransferred[from] += amount;
-          } else {
-            amount = diff;
-            _strategicWalletApprovedReceiverAmountTransferred[from] += amount;
+      bool caseOne = !isTransfer &&
+        (!fromIsCompanyLiquidityWallet || strategicWallet.approvedReceiver == to);
+      bool caseTwo = isTransfer && strategicWallet.approvedReceiver == to;
 
-            emit StrategicWalletCapReached(from);
-          }
+      if (caseOne || caseTwo) {
+        uint256 diff = strategicWallet.amountTransferredLimit.sub(
+          strategicWallet.amountTransferred
+        );
+
+        if (amount < diff) {
+          strategicWallet.amountTransferred += amount;
         } else {
-          // can approve to anybody within limits
-          uint256 diff = _companyLiquidityTransfersLimit.sub(_companyLiquidityTransfers);
-          if (amount < diff) {
-            // Just add the amount to the transfers
-            _companyLiquidityTransfers += amount;
-          } else {
-            // Reduce amount to what is allowed
-            amount = diff;
+          amount = diff;
+          strategicWallet.amountTransferred += amount;
 
-            emit StrategicWalletCapReached(from);
-
-            _companyLiquidityTransfersLockStartTime = block.timestamp;
-            _companyLiquidityTransfers = 0;
-          }
+          emit StrategicWalletCapReached(from);
         }
-      } else {
-        // transfer (from == _msgSender())
-        if (_strategicWalletApprovedReceiver[_msgSender()] != to) {
-          // only company liquidity
-          uint256 diff = _companyLiquidityTransfersLimit.sub(_companyLiquidityTransfers);
-          if (amount < diff) {
-            // Just add the amount to the transfers
-            _companyLiquidityTransfers += amount;
-          } else {
-            // Reduce amount to what is allowed
-            amount = diff;
 
-            emit StrategicWalletCapReached(from);
-
-            _companyLiquidityTransfersLockStartTime = block.timestamp;
-            _companyLiquidityTransfers = 0;
-          }
-        } else {
-          uint256 diff = _strategicWalletApprovedReceiverAmountTransferredLimit[from].sub(
-            _strategicWalletApprovedReceiverAmountTransferred[from]
-          );
-
-          if (amount < diff) {
-            _strategicWalletApprovedReceiverAmountTransferred[from] += amount;
-          } else {
-            amount = diff;
-            _strategicWalletApprovedReceiverAmountTransferred[from] += amount;
-
-            emit StrategicWalletCapReached(from);
-          }
-
-          if (_msgSender() == _companyLiquidityWallet) {
+        if (caseTwo) {
+          if (fromIsCompanyLiquidityWallet) {
             // approval only for one transfer
-            _strategicWalletApprovedReceiver[_msgSender()] = address(0);
-            _strategicWalletApprovedReceiverAmountTransferred[_msgSender()] = 0;
-            _strategicWalletApprovedReceiverAmountTransferredLimit[_msgSender()] = 0;
+            strategicWallet.approvedReceiver = address(0);
+            strategicWallet.amountTransferred = 0;
+            strategicWallet.amountTransferredLimit = 0;
 
             emit UnrestrictedTransferOccured(from, to, amount);
           }
+        }
+      } else if (!caseTwo) {
+        // !isTransfer || strategicWallet.approvedReceiver != to;
+        uint256 diff = _companyLiquidityTransfersLimit.sub(_companyLiquidityTransfers);
+        if (amount < diff) {
+          _companyLiquidityTransfers += amount;
+        } else {
+          amount = diff;
+
+          emit StrategicWalletCapReached(from);
+
+          _companyLiquidityTransfersLockStartTime = block.timestamp;
+          _companyLiquidityTransfers = 0;
         }
       }
     }

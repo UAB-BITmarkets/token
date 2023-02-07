@@ -122,6 +122,8 @@ task("deploy", "Deploy contracts").setAction(
     );
     await allocations.deployed();
 
+    console.log(`ALLOCATIONS_CONTRACT_ADDRESS=${allocations.address}`);
+
     await btmt.connect(feelessAdminWallet).addFeeless(allocations.address);
     await btmt.connect(feelessAdminWallet).addFeeless(allocationsWallet.address);
     await btmt
