@@ -23,12 +23,14 @@ abstract contract VestingCrowdsale is Crowdsale {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
+  BITMarketsToken private _btmt;
+
   address private _tokenWallet;
 
-  uint64 private _cliffAfterPurchaseSeconds;
-  uint64 private _vestingDurationSeconds;
+  uint64 private _cliffSeconds;
+  uint64 private _vestingDurationAfterCliffSeconds;
 
-  mapping(address => address) public vestingWallets;
+  mapping(address => address) private _vestingWallets;
 
   /**
    * @dev Constructor, takes token wallet address.
@@ -42,17 +44,19 @@ abstract contract VestingCrowdsale is Crowdsale {
     require(wallet != address(0), "Crowdsale: wallet 0 address");
 
     _tokenWallet = wallet;
-    _cliffAfterPurchaseSeconds = cliff;
-    _vestingDurationSeconds = vestingDuration;
+    _btmt = BITMarketsToken(address(token()));
+
+    _cliffSeconds = cliff;
+    _vestingDurationAfterCliffSeconds = vestingDuration;
   }
 
   /**
    * @dev Function to withdraw already vested tokens.
    */
   function withdrawTokens(address beneficiary) public {
-    address vestingWalletAddress = vestingWallets[beneficiary];
+    address vestingWalletAddress = _vestingWallets[beneficiary];
     require(vestingWalletAddress != address(0), "No vesting wallet");
-    require(_msgSender() == beneficiary || _msgSender() == _tokenWallet, "Invalid msg sender");
+    // require(_msgSender() == beneficiary || _msgSender() == _tokenWallet, "Invalid msg sender");
 
     IVestingWallet vwallet = IVestingWallet(vestingWalletAddress);
 
@@ -81,7 +85,7 @@ abstract contract VestingCrowdsale is Crowdsale {
    * @return the address of the vesting wallet.
    */
   function vestingWallet(address beneficiary) public view returns (address) {
-    address vestingWalletAddress = vestingWallets[beneficiary];
+    address vestingWalletAddress = _vestingWallets[beneficiary];
     require(vestingWalletAddress != address(0), "No vesting wallet");
 
     return vestingWalletAddress;
@@ -92,11 +96,12 @@ abstract contract VestingCrowdsale is Crowdsale {
    * @return Amount of retrievable tokens from vesting wallet.
    */
   function vestedAmount(address beneficiary) public view returns (uint256) {
-    address vestingWalletAddress = vestingWallets[beneficiary];
+    address vestingWalletAddress = _vestingWallets[beneficiary];
     require(vestingWalletAddress != address(0), "No vesting wallet");
 
     IVestingWallet vwallet = IVestingWallet(vestingWalletAddress);
 
+    // solhint-disable-next-line not-rely-on-time
     return vwallet.vestedAmount(address(token()), uint64(block.timestamp));
   }
 
@@ -108,21 +113,19 @@ abstract contract VestingCrowdsale is Crowdsale {
   function _deliverTokens(address beneficiary, uint256 tokenAmount) internal virtual override {
     require(remainingTokens() >= tokenAmount, "Allowance too low");
 
-    address vestingWalletAddress = vestingWallets[beneficiary];
+    address vestingWalletAddress = _vestingWallets[beneficiary];
 
-    bool exists = vestingWalletAddress != address(0);
-
-    if (!exists) {
-      uint64 cliff = uint64(block.timestamp + _cliffAfterPurchaseSeconds);
-      uint64 vesting = _vestingDurationSeconds;
-
-      VestingWallet vwallet = new VestingWallet(beneficiary, cliff, vesting);
+    if (vestingWalletAddress == address(0)) {
+      VestingWallet vwallet = new VestingWallet(
+        beneficiary,
+        // solhint-disable-next-line not-rely-on-time
+        uint64(block.timestamp + _cliffSeconds),
+        _vestingDurationAfterCliffSeconds
+      );
+      _vestingWallets[beneficiary] = address(vwallet);
       vestingWalletAddress = address(vwallet);
-      vestingWallets[beneficiary] = vestingWalletAddress;
 
-      BITMarketsToken tk = BITMarketsToken(address(token()));
-
-      tk.addFeeless(vestingWalletAddress);
+      _btmt.addFeeless(vestingWalletAddress);
     }
 
     // No fees here since _tokenWallet is feeless

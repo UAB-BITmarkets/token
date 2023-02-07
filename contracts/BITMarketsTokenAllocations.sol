@@ -8,10 +8,11 @@ import "@openzeppelin/contracts/finance/VestingWallet.sol";
 
 import "./BITMarketsToken.sol";
 
+import "./utils/IBITMarketsTokenAllocations.sol";
 import "./utils/IVestingWallet.sol";
 
 /// @custom:security-contact security@bitmarkets.com
-contract BITMarketsTokenAllocations {
+contract BITMarketsTokenAllocations is IBITMarketsTokenAllocations {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
@@ -59,7 +60,7 @@ contract BITMarketsTokenAllocations {
   /**
    * @dev Expects amount converted to 10 ** 18
    */
-  function allocate(address beneficiary, uint256 amount) public {
+  function allocate(address beneficiary, uint256 amount) public virtual override {
     require(msg.sender == _allocationsAdmin, "Invalid message sender");
     require(vestingWallets[beneficiary] == address(0), "Vesting wallet exists");
     require(
@@ -70,6 +71,7 @@ contract BITMarketsTokenAllocations {
 
     VestingWallet vwallet = new VestingWallet(
       beneficiary,
+      // solhint-disable-next-line not-rely-on-time
       uint64(block.timestamp + _cliffSeconds),
       _vestingDurationAfterCliffSeconds
     );
@@ -83,10 +85,10 @@ contract BITMarketsTokenAllocations {
   /**
    * @dev Function to withdraw already vested tokens.
    */
-  function withdraw(address beneficiary) public {
+  function withdraw(address beneficiary) public virtual override {
     address vestingWalletAddress = vestingWallets[beneficiary];
     require(vestingWalletAddress != address(0), "No vesting wallet");
-    require(msg.sender == beneficiary || msg.sender == _tokenWallet, "Invalid msg sender");
+    // require(msg.sender == beneficiary || msg.sender == _tokenWallet, "Invalid msg sender");
 
     IVestingWallet vwallet = IVestingWallet(vestingWalletAddress);
 
@@ -96,28 +98,28 @@ contract BITMarketsTokenAllocations {
   /**
    * @return the token being allocated
    */
-  function token() public view returns (IERC20) {
+  function token() public view override returns (IERC20) {
     return _token;
   }
 
   /**
    * @return the address holding the tokens initially
    */
-  function wallet() public view returns (address payable) {
+  function wallet() public view override returns (address payable) {
     return _tokenWallet;
   }
 
   /**
    * @return the allocations admin wallet
    */
-  function admin() public view returns (address) {
+  function admin() public view override returns (address) {
     return _allocationsAdmin;
   }
 
   /**
    * @return the address of the vesting wallet.
    */
-  function vestingWallet(address beneficiary) public view returns (address) {
+  function vestingWallet(address beneficiary) public view override returns (address) {
     address vestingWalletAddress = vestingWallets[beneficiary];
     require(vestingWalletAddress != address(0), "No vesting wallet");
 
@@ -128,12 +130,13 @@ contract BITMarketsTokenAllocations {
    * @dev Checks the amount of tokens that can be released.
    * @return Amount of retrievable tokens from vesting wallet.
    */
-  function vestedAmount(address beneficiary) public view returns (uint256) {
+  function vestedAmount(address beneficiary) public view override returns (uint256) {
     address vestingWalletAddress = vestingWallets[beneficiary];
     require(vestingWalletAddress != address(0), "No vesting wallet");
 
     IVestingWallet vwallet = IVestingWallet(vestingWalletAddress);
 
+    // solhint-disable-next-line not-rely-on-time
     return vwallet.vestedAmount(address(_token), uint64(block.timestamp));
   }
 }

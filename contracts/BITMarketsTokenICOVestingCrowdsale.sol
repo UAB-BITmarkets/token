@@ -51,10 +51,6 @@ contract BITMarketsTokenICOVestingCrowdsale is
 {
   using SafeMath for uint256;
 
-  // Track investor contributions
-  // uint256 public investorTariff = 0.002 * 10 ** 18; // 0.002 ether
-  // uint256 public investorCap = 50 * 10 ** 18; // 50 ether
-
   /**
    * @dev Constructor
    */

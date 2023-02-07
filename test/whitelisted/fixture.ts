@@ -6,8 +6,8 @@ import type { BITMarketsTokenWhitelistedVestingCrowdsale__factory } from "../../
 export const investorTariff = ethers.utils.parseEther("1.0");
 export const investorCap = ethers.utils.parseEther("50.0");
 
-export const cliff = 1; // seconds locked
-export const vestingDuration = 2; // seconds after cliff for full vesting
+export const cliff = 10; // seconds locked
+export const vestingDuration = 20; // seconds after cliff for full vesting
 
 export const rate = 10;
 export const maxWhitelisted = 100000;

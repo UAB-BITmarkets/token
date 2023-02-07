@@ -13,6 +13,8 @@ import "./token/ERC20MintRestrictions.sol";
 import "./token/ERC20Blacklistable.sol";
 import "./token/ERC20Fees.sol";
 
+import "./utils/IBITMarketsToken.sol";
+
 /**
  * @dev Constructor
  * @param initialSupply The total number of tokens to mint without the decimals
@@ -51,6 +53,7 @@ struct BTMTArgs {
 
 /// @custom:security-contact security@bitmarkets.com
 contract BITMarketsToken is
+  IBITMarketsToken,
   ERC20,
   ERC20Snapshot,
   ERC20Pausable,
@@ -112,21 +115,21 @@ contract BITMarketsToken is
   /**
    * @dev Takes snapshot of state and can return to it
    */
-  function snapshot() public onlyRole(SNAPSHOT_ROLE) {
+  function snapshot() public virtual override onlyRole(SNAPSHOT_ROLE) {
     _snapshot();
   }
 
   /**
    * @dev Freezes transfers, burning, minting
    */
-  function pause() public onlyRole(PAUSER_ROLE) {
+  function pause() public virtual override onlyRole(PAUSER_ROLE) {
     _pause();
   }
 
   /**
    * @dev Unfreezes transfers, burning, minting
    */
-  function unpause() public onlyRole(PAUSER_ROLE) {
+  function unpause() public virtual override onlyRole(PAUSER_ROLE) {
     _unpause();
   }
 
@@ -134,7 +137,7 @@ contract BITMarketsToken is
    * @dev Mints amount to address only if more than 6 months since and
    * only if totalSupply + 10% > amount
    */
-  function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
+  function mint(address to, uint256 amount) public virtual override onlyRole(MINTER_ROLE) {
     super._mint(to, amount);
   }
 

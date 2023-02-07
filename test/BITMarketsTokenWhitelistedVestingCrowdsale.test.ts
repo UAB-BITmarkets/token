@@ -2,15 +2,15 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { loadContracts, openingTime } from "./whitelisted/fixture";
-
-const investorTariff = ethers.utils.parseEther("1.0");
-const investorCap = ethers.utils.parseEther("50.0");
-
-const cliff = 1; // seconds locked
-const vestingDuration = 2; // seconds after cliff for full vesting
-
-const rate = 10;
+import {
+  loadContracts,
+  openingTime,
+  investorTariff,
+  investorCap,
+  cliff,
+  vestingDuration,
+  rate
+} from "./whitelisted/fixture";
 
 describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", () => {
   describe("Participation", () => {
@@ -99,8 +99,12 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
         .connect(addr2)
         .vestedAmount(addr2.address);
 
-      const newTimestampInSeconds = openingTime + cliff + 1;
-      await ethers.provider.send("evm_mine", [newTimestampInSeconds]);
+      expect(addr2VestedAmountBeforeCliff).to.be.equal(ethers.utils.parseEther("0"));
+
+      const addr2VestingWallet = await crowdsale.connect(addr2).vestingWallet(addr2.address);
+      const addr2VestingTokens = await token.balanceOf(addr2VestingWallet);
+
+      await ethers.provider.send("evm_mine", [openingTime + cliff + vestingDuration / 2]);
 
       const companyLiquidityWalletCurrentEthBalance = await crowdsalesWallet.getBalance();
       const companyLiquidityWalletCurrentTokenBalance = await token.balanceOf(
@@ -112,6 +116,15 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       const addr2TokenBalanceAfterCliffBeforeCompleteVestingNoWithdraw = await token.balanceOf(
         addr2.address
       );
+
+      expect(addr2TokenBalanceAfterCliffBeforeCompleteVestingNoWithdraw).to.be.equal(
+        ethers.utils.parseEther("0")
+      );
+
+      expect(await crowdsale.connect(addr2).vestedAmount(addr2.address)).to.be.equal(
+        ethers.utils.parseEther("4.5")
+      );
+
       await crowdsale.connect(addr2).withdrawTokens(addr2.address);
       const addr2TokenBalanceAfterCliffBeforeCompleteVesting = await token.balanceOf(addr2.address);
 

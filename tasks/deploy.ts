@@ -4,21 +4,22 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 // import type { Wallet } from "ethers";
 
-const icoInitialRate = 10;
-const icoFinalRate = 3;
+// const icoInitialRate = 10;
+// const icoFinalRate = 3;
+
 const whitelistedCrowdsaleOpeningTime =
   process.env.NODE_ENV === "production"
     ? Math.trunc(new Date(`2023-02-15T09:00:00`).valueOf() / 1000)
-    : Math.trunc((Date.now() + 60 * 1000) / 1000);
+    : Math.trunc((Date.now() + 2 * 60 * 1000) / 1000);
 const whitelistedCrowdsaleClosingTime = Math.trunc(
   new Date("2023-06-26T17:00:00").valueOf() / 1000
 );
 
-const icoCrowdsaleOpeningTime =
-  process.env.NODE_ENV === "production"
-    ? Math.trunc(new Date(`2023-09-01T09:00:00`).valueOf() / 1000)
-    : Math.trunc((Date.now() + 60 * 1000) / 1000);
-const icoCrowdsaleClosingTime = Math.trunc(new Date("2023-12-23T17:00:00").valueOf() / 1000);
+// const icoCrowdsaleOpeningTime =
+//   process.env.NODE_ENV === "production"
+//     ? Math.trunc(new Date(`2023-09-01T09:00:00`).valueOf() / 1000)
+//     : Math.trunc((Date.now() + 10 * 60 * 1000) / 1000);
+// const icoCrowdsaleClosingTime = Math.trunc(new Date("2023-12-23T17:00:00").valueOf() / 1000);
 
 const initialSupply = 300000000;
 const finalSupply = 200000000;
@@ -122,8 +123,6 @@ task("deploy", "Deploy contracts").setAction(
     );
     await allocations.deployed();
 
-    console.log(`ALLOCATIONS_CONTRACT_ADDRESS=${allocations.address}`);
-
     await btmt.connect(feelessAdminWallet).addFeeless(allocations.address);
     await btmt.connect(feelessAdminWallet).addFeeless(allocationsWallet.address);
     await btmt
@@ -136,6 +135,7 @@ task("deploy", "Deploy contracts").setAction(
     await btmt
       .connect(companyLiquidityWallet)
       .transfer(allocationsWallet.address, ethers.utils.parseEther(`${allocationsWalletTokens}`));
+
     await btmt
       .connect(companyRestrictionWhitelistWallet)
       .addUnrestrictedReceiver(
@@ -145,6 +145,8 @@ task("deploy", "Deploy contracts").setAction(
       );
     await btmt.connect(feelessAdminWallet).addFeelessAdmin(allocations.address);
     await btmt.connect(allocationsWallet).approve(allocations.address, allocationsCap);
+
+    console.log(`ALLOCATIONS_CONTRACT_ADDRESS=${allocations.address}`);
 
     // let i = 0;
     //
@@ -176,19 +178,7 @@ task("deploy", "Deploy contracts").setAction(
 
     const totalCrowdsalesSupply = btmtTotalSupply.div(3);
     const whitelistedCrowdsaleCap = totalCrowdsalesSupply.mul(4).div(10);
-    const icoCrowdsaleCap = totalCrowdsalesSupply.mul(6).div(10);
-
-    await btmt.connect(feelessAdminWallet).addFeeless(crowdsalesWallet.address);
-    await btmt
-      .connect(companyRestrictionWhitelistWallet)
-      .addUnrestrictedReceiver(
-        companyLiquidityWallet.address,
-        crowdsalesWallet.address,
-        ethers.utils.parseEther(`${crowdsalesWalletTokens}`)
-      );
-    await btmt
-      .connect(companyLiquidityWallet)
-      .transfer(crowdsalesWallet.address, ethers.utils.parseEther(`${crowdsalesWalletTokens}`));
+    // const icoCrowdsaleCap = totalCrowdsalesSupply.mul(6).div(10);
 
     const WHITELISTED = await hre.ethers.getContractFactory(
       "BITMarketsTokenWhitelistedVestingCrowdsale"
@@ -208,9 +198,21 @@ task("deploy", "Deploy contracts").setAction(
       cliff,
       vestingDuration
     });
-
     await whitelisted.deployed();
+
     await btmt.connect(feelessAdminWallet).addFeeless(whitelisted.address);
+    await btmt.connect(feelessAdminWallet).addFeeless(crowdsalesWallet.address);
+    await btmt
+      .connect(companyRestrictionWhitelistWallet)
+      .addUnrestrictedReceiver(
+        companyLiquidityWallet.address,
+        crowdsalesWallet.address,
+        ethers.utils.parseEther(`${crowdsalesWalletTokens}`)
+      );
+    await btmt
+      .connect(companyLiquidityWallet)
+      .transfer(crowdsalesWallet.address, ethers.utils.parseEther(`${crowdsalesWalletTokens}`));
+
     await btmt
       .connect(companyRestrictionWhitelistWallet)
       .addUnrestrictedReceiver(
@@ -223,34 +225,34 @@ task("deploy", "Deploy contracts").setAction(
 
     console.log(`WHITELISTED_CONTRACT_ADDRESS=${whitelisted.address}`);
 
-    const ICO = await hre.ethers.getContractFactory("BITMarketsTokenICOVestingCrowdsale");
-    const ico = await ICO.deploy({
-      initialRate: icoInitialRate,
-      finalRate: icoFinalRate,
-      wallet: crowdsalesWallet.address,
-      purchaser: crowdsalesClientPurchaserWallet.address,
-      token: btmt.address,
-      cap: icoCrowdsaleCap,
-      openingTime: icoCrowdsaleOpeningTime,
-      closingTime: icoCrowdsaleClosingTime,
-      investorTariff,
-      investorCap,
-      cliff,
-      vestingDuration
-    });
-
-    await ico.deployed();
-    await btmt.connect(feelessAdminWallet).addFeeless(ico.address);
-    await btmt
-      .connect(companyRestrictionWhitelistWallet)
-      .addUnrestrictedReceiver(
-        crowdsalesWallet.address,
-        ico.address,
-        ethers.utils.parseEther(`${icoCrowdsaleCap}`)
-      );
-    await btmt.connect(feelessAdminWallet).addFeelessAdmin(ico.address);
-    await btmt.connect(crowdsalesWallet).approve(ico.address, icoCrowdsaleCap);
-
-    console.log(`ICO_CONTRACT_ADDRESS=${ico.address}`);
+    // const ICO = await hre.ethers.getContractFactory("BITMarketsTokenICOVestingCrowdsale");
+    // const ico = await ICO.deploy({
+    //   initialRate: icoInitialRate,
+    //   finalRate: icoFinalRate,
+    //   wallet: crowdsalesWallet.address,
+    //   purchaser: crowdsalesClientPurchaserWallet.address,
+    //   token: btmt.address,
+    //   cap: icoCrowdsaleCap,
+    //   openingTime: icoCrowdsaleOpeningTime,
+    //   closingTime: icoCrowdsaleClosingTime,
+    //   investorTariff,
+    //   investorCap,
+    //   cliff,
+    //   vestingDuration
+    // });
+    //
+    // await ico.deployed();
+    // await btmt.connect(feelessAdminWallet).addFeeless(ico.address);
+    // await btmt
+    //   .connect(companyRestrictionWhitelistWallet)
+    //   .addUnrestrictedReceiver(
+    //     crowdsalesWallet.address,
+    //     ico.address,
+    //     ethers.utils.parseEther(`${icoCrowdsaleCap}`)
+    //   );
+    // await btmt.connect(feelessAdminWallet).addFeelessAdmin(ico.address);
+    // await btmt.connect(crowdsalesWallet).approve(ico.address, icoCrowdsaleCap);
+    //
+    // console.log(`ICO_CONTRACT_ADDRESS=${ico.address}`);
   }
 );

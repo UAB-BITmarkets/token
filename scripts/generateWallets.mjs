@@ -100,27 +100,37 @@ COMPANY_LIQUIDITY_WALLET_ADDRESS=${companyLiquidityWallet.address}\n\
 # Will only have tokens until it allocates the tokens to their respective wallets\n\
 # It is a strategic wallet so it cannot move unlimited amounts of tokens\n\
 ALLOCATIONS_WALLET_PRIVATE_KEY=${allocationsWallet.privateKey}\n\
+ALLOCATIONS_WALLET_ADDRESS=${allocationsWallet.address}\n\
 # Same case as the above but this serves tokens to the smart contracts\n\
 # of the crowdsales\n\
 CROWDSALES_WALLET_PRIVATE_KEY=${crowdsalesWallet.privateKey}\n\
+CROWDSALES_WALLET_ADDRESS=${crowdsalesWallet.address}\n\
 COMPANY_REWARDS_WALLET_PRIVATE_KEY=${companyRewardsWallet.privateKey}\n\
 COMPANY_REWARDS_WALLET_ADDRESS=${companyRewardsWallet.address}\n\
 ESG_FUND_WALLET_PRIVATE_KEY=${esgFundWallet.privateKey}\n\
 ESG_FUND_WALLET_ADDRESS=${esgFundWallet.address}\n\
 MINTER_WALLET_PRIVATE_KEY=${minterWallet.privateKey}\n\
+MINTER_WALLET_ADDRESS=${minterWallet.address}\n\
 PAUSER_WALLET_PRIVATE_KEY=${pauserWallet.privateKey}\n\
+PAUSER_WALLET_ADDRESS=${pauserWallet.address}\n\
 WHITELISTER_WALLET_PRIVATE_KEY=${whitelisterWallet.privateKey}\n\
+WHITELISTER_WALLET_ADDRESS=${whitelisterWallet.address}\n\
 BLACKLISTER_WALLET_PRIVATE_KEY=${blacklisterWallet.privateKey}\n\
+BLACKLISTER_WALLET_ADDRESS=${blacklisterWallet.address}\n\
 # This wallet can add feeless addresses and feeless admins such as\n\
 # smart contracts generating vesting wallets\n\
 FEELESS_ADMIN_WALLET_PRIVATE_KEY=${feelessAdminWallet.privateKey}\n\
+FEELESS_ADMIN_WALLET_ADDRESS=${feelessAdminWallet.address}\n\
 # This wallet can lift the company liquidity restriction for one transfer only.\n\
 # To be handled exclusively by the CEO\n\
 COMPANY_RESTRICTION_WHITELIST_WALLET_PRIVATE_KEY=${companyRestrictionWhitelistWallet.privateKey}\n\
+COMPANY_RESTRICTION_WHITELIST_WALLET_ADDRESS=${companyRestrictionWhitelistWallet.address}\n\
 # This wallet can call the "allocate" function\n\
 ALLOCATIONS_ADMIN_WALLET_PRIVATE_KEY=${allocationsAdminWallet.privateKey}\n\
+ALLOCATIONS_ADMIN_WALLET_ADDRESS=${allocationsAdminWallet.address}\n\
 # This wallet has funds to participate to the crowdsales\n\
 # on behalf of addresses\n\
 CROWDSALES_CLIENT_PURCHASER_WALLET_PRIVATE_KEY=${crowdsalesClientPurchaserWallet.privateKey}\n\
-\n# Send some funds to the wallet with address ${companyLiquidityWallet.address} to have enough to deploy.`
+CROWDSALES_CLIENT_PURCHASER_WALLET_ADDRESS=${crowdsalesClientPurchaserWallet.address}\n\
+`
 );

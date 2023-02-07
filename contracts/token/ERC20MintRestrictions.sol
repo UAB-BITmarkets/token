@@ -31,6 +31,7 @@ abstract contract ERC20MintRestrictions is ERC20 {
     if (_lastMintTime != 0) {
       require(_msgSender() == _minterWallet, "Sender not minter");
     }
+    // solhint-disable-next-line not-rely-on-time
     require(block.timestamp - _lastMintTime >= _timeRestrictionForMinting, "Last mint too close");
     _;
   }
@@ -61,6 +62,7 @@ abstract contract ERC20MintRestrictions is ERC20 {
   }
 
   function canMintNow() public view returns (bool) {
+    // solhint-disable-next-line not-rely-on-time
     return ((block.timestamp - _lastMintTime) >= _timeRestrictionForMinting);
   }
 
@@ -74,6 +76,7 @@ abstract contract ERC20MintRestrictions is ERC20 {
       require(totalSupply() + amount <= totalSupply().div(100).mul(110), "Mint >10% total supply");
     }
 
+    // solhint-disable-next-line not-rely-on-time
     _lastMintTime = block.timestamp;
 
     emit MintingHappened();

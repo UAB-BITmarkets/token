@@ -58,7 +58,7 @@ const config: HardhatUserConfig = {
       // ...(process.env.NODE_ENV !== "development" && {
       optimizer: {
         enabled: true,
-        runs: 800
+        runs: 1000
       }
       // })
     }
@@ -136,7 +136,7 @@ const config: HardhatUserConfig = {
           auto: true,
           interval: 10
         },
-        gasPrice: 21
+        gasPrice: 175000
       }
     }),
     ...(process.env.NODE_ENV === "testing" && {

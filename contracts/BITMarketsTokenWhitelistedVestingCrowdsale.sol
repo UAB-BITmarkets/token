@@ -11,6 +11,8 @@ import "./crowdsale/TimedCrowdsale.sol";
 import "./crowdsale/WhitelistCrowdsale.sol";
 import "./crowdsale/VestingCrowdsale.sol";
 
+import "./utils/IBITMarketsTokenWhitelistedVestingCrowdsale.sol";
+
 struct CrowdsaleArgs {
   uint256 rate;
   address payable wallet;
@@ -29,6 +31,7 @@ struct CrowdsaleArgs {
 
 /// @custom:security-contact security@bitmarkets.com
 contract BITMarketsTokenWhitelistedVestingCrowdsale is
+  IBITMarketsTokenWhitelistedVestingCrowdsale,
   Crowdsale,
   PausableCrowdsale,
   CappedCrowdsale,
@@ -57,7 +60,7 @@ contract BITMarketsTokenWhitelistedVestingCrowdsale is
     _rate = args.rate;
   }
 
-  function getCurrentRate() public view virtual returns (uint256) {
+  function getCurrentRate() public view override returns (uint256) {
     return _rate;
   }
 
