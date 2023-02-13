@@ -313,9 +313,7 @@ describe("BITMarkets ERC20 token allocations tests", () => {
     });
 
     it("Should not be possible to withdraw if not beneficiary.", async () => {
-      const { allocations, addr1, addr2, allocationsAdminWallet } = await loadFixture(
-        loadContracts
-      );
+      const { allocations, addr1, allocationsAdminWallet } = await loadFixture(loadContracts);
 
       const amount = ethers.utils.parseEther(`${allocationsWalletTokens}`);
 

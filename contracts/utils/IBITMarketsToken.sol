@@ -17,10 +17,4 @@ interface IBITMarketsToken {
    * @dev Unfreezes transfers, burning, minting
    */
   function unpause() external;
-
-  /**
-   * @dev Mints amount to address only if more than 6 months since and
-   * only if totalSupply + 10% > amount
-   */
-  function mint(address to, uint256 amount) external;
 }

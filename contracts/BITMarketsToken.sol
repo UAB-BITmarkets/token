@@ -9,8 +9,6 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "./token/ERC20StrategicWalletRestrictions.sol";
-import "./token/ERC20MintRestrictions.sol";
-import "./token/ERC20Blacklistable.sol";
 import "./token/ERC20Fees.sol";
 
 import "./utils/IBITMarketsToken.sol";
@@ -29,7 +27,6 @@ import "./utils/IBITMarketsToken.sol";
  * @param companyRewardsWallet The address that receives the transfer fees for the company
  * @param esgFundWallet The address that handles the ESG fund from gathered transfer fees
  * @param pauserWallet The address with the authority to pause the ERC20 token
- * @param blacklisterWallet The address with the authority to blacklist addresses
  */
 struct BTMTArgs {
   uint32 initialSupply;
@@ -44,9 +41,7 @@ struct BTMTArgs {
   address crowdsalesWallet;
   address companyRewardsWallet;
   address esgFundWallet;
-  address minterWallet;
   address pauserWallet;
-  address blacklisterWallet;
   address feelessAdminWallet;
   address companyRestrictionWhitelistWallet;
 }
@@ -58,15 +53,12 @@ contract BITMarketsToken is
   ERC20Snapshot,
   ERC20Pausable,
   ERC20Burnable,
-  ERC20MintRestrictions,
   ERC20StrategicWalletRestrictions,
-  ERC20Blacklistable,
   ERC20Fees,
   AccessControl
 {
   using SafeMath for uint256;
 
-  bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
   bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
   bytes32 public constant SNAPSHOT_ROLE = keccak256("SNAPSHOT_ROLE");
 
@@ -74,7 +66,6 @@ contract BITMarketsToken is
     BTMTArgs memory args
   )
     ERC20("BITMarketsToken", "BTMT")
-    ERC20MintRestrictions(args.minterWallet, 6)
     ERC20StrategicWalletRestrictions(
       args.companyRestrictionWhitelistWallet,
       args.allocationsWallet,
@@ -82,7 +73,6 @@ contract BITMarketsToken is
       args.maxCompanyWalletTransfer,
       1
     )
-    ERC20Blacklistable(args.blacklisterWallet, 100000)
     ERC20Fees(
       args.finalSupply,
       args.companyRate,
@@ -107,7 +97,6 @@ contract BITMarketsToken is
     _approve(msg.sender, args.crowdsalesWallet, args.crowdsalesWalletTokens * 10 ** decimals());
 
     // Setup roles
-    _setupRole(MINTER_ROLE, args.minterWallet);
     _setupRole(PAUSER_ROLE, args.pauserWallet);
     _setupRole(SNAPSHOT_ROLE, msg.sender);
   }
@@ -134,18 +123,6 @@ contract BITMarketsToken is
   }
 
   /**
-   * @dev Mints amount to address only if more than 6 months since and
-   * only if totalSupply + 10% > amount
-   */
-  function mint(address to, uint256 amount) public virtual override onlyRole(MINTER_ROLE) {
-    super._mint(to, amount);
-  }
-
-  function _mint(address to, uint256 amount) internal override(ERC20, ERC20MintRestrictions) {
-    super._mint(to, amount);
-  }
-
-  /**
    * @dev Overridable function
    */
   function _beforeTokenTransfer(
@@ -154,15 +131,19 @@ contract BITMarketsToken is
     uint256 amount
   )
     internal
-    override(
-      ERC20,
-      ERC20Snapshot,
-      ERC20Pausable,
-      ERC20Blacklistable,
-      ERC20Fees,
-      ERC20StrategicWalletRestrictions
-    )
+    override(ERC20, ERC20Snapshot, ERC20Pausable, ERC20StrategicWalletRestrictions, ERC20Fees)
   {
     super._beforeTokenTransfer(from, to, amount);
+  }
+
+  /**
+   * @dev Overridable function
+   */
+  function _afterTokenTransfer(
+    address from,
+    address to,
+    uint256 amount
+  ) internal override(ERC20, ERC20Fees) {
+    super._afterTokenTransfer(from, to, amount);
   }
 }

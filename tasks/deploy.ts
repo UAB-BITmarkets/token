@@ -30,9 +30,9 @@ const crowdsalesWalletTokens = initialSupply / 3;
 
 const maxCompanyWalletTransfer = companyWalletTokens / 10;
 
-const companyRate = 1; // over 1000 = 0.1%
-const esgFundRate = 1;
-const burnRate = 1;
+const companyRate = 10; // 1 over 1000 = 0.1%
+const esgFundRate = 10;
+const burnRate = 10;
 
 const investorTariff = ethers.utils.parseEther("100.0"); // 100 matic
 const investorCap = ethers.utils.parseEther("30000.0"); // 30000 matic

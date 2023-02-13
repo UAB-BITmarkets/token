@@ -39,6 +39,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
       // We use .connect(signer) to send a transaction from another account
       const addr2TransferredAmount = ethers.utils.parseEther("49");
       await token.connect(addr1).transfer(addr2.address, addr2TransferredAmount);
+
       const addr2Balance = await token.balanceOf(addr2.address);
       expect(addr2Balance.eq(addr2TransferredAmount)).to.equal(true);
     });
@@ -176,7 +177,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
     });
   });
 
-  describe("Minting and burning", () => {
+  describe("Burning", () => {
     it("Should be possible to burn", async () => {
       const { token, companyLiquidityWallet } = await loadFixture(loadContract);
 
@@ -190,96 +191,6 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const totalSupplyAfter = await token.totalSupply();
 
       expect(totalSupplyAfter).to.lessThan(totalSupplyBefore);
-    });
-
-    it("Should be possible to mint", async () => {
-      const { token, companyLiquidityWallet, minterWallet } = await loadFixture(loadContract);
-
-      const startTime = Date.now();
-      await ethers.provider.send("evm_mine", [startTime]);
-
-      const totalSupplyBefore = await token.totalSupply();
-
-      await token.connect(companyLiquidityWallet).burn(ethers.utils.parseEther("1"));
-
-      await token
-        .connect(minterWallet)
-        .mint(companyLiquidityWallet.address, ethers.utils.parseEther("1"));
-
-      const totalSupplyAfterAfter = await token.totalSupply();
-
-      expect(totalSupplyBefore).to.be.equal(totalSupplyAfterAfter);
-    });
-  });
-
-  describe("Minting restrictions", () => {
-    it("Should be possible to get all mint-related utility data", async () => {
-      const { token, minterWallet, companyLiquidityWallet } = await loadFixture(loadContract);
-
-      expect(await token.minter()).to.not.be.equal(companyLiquidityWallet.address);
-      expect(await token.minter()).to.be.equal(minterWallet.address);
-
-      expect(await token.canMintNow()).to.be.equal(false);
-
-      expect(await token.timeRestrictionForMintingSeconds()).to.be.equal(6 * 30 * 24 * 60 * 60);
-
-      const startTime = Date.now();
-      await ethers.provider.send("evm_mine", [startTime + 7 * 30 * 24 * 60 * 60]);
-
-      await token
-        .connect(minterWallet)
-        .mint(companyLiquidityWallet.address, ethers.utils.parseEther("2"));
-
-      expect(startTime).to.be.lessThan(await token.lastMintTimestamp());
-    });
-
-    it("Should be possible to mint more tokens once every six months", async () => {
-      const { token, companyLiquidityWallet, minterWallet } = await loadFixture(loadContract);
-
-      const startTime = Date.now();
-      await ethers.provider.send("evm_mine", [startTime]);
-
-      const tokenSupplyBeginning = await token.totalSupply();
-
-      // await expect(token.mint(companyLiquidityWallet.address, tokenSupplyBeginning.div(9))).to.revertedWith(
-      //   `AccessControl: account ${companyLiquidityWallet.address} is missing role 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6`
-      // );
-
-      await expect(
-        token
-          .connect(minterWallet)
-          .mint(companyLiquidityWallet.address, tokenSupplyBeginning.div(9))
-      ).to.revertedWith("Mint >10% total supply");
-
-      await token
-        .connect(minterWallet)
-        .mint(companyLiquidityWallet.address, tokenSupplyBeginning.div(10));
-
-      const tokenSupplyAfterFirst = await token.totalSupply();
-
-      expect(tokenSupplyBeginning).to.lessThan(tokenSupplyAfterFirst);
-
-      await expect(
-        token
-          .connect(minterWallet)
-          .mint(companyLiquidityWallet.address, tokenSupplyBeginning.div(10))
-      ).to.revertedWith("Last mint too close");
-
-      await ethers.provider.send("evm_mine", [startTime + 6.1 * 30 * 24 * 60 * 60]);
-
-      await token
-        .connect(minterWallet)
-        .mint(companyLiquidityWallet.address, tokenSupplyBeginning.div(10));
-      const tokenSupplyAfterSecond = await token.totalSupply();
-
-      expect(tokenSupplyAfterFirst).to.lessThan(tokenSupplyAfterSecond);
-    });
-
-    it("Reverts when minting called by a non-mint admin", async () => {
-      const { token, addr1 } = await loadFixture(loadContract);
-      await expect(token.connect(addr1).mint(addr1.address, 1)).to.revertedWith(
-        `AccessControl: account ${addr1.address.toLowerCase()} is missing role 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6`
-      );
     });
   });
 
@@ -675,116 +586,6 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const { token, addr1 } = await loadFixture(loadContract);
       await expect(token.connect(addr1).snapshot()).to.revertedWith(
         `AccessControl: account ${addr1.address.toLowerCase()} is missing role 0x5fdbd35e8da83ee755d5e62a539e5ed7f47126abede0b8b10f9ea43dc6eed07f`
-      );
-    });
-  });
-
-  describe("Blacklist", () => {
-    it("Should disallow transfers from blacklisted people.", async () => {
-      const { token, companyLiquidityWallet, addr1, addr2, blacklisterWallet } = await loadFixture(
-        loadContract
-      );
-
-      await token.transfer(addr1.address, 100, { from: companyLiquidityWallet.address });
-
-      await token.connect(blacklisterWallet).addBlacklisted(addr1.address);
-
-      await expect(
-        token.connect(addr1).transfer(addr2.address, 50, { from: addr1.address })
-      ).to.be.revertedWith("From is blacklisted");
-    });
-
-    it("Should disallow transfers to blacklisted people.", async () => {
-      const { token, companyLiquidityWallet, addr1, addr2, blacklisterWallet } = await loadFixture(
-        loadContract
-      );
-
-      await token.transfer(addr1.address, 100, { from: companyLiquidityWallet.address });
-
-      await token.connect(blacklisterWallet).addBlacklisted(addr2.address);
-
-      await expect(
-        token.connect(addr1).transfer(addr2.address, 50, { from: addr1.address })
-      ).to.be.revertedWith("To is blacklisted");
-    });
-
-    it("Should disallow transfers with blacklisted people as msg sender.", async () => {
-      const { token, addr1, addr2, blacklisterWallet } = await loadFixture(loadContract);
-
-      await token.transfer(addr1.address, 100);
-
-      await token.connect(addr1).approve(addr2.address, 50);
-
-      await token.connect(blacklisterWallet).addBlacklisted(addr2.address);
-
-      await expect(
-        token.connect(addr2).transferFrom(addr1.address, blacklisterWallet.address, 50)
-      ).to.be.revertedWith("Sender is blacklisted");
-    });
-
-    it("Should disallow blacklisting from non-admin.", async () => {
-      const { token, addr1, addr2 } = await loadFixture(loadContract);
-
-      await expect(token.connect(addr1).addBlacklisted(addr2.address)).to.be.revertedWith(
-        "Caller not blacklister"
-      );
-
-      expect(await token.connect(addr1).isBlacklistAdmin(addr1.address)).to.be.equal(false);
-    });
-
-    it("Should disallow unblacklisting from non-admin.", async () => {
-      const { token, addr1, addr2 } = await loadFixture(loadContract);
-
-      await expect(token.connect(addr1).removeBlacklisted(addr2.address)).to.be.revertedWith(
-        "Caller not blacklister"
-      );
-
-      expect(await token.connect(addr1).isBlacklistAdmin(addr1.address)).to.be.equal(false);
-    });
-
-    it("Should disallow blacklisting of zero address.", async () => {
-      const { token, blacklisterWallet } = await loadFixture(loadContract);
-
-      await expect(
-        token.connect(blacklisterWallet).addBlacklisted(ethers.constants.AddressZero)
-      ).to.be.revertedWith("Account is zero");
-    });
-
-    it("Should disallow unblacklisting of zero address.", async () => {
-      const { token, blacklisterWallet } = await loadFixture(loadContract);
-
-      await expect(
-        token.connect(blacklisterWallet).removeBlacklisted(ethers.constants.AddressZero)
-      ).to.be.revertedWith("Account is zero");
-    });
-
-    it("Should disallow repeated blacklisting.", async () => {
-      const { token, addr1, blacklisterWallet } = await loadFixture(loadContract);
-
-      await token.connect(blacklisterWallet).addBlacklisted(addr1.address);
-
-      await expect(
-        token.connect(blacklisterWallet).addBlacklisted(addr1.address)
-      ).to.be.revertedWith("Account already blacklisted");
-    });
-
-    it("Should allow blacklisting.", async () => {
-      const { token, addr1, blacklisterWallet } = await loadFixture(loadContract);
-
-      expect(await token.connect(blacklisterWallet).addBlacklisted(addr1.address)).to.emit(
-        "BITMarketsToken",
-        "Caller added to blacklist"
-      );
-    });
-
-    it("Should allow de-blacklisting.", async () => {
-      const { token, addr1, blacklisterWallet } = await loadFixture(loadContract);
-
-      await token.connect(blacklisterWallet).addBlacklisted(addr1.address);
-
-      expect(await token.connect(blacklisterWallet).removeBlacklisted(addr1.address)).to.emit(
-        "BITMarketsToken",
-        "Caller removed from blacklist"
       );
     });
   });

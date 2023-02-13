@@ -11,9 +11,9 @@ const crowdsalesWalletTokens = initialSupply / 3;
 
 const maxCompanyWalletTransfer = companyWalletTokens / 10;
 
-const companyRate = 1;
-const esgFundRate = 1;
-const burnRate = 1; // 1/1000 = 0.1%
+const companyRate = 10;
+const esgFundRate = 10;
+const burnRate = 10; // 1/1000 = 0.1%
 
 export const loadContract = async () => {
   const [
@@ -24,9 +24,7 @@ export const loadContract = async () => {
     crowdsalesWallet,
     companyRewardsWallet,
     esgFundWallet,
-    minterWallet,
     pauserWallet,
-    blacklisterWallet,
     feelessAdminWallet,
     companyRestrictionWhitelistWallet
   ] = await ethers.getSigners();
@@ -50,9 +48,7 @@ export const loadContract = async () => {
     crowdsalesWallet: crowdsalesWallet.address,
     companyRewardsWallet: companyRewardsWallet.address,
     esgFundWallet: esgFundWallet.address,
-    minterWallet: minterWallet.address,
     pauserWallet: pauserWallet.address,
-    blacklisterWallet: blacklisterWallet.address,
     feelessAdminWallet: feelessAdminWallet.address,
     companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
   });
@@ -67,9 +63,7 @@ export const loadContract = async () => {
     crowdsalesWallet,
     companyRewardsWallet,
     esgFundWallet,
-    minterWallet,
     pauserWallet,
-    blacklisterWallet,
     feelessAdminWallet,
     companyRestrictionWhitelistWallet
   };

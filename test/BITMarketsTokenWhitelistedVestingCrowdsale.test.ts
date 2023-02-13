@@ -101,8 +101,8 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
 
       expect(addr2VestedAmountBeforeCliff).to.be.equal(ethers.utils.parseEther("0"));
 
-      const addr2VestingWallet = await crowdsale.connect(addr2).vestingWallet(addr2.address);
-      const addr2VestingTokens = await token.balanceOf(addr2VestingWallet);
+      // const addr2VestingWallet = await crowdsale.connect(addr2).vestingWallet(addr2.address);
+      // const addr2VestingTokens = await token.balanceOf(addr2VestingWallet);
 
       await ethers.provider.send("evm_mine", [openingTime + cliff + vestingDuration / 2]);
 

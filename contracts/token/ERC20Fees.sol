@@ -2,12 +2,13 @@
 pragma solidity ^0.8.14;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 /// @custom:security-contact security@bitmarkets.com
-abstract contract ERC20Fees is ERC20 {
+abstract contract ERC20Fees is ERC20, ERC20Burnable {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
@@ -15,19 +16,19 @@ abstract contract ERC20Fees is ERC20 {
   uint16 private _fundR;
   uint16 private _burnR;
 
-  uint32 private _maxFeeless;
-  uint32 private _numFeeless;
-
   uint256 private _minimalSupply;
-
-  mapping(address => bool) private _feeless;
 
   address private _companyWallet;
   address private _companyRewardsWallet;
   address private _esgFundWallet;
 
   address private _feelessAdminWallet;
+  mapping(address => bool) private _feeless;
   mapping(address => bool) private _feelessAdmins;
+
+  mapping(address => uint256) private _fromCompanyRewards;
+  mapping(address => uint256) private _fromESG;
+  mapping(address => uint256) private _fromBurn;
 
   event FeelessAdminAdded(address indexed account);
   event FeelessAdded(address indexed account);
@@ -89,12 +90,8 @@ abstract contract ERC20Fees is ERC20 {
     _feelessAdminWallet = feelessAdminWallet;
     _feelessAdmins[feelessAdminWallet] = true;
 
-    _maxFeeless = 1000000; // company rewards, esg fund, whitelisted crowdsale, ico.
-
-    // _feeless[_companyWallet] = true;
     _feeless[_companyRewardsWallet] = true;
     _feeless[_esgFundWallet] = true;
-    _numFeeless = 2;
   }
 
   function addFeelessAdmin(address contractAddress) public virtual onlyFeelessAdmin {
@@ -108,10 +105,8 @@ abstract contract ERC20Fees is ERC20 {
   function addFeeless(address account) public virtual onlyFeelessAdmins {
     require(account != address(0), "Account is zero");
     require(!_feeless[account], "Account already feeless");
-    require(_numFeeless < _maxFeeless, "Feeless limit reached");
 
     _feeless[account] = true;
-    _numFeeless += 1;
 
     emit FeelessAdded(account);
   }
@@ -120,7 +115,6 @@ abstract contract ERC20Fees is ERC20 {
     require(account != address(0), "Account is zero");
 
     _feeless[account] = false;
-    _numFeeless -= 1;
 
     emit FeelessRemoved(account);
   }
@@ -139,10 +133,10 @@ abstract contract ERC20Fees is ERC20 {
     if (
       from != address(0) && // Fees not on minting
       to != address(0) && // Nor on burning
-      from == _msgSender() && // Only direct transfers and not approvals
-      amount > 1000 && // To be safe for underflow
-      !isFeeless(from) && // To not go through this if condition many times.
-      !isFeeless(to) // same
+      !isFeeless(from) && // To not go through this condition many times.
+      !isFeeless(to) && // same
+      amount > 0 &&
+      balanceOf(_msgSender()) > amount
     ) {
       uint256 companyFee = amount.mul(_companyR).div(1000);
       uint256 fundFee = amount.mul(_fundR).div(1000);
@@ -150,25 +144,45 @@ abstract contract ERC20Fees is ERC20 {
 
       amount -= companyFee.add(fundFee);
 
-      // SafeERC20.safeTransferFrom(this, from, _companyRewardsWallet, companyFee);
-      // balanceOf[_companyRewardsWallet] += companyFee;
-      // SafeERC20.safeTransfer(this, _companyRewardsWallet, companyFee);
-      _transfer(from, _companyRewardsWallet, companyFee);
-      // _mint(_companyRewardsWallet, companyFee);
+      _fromCompanyRewards[from] += companyFee;
+      _fromESG[from] += fundFee;
 
-      // SafeERC20.safeTransferFrom(this, from, _esgFundWallet, fundFee);
-      // balanceOf[_esgFundWallet] += fundFee;
-      // SafeERC20.safeTransfer(this, _esgFundWallet, fundFee);
-      _transfer(from, _esgFundWallet, fundFee);
-      // _mint(_esgFundWallet, fundFee);
-
-      uint256 totalSupplyAfterBurn = totalSupply().sub(burnFee);
-
-      if (totalSupplyAfterBurn > _minimalSupply) {
+      if (totalSupply().sub(burnFee) > _minimalSupply) {
         amount -= burnFee;
 
-        // SafeERC20.safeTransfer(this, address(0), burnFee);
-        _burn(from, burnFee);
+        _fromBurn[from] += burnFee;
+      }
+    }
+  }
+
+  function _afterTokenTransfer(address from, address to, uint256 amount) internal virtual override {
+    super._afterTokenTransfer(from, to, amount);
+
+    if (
+      from != address(0) && // Fees not on minting
+      to != address(0) && // Nor on burning
+      !isFeeless(from) && // To not go through this condition many times.
+      !isFeeless(to) && // same
+      amount > 0 &&
+      balanceOf(_msgSender()) > amount
+    ) {
+      uint256 companyFee = _fromCompanyRewards[from];
+      uint256 fundFee = _fromESG[from];
+      uint256 burnFee = _fromBurn[from];
+
+      if (burnFee > 0 && totalSupply().sub(burnFee) > _minimalSupply) {
+        burn(burnFee);
+        _fromBurn[from] = 0;
+      }
+
+      if (companyFee > 0) {
+        transfer(_companyRewardsWallet, companyFee);
+        _fromCompanyRewards[from] = 0;
+      }
+
+      if (fundFee > 0) {
+        transfer(_esgFundWallet, fundFee);
+        _fromESG[from] = 0;
       }
     }
   }

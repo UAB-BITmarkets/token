@@ -52,9 +52,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         crowdsalesWallet,
         companyRewardsWallet,
         esgFundWallet,
-        minterWallet,
         pauserWallet,
-        blacklisterWallet,
         feelessAdminWallet,
         companyRestrictionWhitelistWallet
       } = await loadFixture(loadContract);
@@ -78,9 +76,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: esgFundWallet.address,
-          minterWallet: minterWallet.address,
           pauserWallet: pauserWallet.address,
-          blacklisterWallet: blacklisterWallet.address,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -94,9 +90,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         crowdsalesWallet,
         companyRewardsWallet,
         esgFundWallet,
-        minterWallet,
         pauserWallet,
-        blacklisterWallet,
         feelessAdminWallet,
         companyRestrictionWhitelistWallet
       } = await loadFixture(loadContract);
@@ -120,9 +114,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: esgFundWallet.address,
-          minterWallet: minterWallet.address,
           pauserWallet: pauserWallet.address,
-          blacklisterWallet: blacklisterWallet.address,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -136,9 +128,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         crowdsalesWallet,
         companyRewardsWallet,
         esgFundWallet,
-        minterWallet,
         pauserWallet,
-        blacklisterWallet,
         feelessAdminWallet,
         companyRestrictionWhitelistWallet
       } = await loadFixture(loadContract);
@@ -162,9 +152,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: esgFundWallet.address,
-          minterWallet: minterWallet.address,
           pauserWallet: pauserWallet.address,
-          blacklisterWallet: blacklisterWallet.address,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -180,7 +168,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         crowdsalesWallet,
         companyRewardsWallet,
         esgFundWallet,
-        minterWallet,
         pauserWallet,
         feelessAdminWallet,
         companyRestrictionWhitelistWallet
@@ -205,9 +192,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: esgFundWallet.address,
-          minterWallet: minterWallet.address,
           pauserWallet: pauserWallet.address,
-          blacklisterWallet: ethers.constants.AddressZero,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -227,9 +212,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: esgFundWallet.address,
-          minterWallet: minterWallet.address,
           pauserWallet: pauserWallet.address,
-          blacklisterWallet: ethers.constants.AddressZero,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -249,9 +232,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: esgFundWallet.address,
-          minterWallet: minterWallet.address,
           pauserWallet: pauserWallet.address,
-          blacklisterWallet: ethers.constants.AddressZero,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -271,9 +252,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: ethers.constants.AddressZero,
           esgFundWallet: esgFundWallet.address,
-          minterWallet: minterWallet.address,
           pauserWallet: pauserWallet.address,
-          blacklisterWallet: ethers.constants.AddressZero,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -293,9 +272,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: ethers.constants.AddressZero,
-          minterWallet: minterWallet.address,
           pauserWallet: pauserWallet.address,
-          blacklisterWallet: ethers.constants.AddressZero,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -315,9 +292,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: esgFundWallet.address,
-          minterWallet: minterWallet.address,
           pauserWallet: pauserWallet.address,
-          blacklisterWallet: ethers.constants.AddressZero,
           feelessAdminWallet: ethers.constants.AddressZero,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
