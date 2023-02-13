@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.14;
 
-import "./Crowdsale.sol";
+import "./Sale.sol";
 
 /**
- * @dev Crowdsale in which only whitelisted users can contribute.
+ * @dev Sale in which only whitelisted users can contribute.
  */
-abstract contract WhitelistCrowdsale is Crowdsale {
+abstract contract Whitelist is Sale {
   // Max number of whitelisted addresses allowed
   uint32 private _maxWhitelisteds;
 

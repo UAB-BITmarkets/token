@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.14;
 
-import "hardhat/console.sol";
-
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import "./Crowdsale.sol";
+import "./Sale.sol";
 
 /**
- * @title InvestorlyCappedCrowdsale
- * @dev Crowdsale with per-beneficiary caps.
+ * @title PurchaseTariffCap
+ * @dev Sale with per-beneficiary caps.
  */
-abstract contract InvestorTariffCapCrowdsale is Crowdsale {
+abstract contract PurchaseTariffCap is Sale {
   using SafeMath for uint256;
 
   mapping(address => uint256) private _contributions;
@@ -20,7 +18,7 @@ abstract contract InvestorTariffCapCrowdsale is Crowdsale {
   uint256 private _cap;
 
   /**
-   * @dev Constructor, takes minimum amount of wei accepted in the crowdsale.
+   * @dev Constructor, takes minimum amount of wei accepted in the sale.
    * @param t Min amount of wei to be contributed (tariff)
    * @param c Max amount of wei to be contributed (cap)
    */

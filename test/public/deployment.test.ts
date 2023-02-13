@@ -14,7 +14,7 @@ import {
   closingTime
 } from "./fixture";
 
-import type { BITMarketsTokenICOVestingCrowdsale__factory } from "../../typechain-types/factories/contracts/BITMarketsTokenICOVestingCrowdsale__factory";
+import type { BITMarketsTokenPublicSale__factory } from "../../typechain-types/factories/contracts/BITMarketsTokenPublicSale__factory";
 
 describe("BITMarkets ERC20 token contract deployment tests", () => {
   describe("Main contract deployment", () => {
@@ -67,16 +67,16 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
       const { token, companyLiquidityWallet, crowdsalesWallet, crowdsalesClientPurchaserWallet } =
         await loadFixture(loadContracts);
 
-      const BITMarketsTokenICOVestingCrowdsaleFactory = (await ethers.getContractFactory(
-        "BITMarketsTokenICOVestingCrowdsale",
+      const BITMarketsTokenPublicSaleFactory = (await ethers.getContractFactory(
+        "BITMarketsTokenPublicSale",
         companyLiquidityWallet
-      )) as BITMarketsTokenICOVestingCrowdsale__factory;
+      )) as BITMarketsTokenPublicSale__factory;
 
       const totalSupply = await token.totalSupply();
       const cap = totalSupply.div(5);
 
       await expect(
-        BITMarketsTokenICOVestingCrowdsaleFactory.deploy({
+        BITMarketsTokenPublicSaleFactory.deploy({
           initialRate,
           finalRate: 0,
           wallet: crowdsalesWallet.address,
@@ -93,7 +93,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
       ).to.revertedWith("Crowdsale: final rate 0");
 
       await expect(
-        BITMarketsTokenICOVestingCrowdsaleFactory.deploy({
+        BITMarketsTokenPublicSaleFactory.deploy({
           initialRate,
           finalRate: initialRate + 1,
           wallet: crowdsalesWallet.address,

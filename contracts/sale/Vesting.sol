@@ -7,19 +7,19 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/finance/VestingWallet.sol";
 
-import "./Crowdsale.sol";
+import "./Sale.sol";
 
 import "../BITMarketsToken.sol";
 
 import "../utils/IVestingWallet.sol";
 
 /**
- * @title VestingCrowdsale
- * @dev Extension of Crowdsale where allowance tokens are locked by the crowdsale contract
+ * @title Vesting
+ * @dev Extension of sale where allowance tokens are locked by the sale contract
  * with some cliff and vesting period.
  * Cannot be used with AllowanceCrowdsale
  */
-abstract contract VestingCrowdsale is Crowdsale {
+abstract contract Vesting is Sale {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
@@ -102,7 +102,7 @@ abstract contract VestingCrowdsale is Crowdsale {
     IVestingWallet vwallet = IVestingWallet(vestingWalletAddress);
 
     // solhint-disable-next-line not-rely-on-time
-    return vwallet.vestedAmount(address(token()), uint64(block.timestamp));
+    return vwallet.releasable(address(token()));
   }
 
   /**

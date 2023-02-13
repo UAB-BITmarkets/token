@@ -3,24 +3,13 @@ pragma solidity ^0.8.14;
 
 import "@openzeppelin/contracts/security/Pausable.sol";
 
-import "./Crowdsale.sol";
+import "./Sale.sol";
 
 /**
- * @title PausableCrowdsale
- * @dev Extension of Crowdsale contract where purchases can be paused and unpaused by the pauser role.
+ * @title PausableSale
+ * @dev Extension of sale contract where purchases can be paused and unpaused by the pauser role.
  */
-abstract contract PausableCrowdsale is Crowdsale, Pausable {
-  // /**
-  //  * @param r Number of token units a buyer gets per wei (rate)
-  //  * @param w Address where collected funds will be forwarded to (wallet)
-  //  * @param t Address of the token being sold (token)
-  //  */
-  // constructor(
-  //     uint256 r,
-  //     address payable w,
-  //     IERC20 t
-  // ) Crowdsale(r,w,t) {}
-
+abstract contract PausableSale is Sale, Pausable {
   /**
    * @dev Validation of an incoming purchase. Use require statements to revert state when conditions are not met.
    * Use super to concatenate validations.

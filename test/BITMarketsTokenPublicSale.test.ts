@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { loadContracts, openingTime } from "./ico/fixture";
+import { loadContracts, openingTime } from "./public/fixture";
 
 describe("BITMarkets ERC20 token ICO vesting crowdsale contract tests", () => {
   describe("Participation", () => {

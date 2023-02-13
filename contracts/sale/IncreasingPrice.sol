@@ -3,15 +3,15 @@ pragma solidity ^0.8.14;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import "./TimedCrowdsale.sol";
+import "./TimedSale.sol";
 
 /**
- * @title IncreasingPriceCrowdsale
- * @dev Extension of Crowdsale contract that increases the price of tokens linearly in time.
+ * @title IncreasingPriceSale
+ * @dev Extension of sale contract that increases the price of tokens linearly in time.
  * Note that what should be provided to the constructor is the initial and final _rates_, that is,
  * the amount of tokens per wei contributed. Thus, the initial rate must be greater than the final rate.
  */
-abstract contract IncreasingPriceCrowdsale is TimedCrowdsale {
+abstract contract IncreasingPrice is TimedSale {
   using SafeMath for uint256;
 
   uint256 private _initialRate;

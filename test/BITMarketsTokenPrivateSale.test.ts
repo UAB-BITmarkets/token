@@ -10,7 +10,7 @@ import {
   cliff,
   vestingDuration,
   rate
-} from "./whitelisted/fixture";
+} from "./private/fixture";
 
 describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", () => {
   describe("Participation", () => {

@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 
 import type { BITMarketsToken__factory } from "../../typechain-types/factories/contracts/BITMarketsToken__factory";
-import type { BITMarketsTokenICOVestingCrowdsale__factory } from "../../typechain-types/factories/contracts/BITMarketsTokenICOVestingCrowdsale__factory";
+import type { BITMarketsTokenPublicSale__factory } from "../../typechain-types/factories/contracts/BITMarketsTokenPublicSale__factory";
 
 export const initialRate = 1000;
 export const finalRate = 10;
@@ -71,11 +71,11 @@ export const loadContracts = async () => {
   const totalSupply = await token.totalSupply();
   const cap = totalSupply.div(5);
 
-  const BITMarketsTokenICOVestingCrowdsaleFactory = (await ethers.getContractFactory(
-    "BITMarketsTokenICOVestingCrowdsale",
+  const BITMarketsTokenPublicSaleFactory = (await ethers.getContractFactory(
+    "BITMarketsTokenPublicSale",
     companyLiquidityWallet
-  )) as BITMarketsTokenICOVestingCrowdsale__factory;
-  const crowdsale = await BITMarketsTokenICOVestingCrowdsaleFactory.deploy({
+  )) as BITMarketsTokenPublicSale__factory;
+  const crowdsale = await BITMarketsTokenPublicSaleFactory.deploy({
     initialRate,
     finalRate,
     wallet: crowdsalesWallet.address,

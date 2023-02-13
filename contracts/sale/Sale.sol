@@ -8,18 +8,18 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
- * @title Crowdsale
- * @dev Crowdsale is a base contract for managing a token crowdsale,
+ * @title Sale
+ * @dev Sale is a base contract for managing a token sale,
  * allowing investors to purchase tokens with ether. This contract implements
  * such functionality in its most fundamental form and can be extended to provide additional
  * functionality and/or custom behavior.
  * The external interface represents the basic interface for purchasing tokens, and conforms
  * the base architecture for crowdsales. It is *not* intended to be modified / overridden.
- * The internal interface conforms the extensible and modifiable surface of crowdsales. Override
+ * The internal interface conforms the extensible and modifiable surface of sales. Override
  * the methods to add functionality. Consider using 'super' where appropriate to concatenate
  * behavior.
  */
-abstract contract Crowdsale is Context, ReentrancyGuard {
+abstract contract Sale is Context, ReentrancyGuard {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 

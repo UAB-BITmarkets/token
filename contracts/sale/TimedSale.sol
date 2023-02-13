@@ -3,13 +3,13 @@ pragma solidity ^0.8.14;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import "./Crowdsale.sol";
+import "./Sale.sol";
 
 /**
- * @title TimedCrowdsale
- * @dev Crowdsale accepting contributions only within a time frame.
+ * @title TimedSale
+ * @dev Sale accepting contributions only within a time frame.
  */
-abstract contract TimedCrowdsale is Crowdsale {
+abstract contract TimedSale is Sale {
   using SafeMath for uint256;
 
   uint256 private _openingTime;

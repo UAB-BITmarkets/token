@@ -2,24 +2,20 @@ import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-// import type { Wallet } from "ethers";
+// const publicSaleInitialRate = 10;
+// const publicSaleFinalRate = 3;
 
-// const icoInitialRate = 10;
-// const icoFinalRate = 3;
-
-const whitelistedCrowdsaleOpeningTime =
+const privateSaleOpeningTime =
   process.env.NODE_ENV === "production"
     ? Math.trunc(new Date(`2023-02-15T09:00:00`).valueOf() / 1000)
     : Math.trunc((Date.now() + 2 * 60 * 1000) / 1000);
-const whitelistedCrowdsaleClosingTime = Math.trunc(
-  new Date("2023-06-26T17:00:00").valueOf() / 1000
-);
+const privateSaleClosingTime = Math.trunc(new Date("2023-06-26T17:00:00").valueOf() / 1000);
 
-// const icoCrowdsaleOpeningTime =
+// const publicSaleOpeningTime =
 //   process.env.NODE_ENV === "production"
 //     ? Math.trunc(new Date(`2023-09-01T09:00:00`).valueOf() / 1000)
 //     : Math.trunc((Date.now() + 10 * 60 * 1000) / 1000);
-// const icoCrowdsaleClosingTime = Math.trunc(new Date("2023-12-23T17:00:00").valueOf() / 1000);
+// const publicSaleClosingTime = Math.trunc(new Date("2023-12-23T17:00:00").valueOf() / 1000);
 
 const initialSupply = 300000000;
 const finalSupply = 200000000;
@@ -75,10 +71,8 @@ task("deploy", "Deploy contracts").setAction(
       crowdsalesWallet, // needed
       companyRewardsWallet,
       esgFundWallet,
-      minterWallet,
       pauserWallet,
       whitelisterWallet,
-      blacklisterWallet,
       feelessAdminWallet, // needed
       companyRestrictionWhitelistWallet, // needed
       allocationsAdminWallet, // needed
@@ -99,9 +93,7 @@ task("deploy", "Deploy contracts").setAction(
       crowdsalesWallet: crowdsalesWallet.address,
       companyRewardsWallet: companyRewardsWallet.address,
       esgFundWallet: esgFundWallet.address,
-      minterWallet: minterWallet.address,
       pauserWallet: pauserWallet.address,
-      blacklisterWallet: blacklisterWallet.address,
       feelessAdminWallet: feelessAdminWallet.address,
       companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
     });
@@ -176,23 +168,21 @@ task("deploy", "Deploy contracts").setAction(
     //     .allocate(airdropsWallets[i].address, airdropsAllocationDecimals);
     // }
 
-    const totalCrowdsalesSupply = btmtTotalSupply.div(3);
-    const whitelistedCrowdsaleCap = totalCrowdsalesSupply.mul(4).div(10);
-    // const icoCrowdsaleCap = totalCrowdsalesSupply.mul(6).div(10);
+    const totalSalesSupply = btmtTotalSupply.div(3);
+    const privateSaleCap = totalSalesSupply.mul(4).div(10);
+    // const publicSaleCap = totalSalesSupply.mul(6).div(10);
 
-    const WHITELISTED = await hre.ethers.getContractFactory(
-      "BITMarketsTokenWhitelistedVestingCrowdsale"
-    );
+    const WHITELISTED = await hre.ethers.getContractFactory("BITMarketsTokenPrivateSale");
     const whitelisted = await WHITELISTED.connect(companyLiquidityWallet).deploy({
       rate: whitelistedRate,
       wallet: crowdsalesWallet.address,
       purchaser: crowdsalesClientPurchaserWallet.address,
       token: btmt.address,
       whitelister: whitelisterWallet.address,
-      cap: whitelistedCrowdsaleCap,
+      cap: privateSaleCap,
       maxWhitelisted,
-      openingTime: whitelistedCrowdsaleOpeningTime,
-      closingTime: whitelistedCrowdsaleClosingTime,
+      openingTime: privateSaleOpeningTime,
+      closingTime: privateSaleClosingTime,
       investorTariff,
       investorCap,
       cliff,
@@ -218,41 +208,41 @@ task("deploy", "Deploy contracts").setAction(
       .addUnrestrictedReceiver(
         crowdsalesWallet.address,
         whitelisted.address,
-        ethers.utils.parseEther(`${whitelistedCrowdsaleCap}`)
+        ethers.utils.parseEther(`${privateSaleCap}`)
       );
     await btmt.connect(feelessAdminWallet).addFeelessAdmin(whitelisted.address);
-    await btmt.connect(crowdsalesWallet).approve(whitelisted.address, whitelistedCrowdsaleCap);
+    await btmt.connect(crowdsalesWallet).approve(whitelisted.address, privateSaleCap);
 
     console.log(`WHITELISTED_CONTRACT_ADDRESS=${whitelisted.address}`);
 
-    // const ICO = await hre.ethers.getContractFactory("BITMarketsTokenICOVestingCrowdsale");
-    // const ico = await ICO.deploy({
-    //   initialRate: icoInitialRate,
-    //   finalRate: icoFinalRate,
+    // const PUBLIC_SALE = await hre.ethers.getContractFactory("BITMarketsTokenPublicSale");
+    // const publicSale = await PUBLIC_SALE.deploy({
+    //   initialRate: publicSaleInitialRate,
+    //   finalRate: publicSaleFinalRate,
     //   wallet: crowdsalesWallet.address,
     //   purchaser: crowdsalesClientPurchaserWallet.address,
     //   token: btmt.address,
-    //   cap: icoCrowdsaleCap,
-    //   openingTime: icoCrowdsaleOpeningTime,
-    //   closingTime: icoCrowdsaleClosingTime,
+    //   cap: publicSaleCap,
+    //   openingTime: publicSaleOpeningTime,
+    //   closingTime: publicSaleClosingTime,
     //   investorTariff,
     //   investorCap,
     //   cliff,
     //   vestingDuration
     // });
     //
-    // await ico.deployed();
-    // await btmt.connect(feelessAdminWallet).addFeeless(ico.address);
+    // await publicSale.deployed();
+    // await btmt.connect(feelessAdminWallet).addFeeless(publicSale.address);
     // await btmt
     //   .connect(companyRestrictionWhitelistWallet)
     //   .addUnrestrictedReceiver(
     //     crowdsalesWallet.address,
-    //     ico.address,
-    //     ethers.utils.parseEther(`${icoCrowdsaleCap}`)
+    //     publicSale.address,
+    //     ethers.utils.parseEther(`${publicSaleCap}`)
     //   );
-    // await btmt.connect(feelessAdminWallet).addFeelessAdmin(ico.address);
-    // await btmt.connect(crowdsalesWallet).approve(ico.address, icoCrowdsaleCap);
+    // await btmt.connect(feelessAdminWallet).addFeelessAdmin(publicSale.address);
+    // await btmt.connect(crowdsalesWallet).approve(publicSale.address, publicSaleCap);
     //
-    // console.log(`ICO_CONTRACT_ADDRESS=${ico.address}`);
+    // console.log(`PUBLIC_SALE_CONTRACT_ADDRESS=${publicSale.address}`);
   }
 );

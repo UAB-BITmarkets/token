@@ -14,7 +14,7 @@ import {
   closingTime
 } from "./fixture";
 
-import type { BITMarketsTokenWhitelistedVestingCrowdsale__factory } from "../../typechain-types/factories/contracts/BITMarketsTokenWhitelistedVestingCrowdsale__factory";
+import type { BITMarketsTokenPrivateSale__factory } from "../../typechain-types/factories/contracts/BITMarketsTokenPrivateSale__factory";
 
 describe("BITMarkets ERC20 token contract deployment tests", () => {
   describe("Main contract deployment", () => {
@@ -60,16 +60,16 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         whitelisterWallet
       } = await loadFixture(loadContracts);
 
-      const BITMarketsTokenWhitelistedVestingCrowdsaleFactory = (await ethers.getContractFactory(
-        "BITMarketsTokenWhitelistedVestingCrowdsale",
+      const BITMarketsTokenPrivateSaleFactory = (await ethers.getContractFactory(
+        "BITMarketsTokenPrivateSale",
         companyLiquidityWallet
-      )) as BITMarketsTokenWhitelistedVestingCrowdsale__factory;
+      )) as BITMarketsTokenPrivateSale__factory;
 
       const totalSupply = await token.totalSupply();
       const cap = totalSupply.div(5);
 
       await expect(
-        BITMarketsTokenWhitelistedVestingCrowdsaleFactory.deploy({
+        BITMarketsTokenPrivateSaleFactory.deploy({
           rate: 0,
           wallet: crowdsalesWallet.address,
           purchaser: crowdsalesClientPurchaserWallet.address,
@@ -87,7 +87,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
       ).to.revertedWith("Crowdsale: 0 rate");
 
       await expect(
-        BITMarketsTokenWhitelistedVestingCrowdsaleFactory.deploy({
+        BITMarketsTokenPrivateSaleFactory.deploy({
           rate,
           wallet: ethers.constants.AddressZero,
           purchaser: crowdsalesClientPurchaserWallet.address,
@@ -105,7 +105,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
       ).to.revertedWith("Crowdsale: wallet 0 address");
 
       await expect(
-        BITMarketsTokenWhitelistedVestingCrowdsaleFactory.deploy({
+        BITMarketsTokenPrivateSaleFactory.deploy({
           rate,
           wallet: crowdsalesWallet.address,
           purchaser: ethers.constants.AddressZero,
@@ -123,7 +123,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
       ).to.revertedWith("Crowdsale: wallet 0 address");
 
       await expect(
-        BITMarketsTokenWhitelistedVestingCrowdsaleFactory.deploy({
+        BITMarketsTokenPrivateSaleFactory.deploy({
           rate,
           wallet: crowdsalesWallet.address,
           purchaser: crowdsalesClientPurchaserWallet.address,
@@ -150,13 +150,13 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         whitelisterWallet
       } = await loadFixture(loadContracts);
 
-      const BITMarketsTokenWhitelistedVestingCrowdsaleFactory = (await ethers.getContractFactory(
-        "BITMarketsTokenWhitelistedVestingCrowdsale",
+      const BITMarketsTokenPrivateSaleFactory = (await ethers.getContractFactory(
+        "BITMarketsTokenPrivateSale",
         companyLiquidityWallet
-      )) as BITMarketsTokenWhitelistedVestingCrowdsale__factory;
+      )) as BITMarketsTokenPrivateSale__factory;
 
       await expect(
-        BITMarketsTokenWhitelistedVestingCrowdsaleFactory.deploy({
+        BITMarketsTokenPrivateSaleFactory.deploy({
           rate,
           wallet: crowdsalesWallet.address,
           purchaser: crowdsalesClientPurchaserWallet.address,
@@ -186,13 +186,13 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
       const totalSupply = await token.totalSupply();
       const cap = totalSupply.div(5);
 
-      const BITMarketsTokenWhitelistedVestingCrowdsaleFactory = (await ethers.getContractFactory(
-        "BITMarketsTokenWhitelistedVestingCrowdsale",
+      const BITMarketsTokenPrivateSaleFactory = (await ethers.getContractFactory(
+        "BITMarketsTokenPrivateSale",
         companyLiquidityWallet
-      )) as BITMarketsTokenWhitelistedVestingCrowdsale__factory;
+      )) as BITMarketsTokenPrivateSale__factory;
 
       await expect(
-        BITMarketsTokenWhitelistedVestingCrowdsaleFactory.deploy({
+        BITMarketsTokenPrivateSaleFactory.deploy({
           rate,
           wallet: crowdsalesWallet.address,
           purchaser: crowdsalesClientPurchaserWallet.address,
@@ -210,7 +210,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
       ).to.revertedWith("Crowdsale: tariff 0");
 
       await expect(
-        BITMarketsTokenWhitelistedVestingCrowdsaleFactory.deploy({
+        BITMarketsTokenPrivateSaleFactory.deploy({
           rate,
           wallet: crowdsalesWallet.address,
           purchaser: crowdsalesClientPurchaserWallet.address,
@@ -240,15 +240,15 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
       const totalSupply = await token.totalSupply();
       const cap = totalSupply.div(5);
 
-      const BITMarketsTokenWhitelistedVestingCrowdsaleFactory = (await ethers.getContractFactory(
-        "BITMarketsTokenWhitelistedVestingCrowdsale",
+      const BITMarketsTokenPrivateSaleFactory = (await ethers.getContractFactory(
+        "BITMarketsTokenPrivateSale",
         companyLiquidityWallet
-      )) as BITMarketsTokenWhitelistedVestingCrowdsale__factory;
+      )) as BITMarketsTokenPrivateSale__factory;
 
       await ethers.provider.send("evm_mine", [openingTime - 10]);
 
       await expect(
-        BITMarketsTokenWhitelistedVestingCrowdsaleFactory.deploy({
+        BITMarketsTokenPrivateSaleFactory.deploy({
           rate,
           wallet: crowdsalesWallet.address,
           purchaser: crowdsalesClientPurchaserWallet.address,
@@ -266,7 +266,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
       ).to.revertedWith("Crowdsale: opening early");
 
       await expect(
-        BITMarketsTokenWhitelistedVestingCrowdsaleFactory.deploy({
+        BITMarketsTokenPrivateSaleFactory.deploy({
           rate,
           wallet: crowdsalesWallet.address,
           purchaser: crowdsalesClientPurchaserWallet.address,

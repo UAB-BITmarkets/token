@@ -3,13 +3,13 @@ pragma solidity ^0.8.14;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import "./Crowdsale.sol";
+import "./Sale.sol";
 
 /**
- * @title CappedCrowdsale
- * @dev Crowdsale with a limit for total contributions.
+ * @title CappedSale
+ * @dev Sale with a limit for total contributions.
  */
-abstract contract CappedCrowdsale is Crowdsale {
+abstract contract CappedSale is Sale {
   using SafeMath for uint256;
 
   uint256 private _cap;

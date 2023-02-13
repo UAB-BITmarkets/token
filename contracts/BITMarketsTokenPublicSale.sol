@@ -3,13 +3,13 @@ pragma solidity ^0.8.14;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import "./crowdsale/Crowdsale.sol";
-import "./crowdsale/CappedCrowdsale.sol";
-import "./crowdsale/InvestorTariffCapCrowdsale.sol";
-import "./crowdsale/PausableCrowdsale.sol";
-import "./crowdsale/TimedCrowdsale.sol";
-import "./crowdsale/IncreasingPriceCrowdsale.sol";
-import "./crowdsale/VestingCrowdsale.sol";
+import "./sale/Sale.sol";
+import "./sale/CappedSale.sol";
+import "./sale/PurchaseTariffCap.sol";
+import "./sale/PausableSale.sol";
+import "./sale/TimedSale.sol";
+import "./sale/IncreasingPrice.sol";
+import "./sale/Vesting.sol";
 
 /**
  * @param initialRate Number of token units a buyer gets per wei in the beginning
@@ -24,7 +24,7 @@ import "./crowdsale/VestingCrowdsale.sol";
  * @param cliff Tokens stay locked in vesting wallet until that time
  * @param vestingDuration Tokens are released linearly until then
  */
-struct CrowdsaleArgs {
+struct SaleArgs {
   uint256 initialRate;
   uint256 finalRate;
   address payable wallet;
@@ -40,14 +40,14 @@ struct CrowdsaleArgs {
 }
 
 /// @custom:security-contact security@bitmarkets.com
-contract BITMarketsTokenICOVestingCrowdsale is
-  Crowdsale,
-  PausableCrowdsale,
-  CappedCrowdsale,
-  InvestorTariffCapCrowdsale,
-  TimedCrowdsale,
-  IncreasingPriceCrowdsale,
-  VestingCrowdsale
+contract BITMarketsTokenPublicSale is
+  Sale,
+  PausableSale,
+  CappedSale,
+  PurchaseTariffCap,
+  TimedSale,
+  IncreasingPrice,
+  Vesting
 {
   using SafeMath for uint256;
 
@@ -55,14 +55,14 @@ contract BITMarketsTokenICOVestingCrowdsale is
    * @dev Constructor
    */
   constructor(
-    CrowdsaleArgs memory args
+    SaleArgs memory args
   )
-    Crowdsale(args.initialRate, args.wallet, args.purchaser, args.token)
-    CappedCrowdsale(args.cap)
-    InvestorTariffCapCrowdsale(args.investorTariff, args.investorCap)
-    TimedCrowdsale(args.openingTime, args.closingTime)
-    IncreasingPriceCrowdsale(args.initialRate, args.finalRate)
-    VestingCrowdsale(args.wallet, args.cliff, args.vestingDuration)
+    Sale(args.initialRate, args.wallet, args.purchaser, args.token)
+    CappedSale(args.cap)
+    PurchaseTariffCap(args.investorTariff, args.investorCap)
+    TimedSale(args.openingTime, args.closingTime)
+    IncreasingPrice(args.initialRate, args.finalRate)
+    Vesting(args.wallet, args.cliff, args.vestingDuration)
   {
     // solhint-disable-previous-line no-empty-blocks
   }
@@ -73,14 +73,14 @@ contract BITMarketsTokenICOVestingCrowdsale is
   function _deliverTokens(
     address beneficiary,
     uint256 tokenAmount
-  ) internal override(Crowdsale, VestingCrowdsale) {
+  ) internal override(Sale, Vesting) {
     super._deliverTokens(beneficiary, tokenAmount);
   }
 
   function _updatePurchasingState(
     address beneficiary,
     uint256 weiAmount
-  ) internal override(Crowdsale, InvestorTariffCapCrowdsale) {
+  ) internal override(Sale, PurchaseTariffCap) {
     super._updatePurchasingState(beneficiary, weiAmount);
   }
 
@@ -91,11 +91,11 @@ contract BITMarketsTokenICOVestingCrowdsale is
     internal
     view
     override(
-      Crowdsale,
-      PausableCrowdsale,
-      CappedCrowdsale,
-      TimedCrowdsale,
-      InvestorTariffCapCrowdsale
+      Sale,
+      PausableSale,
+      CappedSale,
+      TimedSale,
+      PurchaseTariffCap
     )
   {
     super._preValidatePurchase(beneficiary, weiAmount);
@@ -103,7 +103,7 @@ contract BITMarketsTokenICOVestingCrowdsale is
 
   function _getTokenAmount(
     uint256 weiAmount
-  ) internal view override(Crowdsale, IncreasingPriceCrowdsale) returns (uint256) {
+  ) internal view override(Sale, IncreasingPrice) returns (uint256) {
     return super._getTokenAmount(weiAmount);
   }
 }
