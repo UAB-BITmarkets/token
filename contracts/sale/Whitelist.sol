@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.14;
 
-import "./Sale.sol";
+import { Sale } from "./Sale.sol";
 
 /**
  * @dev Sale in which only whitelisted users can contribute.
  */
 abstract contract Whitelist is Sale {
-  // Max number of whitelisted addresses allowed
-  uint32 private _maxWhitelisteds;
-
   // numAddressesWhitelisted would be used to keep track of how many addresses have been whitelisted
   // NOTE: Don't change this variable name, as it will be part of verification
   uint32 private _numWhitelisteds;
@@ -32,18 +29,15 @@ abstract contract Whitelist is Sale {
 
   /**
    * @dev Constructor, takes crowdsale whitelist limit.
-   * @param max Crowdsale max number of whitelisted addresses.
+   * @param whitelister The wallet that can add wallets to whitelist
    */
-  constructor(address whitelister, uint32 max) {
+  constructor(address whitelister) {
     _whitelistAdmin = whitelister;
-    _maxWhitelisteds = max;
   }
 
   function addWhitelisted(address account) public virtual onlyWhitelistAdmin {
     // check if the user has already been whitelisted
     require(!_whitelisteds[account], "Account already whitelisted");
-    // check if the numAddressesWhitelisted < maxWhitelistedAddresses, if not then throw an error.
-    require(_numWhitelisteds < _maxWhitelisteds, "Whitelist limit reached");
     // Add the address which called the function to the whitelistedAddress array
     _whitelisteds[account] = true;
     // Increase the number of whitelisted addresses

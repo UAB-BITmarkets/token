@@ -148,10 +148,8 @@ const config: HardhatUserConfig = {
           process.env.CROWDSALES_WALLET_PRIVATE_KEY || "", // needed
           process.env.COMPANY_REWARDS_WALLET_PRIVATE_KEY || "",
           process.env.ESG_FUND_WALLET_PRIVATE_KEY || "",
-          process.env.MINTER_WALLET_PRIVATE_KEY || "",
           process.env.PAUSER_WALLET_PRIVATE_KEY || "",
           process.env.WHITELISTER_WALLET_PRIVATE_KEY || "",
-          process.env.BLACKLISTER_WALLET_PRIVATE_KEY || "",
           process.env.FEELESS_ADMIN_WALLET_PRIVATE_KEY || "", // needed
           process.env.COMPANY_RESTRICTION_WHITELIST_WALLET_PRIVATE_KEY || "", // needed
           process.env.ALLOCATIONS_ADMIN_WALLET_PRIVATE_KEY || "", // needed
@@ -163,9 +161,17 @@ const config: HardhatUserConfig = {
       polygon_mumbai: {
         url: process.env.ALCHEMY_POLYGON_URL_PROD || "",
         accounts: [
-          process.env.COMPANY_LIQUIDITY_WALLET_PRIVATE_KEY || "",
+          process.env.COMPANY_LIQUIDITY_WALLET_PRIVATE_KEY || "", // needed
+          process.env.ALLOCATIONS_WALLET_PRIVATE_KEY || "", // needed
+          process.env.CROWDSALES_WALLET_PRIVATE_KEY || "", // needed
+          process.env.COMPANY_REWARDS_WALLET_PRIVATE_KEY || "",
+          process.env.ESG_FUND_WALLET_PRIVATE_KEY || "",
+          process.env.PAUSER_WALLET_PRIVATE_KEY || "",
           process.env.WHITELISTER_WALLET_PRIVATE_KEY || "",
-          process.env.BLACKLISTER_WALLET_PRIVATE_KEY || ""
+          process.env.FEELESS_ADMIN_WALLET_PRIVATE_KEY || "", // needed
+          process.env.COMPANY_RESTRICTION_WHITELIST_WALLET_PRIVATE_KEY || "", // needed
+          process.env.ALLOCATIONS_ADMIN_WALLET_PRIVATE_KEY || "", // needed
+          process.env.CROWDSALES_CLIENT_PURCHASER_WALLET_PRIVATE_KEY || ""
         ]
       }
     })

@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.14;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import "./sale/Sale.sol";
-import "./sale/CappedSale.sol";
-import "./sale/PurchaseTariffCap.sol";
-import "./sale/PausableSale.sol";
-import "./sale/TimedSale.sol";
-import "./sale/Whitelist.sol";
-import "./sale/Vesting.sol";
+import { Sale } from "./sale/Sale.sol";
+import { PurchaseTariffCap } from "./sale/PurchaseTariffCap.sol";
+import { TimedSale } from "./sale/TimedSale.sol";
+import { Whitelist } from "./sale/Whitelist.sol";
+import { Vesting } from "./sale/Vesting.sol";
 
-import "./utils/IBITMarketsTokenPrivateSale.sol";
+import { IBITMarketsTokenPrivateSale } from "./utils/IBITMarketsTokenPrivateSale.sol";
 
 struct SaleArgs {
   uint256 rate;
@@ -19,8 +18,6 @@ struct SaleArgs {
   address payable purchaser;
   IERC20 token;
   address whitelister;
-  uint256 cap;
-  uint32 maxWhitelisted;
   uint256 openingTime;
   uint256 closingTime;
   uint256 investorTariff;
@@ -33,8 +30,6 @@ struct SaleArgs {
 contract BITMarketsTokenPrivateSale is
   IBITMarketsTokenPrivateSale,
   Sale,
-  PausableSale,
-  CappedSale,
   PurchaseTariffCap,
   TimedSale,
   Whitelist,
@@ -51,10 +46,9 @@ contract BITMarketsTokenPrivateSale is
     SaleArgs memory args
   )
     Sale(args.rate, args.wallet, args.purchaser, args.token)
-    CappedSale(args.cap)
     PurchaseTariffCap(args.investorTariff, args.investorCap)
     TimedSale(args.openingTime, args.closingTime)
-    Whitelist(args.whitelister, args.maxWhitelisted)
+    Whitelist(args.whitelister)
     Vesting(args.wallet, args.cliff, args.vestingDuration)
   {
     _rate = args.rate;
@@ -86,8 +80,6 @@ contract BITMarketsTokenPrivateSale is
     view
     override(
       Sale,
-      PausableSale,
-      CappedSale,
       TimedSale,
       PurchaseTariffCap,
       Whitelist

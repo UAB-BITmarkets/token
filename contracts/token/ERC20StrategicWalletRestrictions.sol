@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.14;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
-import "hardhat/console.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 struct StrategicWallet {
   address approvedReceiver;
@@ -72,7 +70,7 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
       bool fromIsCompanyLiquidityWallet = from == _companyLiquidityWallet;
       StrategicWallet memory strategicWallet = _strategicWallet[from];
 
-      if (isTransfer && fromIsCompanyLiquidityWallet && strategicWallet.approvedReceiver != to) {
+      if (isTransfer && strategicWallet.approvedReceiver != to) {
         // Only company liquidity is allowed to send to unapproved addresses.
         require(_msgSender() == _companyLiquidityWallet, "Illegal transfer");
 
@@ -83,13 +81,13 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
             _companyLiquidityTransfersLockStartTime.add(_companyLiquidityTransfersLockPeriod),
           "Last max transfer too close"
         );
-      } else if (isTransfer && strategicWallet.approvedReceiver == to) {
+      } else if (isTransfer) {
         // Require the approved amount to be less than the total transfered
         require(
           strategicWallet.amountTransferred < strategicWallet.amountTransferredLimit,
           "Surpassed approved limit"
         );
-      } else if (!isTransfer && fromIsCompanyLiquidityWallet) {
+      } else if (!isTransfer && fromIsCompanyLiquidityWallet && to != strategicWallet.approvedReceiver) {
         // Require unlocked company liquidity
         require(
           // solhint-disable-next-line not-rely-on-time
@@ -97,7 +95,7 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
             _companyLiquidityTransfersLockStartTime.add(_companyLiquidityTransfersLockPeriod),
           "Last max transfer too close"
         );
-      } else if (!isTransfer && !fromIsCompanyLiquidityWallet) {
+      } else if (!isTransfer) {
         require(
           (strategicWallet.approvedReceiver == to) ||
             (strategicWallet.approvedReceiver == _msgSender()),

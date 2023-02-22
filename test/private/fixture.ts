@@ -3,14 +3,13 @@ import { ethers } from "hardhat";
 import type { BITMarketsToken__factory } from "../../typechain-types/factories/contracts/BITMarketsToken__factory";
 import type { BITMarketsTokenPrivateSale__factory } from "../../typechain-types/factories/contracts/BITMarketsTokenPrivateSale__factory";
 
-export const investorTariff = ethers.utils.parseEther("1.0");
-export const investorCap = ethers.utils.parseEther("50.0");
+export const investorTariff = ethers.utils.parseEther("100.0");
+export const investorCap = ethers.utils.parseEther("4000000.0");
 
 export const cliff = 10; // seconds locked
 export const vestingDuration = 20; // seconds after cliff for full vesting
 
 export const rate = 10;
-export const maxWhitelisted = 100000;
 
 const initialSupply = 300000000;
 const finalSupply = 200000000;
@@ -81,8 +80,6 @@ export const loadContracts = async () => {
     purchaser: crowdsalesClientPurchaserWallet.address,
     token: token.address,
     whitelister: whitelisterWallet.address,
-    cap,
-    maxWhitelisted,
     openingTime,
     closingTime,
     investorTariff,

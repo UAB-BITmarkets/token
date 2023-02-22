@@ -26,7 +26,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
       expect(await crowdsale.token()).to.equal(token.address);
       expect(await crowdsale.tokenWallet()).to.equal(crowdsalesWallet.address);
       expect(await crowdsale.wallet()).to.equal(crowdsalesWallet.address);
-      expect(await crowdsale.cap()).to.equal(icoSupply);
       expect(await token.allowance(crowdsalesWallet.address, crowdsale.address)).to.equal(
         icoSupply
       );
@@ -37,7 +36,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
     it("Should have not started yet", async () => {
       const { crowdsale } = await loadFixture(loadContracts);
       expect(await crowdsale.weiRaised()).to.equal(0);
-      expect(await crowdsale.capReached()).to.equal(false);
       expect(await crowdsale.isOpen()).to.equal(false);
     });
 
@@ -72,9 +70,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         companyLiquidityWallet
       )) as BITMarketsTokenPublicSale__factory;
 
-      const totalSupply = await token.totalSupply();
-      const cap = totalSupply.div(5);
-
       await expect(
         BITMarketsTokenPublicSaleFactory.deploy({
           initialRate,
@@ -82,7 +77,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           wallet: crowdsalesWallet.address,
           purchaser: crowdsalesClientPurchaserWallet.address,
           token: token.address,
-          cap,
           openingTime,
           closingTime,
           investorTariff,
@@ -99,7 +93,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           wallet: crowdsalesWallet.address,
           purchaser: crowdsalesClientPurchaserWallet.address,
           token: token.address,
-          cap,
           openingTime,
           closingTime,
           investorTariff,

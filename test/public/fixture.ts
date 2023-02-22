@@ -81,7 +81,6 @@ export const loadContracts = async () => {
     wallet: crowdsalesWallet.address,
     purchaser: crowdsalesClientPurchaserWallet.address,
     token: token.address,
-    cap,
     openingTime,
     closingTime,
     investorTariff,

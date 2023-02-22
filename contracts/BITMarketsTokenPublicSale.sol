@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.14;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import "./sale/Sale.sol";
-import "./sale/CappedSale.sol";
-import "./sale/PurchaseTariffCap.sol";
-import "./sale/PausableSale.sol";
-import "./sale/TimedSale.sol";
-import "./sale/IncreasingPrice.sol";
-import "./sale/Vesting.sol";
+import { Sale } from "./sale/Sale.sol";
+import { PurchaseTariffCap } from "./sale/PurchaseTariffCap.sol";
+import { TimedSale } from "./sale/TimedSale.sol";
+import { IncreasingPrice } from "./sale/IncreasingPrice.sol";
+import { Vesting } from "./sale/Vesting.sol";
 
 /**
  * @param initialRate Number of token units a buyer gets per wei in the beginning
@@ -30,7 +29,6 @@ struct SaleArgs {
   address payable wallet;
   address payable purchaser;
   IERC20 token;
-  uint256 cap;
   uint256 openingTime;
   uint256 closingTime;
   uint256 investorTariff;
@@ -42,8 +40,6 @@ struct SaleArgs {
 /// @custom:security-contact security@bitmarkets.com
 contract BITMarketsTokenPublicSale is
   Sale,
-  PausableSale,
-  CappedSale,
   PurchaseTariffCap,
   TimedSale,
   IncreasingPrice,
@@ -58,7 +54,6 @@ contract BITMarketsTokenPublicSale is
     SaleArgs memory args
   )
     Sale(args.initialRate, args.wallet, args.purchaser, args.token)
-    CappedSale(args.cap)
     PurchaseTariffCap(args.investorTariff, args.investorCap)
     TimedSale(args.openingTime, args.closingTime)
     IncreasingPrice(args.initialRate, args.finalRate)
@@ -92,8 +87,6 @@ contract BITMarketsTokenPublicSale is
     view
     override(
       Sale,
-      PausableSale,
-      CappedSale,
       TimedSale,
       PurchaseTariffCap
     )

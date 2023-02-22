@@ -5,7 +5,6 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import {
   loadContracts,
   rate,
-  maxWhitelisted,
   investorTariff,
   investorCap,
   cliff,
@@ -26,7 +25,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
       expect(await crowdsale.token()).to.equal(token.address);
       expect(await crowdsale.tokenWallet()).to.equal(crowdsalesWallet.address);
       expect(await crowdsale.wallet()).to.equal(crowdsalesWallet.address);
-      expect(await crowdsale.cap()).to.equal(icoSupply);
       expect(await token.allowance(crowdsalesWallet.address, crowdsale.address)).to.equal(
         icoSupply
       );
@@ -35,7 +33,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
     it("Should have not started yet", async () => {
       const { crowdsale } = await loadFixture(loadContracts);
       expect(await crowdsale.weiRaised()).to.equal(0);
-      expect(await crowdsale.capReached()).to.equal(false);
       expect(await crowdsale.isOpen()).to.equal(false);
     });
 
@@ -65,9 +62,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         companyLiquidityWallet
       )) as BITMarketsTokenPrivateSale__factory;
 
-      const totalSupply = await token.totalSupply();
-      const cap = totalSupply.div(5);
-
       await expect(
         BITMarketsTokenPrivateSaleFactory.deploy({
           rate: 0,
@@ -75,8 +69,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           purchaser: crowdsalesClientPurchaserWallet.address,
           token: token.address,
           whitelister: whitelisterWallet.address,
-          cap,
-          maxWhitelisted,
           openingTime,
           closingTime,
           investorTariff,
@@ -93,8 +85,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           purchaser: crowdsalesClientPurchaserWallet.address,
           token: token.address,
           whitelister: whitelisterWallet.address,
-          cap,
-          maxWhitelisted,
           openingTime,
           closingTime,
           investorTariff,
@@ -111,8 +101,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           purchaser: ethers.constants.AddressZero,
           token: token.address,
           whitelister: whitelisterWallet.address,
-          cap,
-          maxWhitelisted,
           openingTime,
           closingTime,
           investorTariff,
@@ -129,8 +117,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           purchaser: crowdsalesClientPurchaserWallet.address,
           token: ethers.constants.AddressZero,
           whitelister: whitelisterWallet.address,
-          cap,
-          maxWhitelisted,
           openingTime,
           closingTime,
           investorTariff,
@@ -139,39 +125,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           vestingDuration
         })
       ).to.revertedWith("Crowdsale: token 0 address");
-    });
-
-    it("Should revert if cap is 0", async () => {
-      const {
-        token,
-        companyLiquidityWallet,
-        crowdsalesWallet,
-        crowdsalesClientPurchaserWallet,
-        whitelisterWallet
-      } = await loadFixture(loadContracts);
-
-      const BITMarketsTokenPrivateSaleFactory = (await ethers.getContractFactory(
-        "BITMarketsTokenPrivateSale",
-        companyLiquidityWallet
-      )) as BITMarketsTokenPrivateSale__factory;
-
-      await expect(
-        BITMarketsTokenPrivateSaleFactory.deploy({
-          rate,
-          wallet: crowdsalesWallet.address,
-          purchaser: crowdsalesClientPurchaserWallet.address,
-          token: token.address,
-          whitelister: whitelisterWallet.address,
-          cap: 0,
-          maxWhitelisted,
-          openingTime,
-          closingTime,
-          investorTariff,
-          investorCap,
-          cliff,
-          vestingDuration
-        })
-      ).to.revertedWith("CappedCrowdsale: cap is 0");
     });
 
     it("Should revert if investor tariff or cap has wrong args", async () => {
@@ -183,9 +136,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         whitelisterWallet
       } = await loadFixture(loadContracts);
 
-      const totalSupply = await token.totalSupply();
-      const cap = totalSupply.div(5);
-
       const BITMarketsTokenPrivateSaleFactory = (await ethers.getContractFactory(
         "BITMarketsTokenPrivateSale",
         companyLiquidityWallet
@@ -198,8 +148,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           purchaser: crowdsalesClientPurchaserWallet.address,
           token: token.address,
           whitelister: whitelisterWallet.address,
-          cap,
-          maxWhitelisted,
           openingTime,
           closingTime,
           investorTariff: ethers.utils.parseEther("0"),
@@ -216,8 +164,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           purchaser: crowdsalesClientPurchaserWallet.address,
           token: token.address,
           whitelister: whitelisterWallet.address,
-          cap,
-          maxWhitelisted,
           openingTime,
           closingTime,
           investorTariff,
@@ -237,9 +183,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         whitelisterWallet
       } = await loadFixture(loadContracts);
 
-      const totalSupply = await token.totalSupply();
-      const cap = totalSupply.div(5);
-
       const BITMarketsTokenPrivateSaleFactory = (await ethers.getContractFactory(
         "BITMarketsTokenPrivateSale",
         companyLiquidityWallet
@@ -254,8 +197,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           purchaser: crowdsalesClientPurchaserWallet.address,
           token: token.address,
           whitelister: whitelisterWallet.address,
-          cap,
-          maxWhitelisted,
           openingTime: openingTime - 10 * 30 * 24 * 60 * 60,
           closingTime,
           investorTariff,
@@ -272,8 +213,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           purchaser: crowdsalesClientPurchaserWallet.address,
           token: token.address,
           whitelister: whitelisterWallet.address,
-          cap,
-          maxWhitelisted,
           openingTime: openingTime + 1,
           closingTime: openingTime - 1,
           investorTariff,
