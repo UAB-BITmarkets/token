@@ -93,6 +93,7 @@ contract BITMarketsToken is
 
     // Company wallet
     _mint(msg.sender, args.initialSupply * 10 ** decimals());
+    // TODO check if needed
     _approve(msg.sender, args.allocationsWallet, args.allocationsWalletTokens * 10 ** decimals());
     _approve(msg.sender, args.crowdsalesWallet, args.crowdsalesWalletTokens * 10 ** decimals());
 

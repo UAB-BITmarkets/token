@@ -14,6 +14,7 @@ import { HardhatUserConfig } from "hardhat/config";
 // import '@nomiclabs/hardhat-web3';
 
 import "./tasks/deploy";
+import "./tasks/allocate";
 
 import {
   companyLiquidityWallet,
@@ -21,10 +22,8 @@ import {
   crowdsalesWallet,
   companyRewardsWallet,
   esgFundWallet,
-  minterWallet,
   pauserWallet,
   whitelisterWallet,
-  blacklisterWallet,
   feelessAdminWallet,
   allocationsAdminWallet,
   companyRestrictionWhitelistWallet,
@@ -99,19 +98,11 @@ const config: HardhatUserConfig = {
             balance: `${10000 * 10 ** 18}`
           },
           {
-            privateKey: minterWallet.privateKey,
-            balance: `${10000 * 10 ** 18}`
-          },
-          {
             privateKey: pauserWallet.privateKey,
             balance: `${10000 * 10 ** 18}`
           },
           {
             privateKey: whitelisterWallet.privateKey,
-            balance: `${10000 * 10 ** 18}`
-          },
-          {
-            privateKey: blacklisterWallet.privateKey,
             balance: `${10000 * 10 ** 18}`
           },
           {

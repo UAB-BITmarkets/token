@@ -1,7 +1,7 @@
 {
   "name": "bitmarkets",
   "version": "0.1.2",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "description": "Crypto made simple",
   "engines": {
     "node": "^18.3.0",
@@ -55,6 +55,7 @@
     "coverage": "npx hardhat coverage",
     "deploy:dev": "cross-env NODE_ENV=development npx hardhat deploy --network localhost",
     "deploy:test": "cross-env NODE_ENV=testing npx hardhat deploy --network polygon_mumbai",
+    "allocate:test": "cross-env NODE_ENV=testing npx hardhat allocate --network polygon_mumbai",
     "deploy:prod": "cross-env NODE_ENV=production npx hardhat deploy",
     "start": "cross-env NODE_ENV=development npx hardhat node",
     "generateAddresses": "node scripts/generateWallets.mjs"

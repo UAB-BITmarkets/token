@@ -39,30 +39,6 @@ const vestingDuration = 60; // one minute = 60 seconds after cliff for full vest
 const whitelistedRate = 19;
 const maxWhitelisted = 100000;
 
-// const salesWalletsLen = 1000;
-// const salesWallets: Wallet[] = [];
-// for (let i = 0; i < salesWalletsLen; i++) {
-//   salesWallets.push(ethers.Wallet.createRandom());
-// }
-// const salesAllocationPerWallet = (allocationsWalletTokens * 40) / 100 / salesWalletsLen;
-//
-// const marketingWallet = ethers.Wallet.createRandom();
-// const marketingAllocation = (allocationsWalletTokens * 25) / 100;
-//
-// const teamWalletsLen = 3;
-// const teamWallets: Wallet[] = [];
-// for (let i = 0; i < teamWalletsLen; i++) {
-//   teamWallets.push(ethers.Wallet.createRandom());
-// }
-// const teamAllocationPerWallet = (allocationsWalletTokens * 30) / 100 / teamWalletsLen;
-//
-// const airdropsWalletsLen = 100;
-// const airdropsWallets: Wallet[] = [];
-// for (let i = 0; i < airdropsWalletsLen; i++) {
-//   airdropsWallets.push(ethers.Wallet.createRandom());
-// }
-// const airdropsAllocationPerWallet = (allocationsWalletTokens * 5) / 100 / airdropsWalletsLen;
-
 task("deploy", "Deploy contracts").setAction(
   async (_, hre: HardhatRuntimeEnvironment): Promise<void> => {
     const [
@@ -139,34 +115,6 @@ task("deploy", "Deploy contracts").setAction(
     await btmt.connect(allocationsWallet).approve(allocations.address, allocationsCap);
 
     console.log(`ALLOCATIONS_CONTRACT_ADDRESS=${allocations.address}`);
-
-    // let i = 0;
-    //
-    // const salesAllocationPerWalletDecimals = ethers.utils.parseEther(`${salesAllocationPerWallet}`);
-    // for (i = 0; i < salesWalletsLen; i++) {
-    //   await allocations
-    //     .connect(allocationsAdminWallet)
-    //     .allocate(salesWallets[i].address, salesAllocationPerWalletDecimals);
-    // }
-    //
-    // const teamAllocationPerWalletDecimals = ethers.utils.parseEther(`${teamAllocationPerWallet}`);
-    // for (i = 0; i < teamWalletsLen; i++) {
-    //   await allocations
-    //     .connect(allocationsAdminWallet)
-    //     .allocate(teamWallets[i].address, teamAllocationPerWalletDecimals);
-    // }
-    //
-    // const marketingAllocationDecimals = ethers.utils.parseEther(`${marketingAllocation}`);
-    // await allocations
-    //   .connect(allocationsAdminWallet)
-    //   .allocate(marketingWallet.address, marketingAllocationDecimals);
-    //
-    // const airdropsAllocationDecimals = ethers.utils.parseEther(`${airdropsAllocationPerWallet}`);
-    // for (i = 0; i < airdropsWalletsLen; i++) {
-    //   await allocations
-    //     .connect(allocationsAdminWallet)
-    //     .allocate(airdropsWallets[i].address, airdropsAllocationDecimals);
-    // }
 
     const totalSalesSupply = btmtTotalSupply.div(3);
     const privateSaleCap = totalSalesSupply.mul(4).div(10);
