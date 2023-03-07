@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.14;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 struct StrategicWallet {
   address approvedReceiver;
@@ -90,7 +90,10 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
           "Last max transfer too close"
         );
 
-        require(_companyLiquidityTransfersLimit >= _companyLiquidityTransfers.add(amount), "Amount > transfer limit");
+        require(
+          _companyLiquidityTransfersLimit >= _companyLiquidityTransfers.add(amount),
+          "Amount > transfer limit"
+        );
       }
     }
     _;
@@ -176,7 +179,9 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
 
   function getApprovedReceiverRemaining(address wallet) public view returns (uint256) {
     return
-    _strategicWallet[wallet].amountTransferredLimit.sub(_strategicWallet[wallet].amountTransferred);
+      _strategicWallet[wallet].amountTransferredLimit.sub(
+        _strategicWallet[wallet].amountTransferred
+      );
   }
 
   function companyLiquidityTransfersLimit() public view returns (uint256) {
@@ -218,7 +223,6 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
       bool caseTwo = isTransfer && strategicWallet.approvedReceiver == to;
 
       if (caseOne || caseTwo) {
-
         uint256 diff = strategicWallet.amountTransferredLimit.sub(
           strategicWallet.amountTransferred
         );

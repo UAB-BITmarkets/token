@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.14;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import { Sale } from "./sale/Sale.sol";
-import { PurchaseTariffCap } from "./sale/PurchaseTariffCap.sol";
-import { TimedSale } from "./sale/TimedSale.sol";
-import { IncreasingPrice } from "./sale/IncreasingPrice.sol";
-import { Vesting } from "./sale/Vesting.sol";
+import {Sale} from "./sale/Sale.sol";
+import {PurchaseTariffCap} from "./sale/PurchaseTariffCap.sol";
+import {TimedSale} from "./sale/TimedSale.sol";
+import {IncreasingPrice} from "./sale/IncreasingPrice.sol";
+import {Vesting} from "./sale/Vesting.sol";
 
 /**
  * @param initialRate Number of token units a buyer gets per wei in the beginning
@@ -38,13 +38,7 @@ struct SaleArgs {
 }
 
 /// @custom:security-contact security@bitmarkets.com
-contract BITMarketsTokenPublicSale is
-  Sale,
-  PurchaseTariffCap,
-  TimedSale,
-  IncreasingPrice,
-  Vesting
-{
+contract BITMarketsTokenPublicSale is Sale, PurchaseTariffCap, TimedSale, IncreasingPrice, Vesting {
   using SafeMath for uint256;
 
   /**
@@ -82,15 +76,7 @@ contract BITMarketsTokenPublicSale is
   function _preValidatePurchase(
     address beneficiary,
     uint256 weiAmount
-  )
-    internal
-    view
-    override(
-      Sale,
-      TimedSale,
-      PurchaseTariffCap
-    )
-  {
+  ) internal view override(Sale, TimedSale, PurchaseTariffCap) {
     super._preValidatePurchase(beneficiary, weiAmount);
   }
 

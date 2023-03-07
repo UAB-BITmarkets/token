@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.14;
 
-import { Sale } from "./Sale.sol";
+import {Sale} from "./Sale.sol";
 
 /**
  * @dev Sale in which only whitelisted users can contribute.

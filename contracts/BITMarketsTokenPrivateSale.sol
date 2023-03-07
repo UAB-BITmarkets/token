@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.14;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import { Sale } from "./sale/Sale.sol";
-import { PurchaseTariffCap } from "./sale/PurchaseTariffCap.sol";
-import { TimedSale } from "./sale/TimedSale.sol";
-import { Whitelist } from "./sale/Whitelist.sol";
-import { Vesting } from "./sale/Vesting.sol";
+import {Sale} from "./sale/Sale.sol";
+import {PurchaseTariffCap} from "./sale/PurchaseTariffCap.sol";
+import {TimedSale} from "./sale/TimedSale.sol";
+import {Whitelist} from "./sale/Whitelist.sol";
+import {Vesting} from "./sale/Vesting.sol";
 
-import { IBITMarketsTokenPrivateSale } from "./utils/IBITMarketsTokenPrivateSale.sol";
+import {IBITMarketsTokenPrivateSale} from "./utils/IBITMarketsTokenPrivateSale.sol";
 
 struct SaleArgs {
   uint256 rate;
@@ -75,16 +75,7 @@ contract BITMarketsTokenPrivateSale is
   function _preValidatePurchase(
     address beneficiary,
     uint256 weiAmount
-  )
-    internal
-    view
-    override(
-      Sale,
-      TimedSale,
-      PurchaseTariffCap,
-      Whitelist
-    )
-  {
+  ) internal view override(Sale, TimedSale, PurchaseTariffCap, Whitelist) {
     super._preValidatePurchase(beneficiary, weiAmount);
   }
 }

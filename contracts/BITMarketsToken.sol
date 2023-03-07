@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.14;
 
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { ERC20Snapshot} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
-import { ERC20Pausable } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
-import { ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC20Snapshot} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
+import {ERC20Pausable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
+import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import { ERC20StrategicWalletRestrictions } from "./token/ERC20StrategicWalletRestrictions.sol";
-import { ERC20Fees } from "./token/ERC20Fees.sol";
+import {ERC20StrategicWalletRestrictions} from "./token/ERC20StrategicWalletRestrictions.sol";
+import {ERC20Fees} from "./token/ERC20Fees.sol";
 
-import { IBITMarketsToken } from "./utils/IBITMarketsToken.sol";
+import {IBITMarketsToken} from "./utils/IBITMarketsToken.sol";
 
 /**
  * @dev Constructor
