@@ -127,10 +127,9 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const startTime = Date.now();
       await ethers.provider.send("evm_mine", [startTime]);
 
-      expect(await token.connect(feelessAdminWallet).addFeeless(someRandomWallet.address)).to.emit(
-        "BITMarketsToken",
-        "Caller added to feeless"
-      );
+      await expect(token.connect(feelessAdminWallet).addFeeless(someRandomWallet.address))
+        .to.emit(token, "FeelessAdded")
+        .withArgs(someRandomWallet.address);
 
       expect(await token.isFeeless(someRandomWallet.address)).to.be.equal(true);
 
@@ -151,9 +150,9 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const someOtherRandomWallet = ethers.Wallet.createRandom();
       token.connect(feelessAdminWallet).addFeeless(someOtherRandomWallet.address);
 
-      expect(
-        await token.connect(feelessAdminWallet).removeFeeless(someRandomWallet.address)
-      ).to.emit("BITMarketsToken", "Caller removed from feeless");
+      await expect(token.connect(feelessAdminWallet).removeFeeless(someRandomWallet.address))
+        .to.emit(token, "FeelessRemoved")
+        .withArgs(someRandomWallet.address);
 
       await expect(
         token.connect(feelessAdminWallet).removeFeeless(ethers.constants.AddressZero)
@@ -332,9 +331,8 @@ describe("BITMarkets ERC20 token contract tests", () => {
       await ethers.provider.send("evm_mine", [startTime]);
 
       const limit = ethers.utils.parseEther(`${maxCompanyWalletTransfer}`);
-      const closeToLimit = limit.sub(limit.mul(1).div(1000));
-      const closeToLimitPlusOne = ethers.utils.parseEther("300000");
-      const closeToLimitPlusTwo = ethers.utils.parseEther("400000");
+      const closeToLimit = limit.sub(3);
+      const closeToLimitPlusTwo = limit.sub(1);
 
       const totalSupplyBefore = await token.totalSupply();
       const expectedBalanceBefore = await token.balanceOf(companyLiquidityWallet.address);
@@ -343,24 +341,26 @@ describe("BITMarkets ERC20 token contract tests", () => {
 
       await token.connect(feelessAdminWallet).addFeeless(companyLiquidityWallet.address);
 
-      await token.transfer(addr1.address, closeToLimit);
+      await token.connect(companyLiquidityWallet).transfer(addr1.address, closeToLimit);
 
       const addr1Balance = await token.balanceOf(addr1.address);
       expect(addr1Balance).to.be.equal(closeToLimit);
 
       const companyLiquidityWalletBalance = await token.balanceOf(companyLiquidityWallet.address);
-
       const expectedBalanceAfter = expectedBalanceBefore.sub(closeToLimit);
-
       expect(companyLiquidityWalletBalance).to.be.equal(expectedBalanceAfter);
 
-      expect(await token.transfer(addr1.address, closeToLimitPlusOne))
-        .to.emit("BITMarketsToken", "StrategicWalletCapReached")
+      await expect(token.transfer(addr1.address, 3))
+        .to.emit(token, "StrategicWalletCapReached")
         .withArgs(companyLiquidityWallet.address);
 
-      expect(await token.companyLiquidityTransfersAreRestricted()).to.be.equal(true);
+      const addr1BalanceAfter = await token.balanceOf(addr1.address);
+      expect(addr1BalanceAfter).to.be.equal(limit);
 
-      await token.approve(addr1.address, ethers.utils.parseEther("1"));
+      await token
+        .connect(companyLiquidityWallet)
+        .approve(addr1.address, ethers.utils.parseEther("1"));
+
       await expect(
         token
           .connect(addr1)
@@ -371,11 +371,11 @@ describe("BITMarkets ERC20 token contract tests", () => {
         "Last max transfer too close"
       );
 
+      expect(await token.companyLiquidityTransfersAreRestricted()).to.be.equal(true);
       await ethers.provider.send("evm_mine", [startTime + 1.2 * 30 * 24 * 60 * 60]);
+      expect(await token.companyLiquidityTransfersAreRestricted()).to.be.equal(false);
 
       const onTheLimit = ethers.utils.parseEther("500000");
-
-      expect(await token.companyLiquidityTransfersAreRestricted()).to.be.equal(false);
 
       await token.transfer(addr1.address, onTheLimit);
 
@@ -384,11 +384,11 @@ describe("BITMarkets ERC20 token contract tests", () => {
       );
 
       expect(companyLiquidityWalletNewBalance).to.be.equal(
-        (await token.totalSupply()).sub(closeToLimit.add(closeToLimitPlusOne.add(onTheLimit)))
+        (await token.totalSupply()).sub(limit.add(onTheLimit))
       );
     });
 
-    it("Should not be possible to approve more than 5m tokens for at least 1 month from the company wallet", async () => {
+    it("Should not be possible to transferFrom more than 5m tokens for at least 1 month from the company wallet", async () => {
       const { token, companyLiquidityWallet, feelessAdminWallet, addr1, addr2 } = await loadFixture(
         loadContract
       );
@@ -397,8 +397,8 @@ describe("BITMarkets ERC20 token contract tests", () => {
       await ethers.provider.send("evm_mine", [startTime]);
 
       const limit = ethers.utils.parseEther(`${maxCompanyWalletTransfer}`);
-      const closeToLimit = limit.sub(limit.mul(1).div(1000));
-      const closeToLimitPlusOne = ethers.utils.parseEther("300000");
+      const closeToLimit = limit.sub(2);
+      const closeToLimitPlusOne = limit.sub(1);
 
       const totalSupplyBefore = await token.totalSupply();
       const expectedBalanceBefore = await token.balanceOf(companyLiquidityWallet.address);
@@ -409,7 +409,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
 
       await token
         .connect(companyLiquidityWallet)
-        .approve(addr1.address, closeToLimit.add(closeToLimit));
+        .approve(addr1.address, closeToLimitPlusOne.add(2));
 
       await token
         .connect(addr1)
@@ -424,18 +424,23 @@ describe("BITMarkets ERC20 token contract tests", () => {
 
       expect(companyLiquidityWalletBalance).to.be.equal(expectedBalanceAfter);
 
-      expect(
-        await token
-          .connect(addr1)
-          .transferFrom(companyLiquidityWallet.address, addr2.address, closeToLimitPlusOne)
+      await expect(
+        token.connect(addr1).transferFrom(companyLiquidityWallet.address, addr2.address, 3)
+      ).to.revertedWith("Amount > transfer limit");
+
+      await expect(
+        token.connect(addr1).transferFrom(companyLiquidityWallet.address, addr2.address, 2)
       )
-        .to.emit("BITMarketsToken", "StrategicWalletCapReached")
+        .to.emit(token, "StrategicWalletCapReached")
         .withArgs(companyLiquidityWallet.address);
+
+      const addr2BalanceAfter = await token.balanceOf(addr2.address);
+      expect(addr2BalanceAfter).to.be.equal(limit);
 
       expect(await token.companyLiquidityTransfersAreRestricted()).to.be.equal(true);
     });
 
-    it("Should be possible to reach the limit of approved receiver with allowance", async () => {
+    it("Should be possible to do only one transferFrom from company liquidity below the limit to an approved receiver when liquidity locked", async () => {
       const {
         token,
         companyLiquidityWallet,
@@ -451,52 +456,54 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const limit = ethers.utils.parseEther(`${maxCompanyWalletTransfer}`);
       const closeToLimit = limit.sub(2);
 
-      const totalSupplyBefore = await token.totalSupply();
-      const expectedBalanceBefore = await token.balanceOf(companyLiquidityWallet.address);
-
-      expect(expectedBalanceBefore).to.be.equal(totalSupplyBefore);
-
       await token.connect(feelessAdminWallet).addFeeless(companyLiquidityWallet.address);
+      await token.connect(companyLiquidityWallet).approve(addr2.address, limit);
+      await token.connect(addr2).transferFrom(companyLiquidityWallet.address, addr1.address, limit);
 
-      await token
-        .connect(companyRestrictionWhitelistWallet)
-        .addUnrestrictedReceiver(companyLiquidityWallet.address, addr2.address, closeToLimit);
-
-      await token.connect(companyLiquidityWallet).approve(addr1.address, limit);
-
-      await token
-        .connect(addr1)
-        .transferFrom(companyLiquidityWallet.address, addr2.address, closeToLimit.sub(1));
-
-      const addr2Balance = await token.balanceOf(addr2.address);
-      expect(addr2Balance).to.be.equal(closeToLimit.sub(1));
-
-      const companyLiquidityWalletBalance = await token.balanceOf(companyLiquidityWallet.address);
-
-      const expectedBalanceAfter = expectedBalanceBefore.sub(closeToLimit.sub(1));
-
-      expect(companyLiquidityWalletBalance).to.be.equal(expectedBalanceAfter);
-
-      expect(
-        await token.connect(addr1).transferFrom(companyLiquidityWallet.address, addr2.address, 2)
-      )
-        .to.emit("BITMarketsToken", "StrategicWalletCapReached")
-        .withArgs(companyLiquidityWallet.address);
+      expect(await token.companyLiquidityTransfersAreRestricted()).to.be.equal(true);
 
       await expect(
-        token.connect(addr1).transferFrom(companyLiquidityWallet.address, addr2.address, 1)
-      ).to.revertedWith("Sender surpassed approved limit");
+        token
+          .connect(companyRestrictionWhitelistWallet)
+          .addUnrestrictedReceiver(companyLiquidityWallet.address, addr2.address, closeToLimit)
+      )
+        .to.emit(token, "UnrestrictedReceiverAdded")
+        .withArgs(companyLiquidityWallet.address, addr2.address, closeToLimit);
 
-      expect(await token.companyLiquidityTransfersAreRestricted()).to.be.equal(false);
+      await token.connect(companyLiquidityWallet).approve(addr1.address, limit.mul(3));
+
+      const approved = await token.getApprovedReceiver(companyLiquidityWallet.address);
+      const lim = await token.getApprovedReceiverLimit(companyLiquidityWallet.address);
+      expect(approved).to.be.equal(addr2.address);
+      expect(lim).to.be.equal(closeToLimit);
+
+      await expect(
+        token
+          .connect(addr1)
+          .transferFrom(companyLiquidityWallet.address, addr2.address, closeToLimit)
+      )
+        .to.emit(token, "StrategicWalletCapReached")
+        .withArgs(companyLiquidityWallet.address)
+        .and.to.emit(token, "UnrestrictedTransferOccured")
+        .withArgs(companyLiquidityWallet.address, addr2.address, closeToLimit);
+
+      const addr2BalanceAfter = await token.balanceOf(addr2.address);
+      expect(addr2BalanceAfter).to.be.equal(closeToLimit);
+
+      const approvedAfter = await token.getApprovedReceiver(companyLiquidityWallet.address);
+      expect(approvedAfter).to.be.equal(ethers.constants.AddressZero);
+      expect(await token.companyLiquidityTransfersAreRestricted()).to.be.equal(true);
+
+      const remaining = await token.getApprovedReceiverRemaining(companyLiquidityWallet.address);
+      expect(remaining).to.be.equal(ethers.constants.Zero);
     });
 
-    it("Should be possible to reach the limit of approved receiver with transfers", async () => {
+    it("Should be possible to do only one transfer from company liquidity below the limit to an approved receiver when liquidity locked", async () => {
       const {
         token,
         companyLiquidityWallet,
         feelessAdminWallet,
         companyRestrictionWhitelistWallet,
-        addr1,
         addr2
       } = await loadFixture(loadContract);
 
@@ -504,8 +511,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
       await ethers.provider.send("evm_mine", [startTime]);
 
       const limit = ethers.utils.parseEther(`${maxCompanyWalletTransfer}`);
-      const closeToLimit = limit.sub(limit.mul(1).div(1000));
-      const closeToLimitPlusOne = ethers.utils.parseEther("300000");
+      const closeToLimit = limit.sub(1);
 
       const totalSupplyBefore = await token.totalSupply();
       const expectedBalanceBefore = await token.balanceOf(companyLiquidityWallet.address);
@@ -513,33 +519,39 @@ describe("BITMarkets ERC20 token contract tests", () => {
       expect(expectedBalanceBefore).to.be.equal(totalSupplyBefore);
 
       await token.connect(feelessAdminWallet).addFeeless(companyLiquidityWallet.address);
+      await token.connect(companyLiquidityWallet).transfer(addr2.address, limit);
+      expect(await token.companyLiquidityTransfersAreRestricted()).to.be.equal(true);
 
-      await token
-        .connect(companyRestrictionWhitelistWallet)
-        .addUnrestrictedReceiver(companyLiquidityWallet.address, addr2.address, closeToLimit);
-
-      await token
-        .connect(companyLiquidityWallet)
-        .transfer(addr1.address, closeToLimit.sub(ethers.utils.parseEther("0.1")));
-
-      const addr1Balance = await token.balanceOf(addr1.address);
-      expect(addr1Balance).to.be.equal(closeToLimit.sub(ethers.utils.parseEther("0.1")));
-
-      const companyLiquidityWalletBalance = await token.balanceOf(companyLiquidityWallet.address);
-
-      const expectedBalanceAfter = expectedBalanceBefore.sub(
-        closeToLimit.sub(ethers.utils.parseEther("0.1"))
-      );
-
-      expect(companyLiquidityWalletBalance).to.be.equal(expectedBalanceAfter);
-
-      expect(
-        await token.connect(companyLiquidityWallet).transfer(addr2.address, closeToLimitPlusOne)
+      await expect(
+        token
+          .connect(companyRestrictionWhitelistWallet)
+          .addUnrestrictedReceiver(companyLiquidityWallet.address, addr2.address, closeToLimit)
       )
-        .to.emit("BITMarketsToken", "StrategicWalletCapReached")
-        .withArgs(companyLiquidityWallet.address);
+        .to.emit(token, "UnrestrictedReceiverAdded")
+        .withArgs(companyLiquidityWallet.address, addr2.address, closeToLimit);
 
-      expect(await token.companyLiquidityTransfersAreRestricted()).to.be.equal(false);
+      // await token.connect(companyLiquidityWallet).transfer(addr2.address, closeToLimit.sub(1));
+      await expect(token.connect(companyLiquidityWallet).transfer(addr2.address, closeToLimit))
+        .to.emit(token, "StrategicWalletCapReached")
+        .withArgs(companyLiquidityWallet.address)
+        .and.to.emit(token, "UnrestrictedTransferOccured")
+        .withArgs(companyLiquidityWallet.address, addr2.address, closeToLimit);
+
+      const addr2BalanceAfter = await token.balanceOf(addr2.address);
+      expect(addr2BalanceAfter).to.be.equal(limit.add(closeToLimit));
+
+      const approvedAfter = await token.getApprovedReceiver(companyLiquidityWallet.address);
+      expect(approvedAfter).to.be.equal(ethers.constants.AddressZero);
+
+      const remaining = await token.getApprovedReceiverRemaining(companyLiquidityWallet.address);
+      expect(remaining).to.be.equal(ethers.constants.Zero);
+
+      // await expect(
+      //   token.connect(companyLiquidityWallet).transfer(addr2.address, 1)
+      //   // ).to.revertedWith("Sender surpassed approved limit");
+      // ).to.revertedWith("Last max transfer too close");
+      //
+      // expect(await token.companyLiquidityTransfersAreRestricted()).to.be.equal(true);
     });
   });
 
@@ -565,11 +577,20 @@ describe("BITMarkets ERC20 token contract tests", () => {
     const allowance = 100;
 
     it("Disallows transfers from allowance when paused and allows them after unpaused", async () => {
-      const { token, companyLiquidityWallet, addr1, addr2, pauserWallet } = await loadFixture(
-        loadContract
-      );
+      const {
+        token,
+        companyLiquidityWallet,
+        companyRestrictionWhitelistWallet,
+        addr1,
+        addr2,
+        pauserWallet
+      } = await loadFixture(loadContract);
 
       await token.approve(addr1.address, allowance, { from: companyLiquidityWallet.address });
+
+      await token
+        .connect(companyRestrictionWhitelistWallet)
+        .addUnrestrictedReceiver(companyLiquidityWallet.address, addr2.address, 100);
 
       await token.connect(pauserWallet).pause();
 
@@ -616,15 +637,13 @@ describe("BITMarkets ERC20 token contract tests", () => {
     it("Emits event", async () => {
       const { token } = await loadFixture(loadContract);
 
-      const receipt = await token.snapshot();
-      expect(receipt).to.emit("BITMarketsToken", "Snapshot");
+      await expect(token.snapshot()).to.emit(token, "Snapshot");
     });
 
     it("Creates increasing snapshots ids, starting from 1", async () => {
       const { token } = await loadFixture(loadContract);
       for (const id of ["1", "2", "3", "4", "5"]) {
-        const receipt = await token.snapshot();
-        expect(receipt).to.emit("BITMarketsToken", "Snapshot").withArgs(id);
+        await expect(token.snapshot()).to.emit(token, "Snapshot").withArgs(id);
       }
     });
 

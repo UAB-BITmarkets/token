@@ -30,14 +30,13 @@ const companyRate = 10; // 1 over 1000 = 0.1%
 const esgFundRate = 10;
 const burnRate = 10;
 
-const investorTariff = ethers.utils.parseEther("100.0"); // 100 matic
-const investorCap = ethers.utils.parseEther("30000.0"); // 30000 matic
+const investorTariff = ethers.utils.parseEther("500.0"); // 500 matic
+const investorCap = ethers.utils.parseEther("50000.0"); // 50000 matic
 
-const cliff = 60; // one minute = 60 seconds locked
-const vestingDuration = 60; // one minute = 60 seconds after cliff for full vesting
+const cliff = 180; // three minutes = 180 seconds locked
+const vestingDuration = 360; // six minute = 360 seconds after cliff for full vesting
 
-const whitelistedRate = 19;
-const maxWhitelisted = 100000;
+const whitelistedRate = 20;
 
 task("deploy", "Deploy contracts").setAction(
   async (_, hre: HardhatRuntimeEnvironment): Promise<void> => {
@@ -127,8 +126,6 @@ task("deploy", "Deploy contracts").setAction(
       purchaser: crowdsalesClientPurchaserWallet.address,
       token: btmt.address,
       whitelister: whitelisterWallet.address,
-      cap: privateSaleCap,
-      maxWhitelisted,
       openingTime: privateSaleOpeningTime,
       closingTime: privateSaleClosingTime,
       investorTariff,

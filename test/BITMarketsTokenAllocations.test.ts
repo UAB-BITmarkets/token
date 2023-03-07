@@ -2,26 +2,14 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import type { BITMarketsToken__factory } from "../typechain-types/factories/contracts/BITMarketsToken__factory";
-import type { BITMarketsTokenAllocations__factory } from "../typechain-types/factories/contracts/BITMarketsTokenAllocations__factory";
+import {
+  loadContracts,
+  cliff,
+  vestingDuration,
+  allocationsWalletTokens
+} from "./allocations/fixture";
 
 import type { Wallet } from "ethers";
-
-const cliff = 10; // seconds locked
-const vestingDuration = 20; // seconds after cliff for full vesting
-
-const initialSupply = 300000000;
-const finalSupply = 200000000;
-
-const companyWalletTokens = initialSupply / 3;
-const allocationsWalletTokens = initialSupply / 3;
-const crowdsalesWalletTokens = initialSupply / 3;
-
-const maxCompanyWalletTransfer = companyWalletTokens / 20;
-
-const companyRate = 1;
-const esgFundRate = 1;
-const burnRate = 1; // 1/1000 = 0.1%
 
 const salesWalletsLen = 10;
 const salesWallets: Wallet[] = [];
@@ -48,188 +36,6 @@ for (let i = 0; i < airdropsWalletsLen; i++) {
 const airdropsAllocationPerWallet = (allocationsWalletTokens * 5) / 100 / airdropsWalletsLen;
 
 describe("BITMarkets ERC20 token allocations tests", () => {
-  const loadContracts = async () => {
-    const [
-      companyLiquidityWallet,
-      addr1,
-      addr2,
-      allocationsWallet,
-      crowdsalesWallet,
-      companyRewardsWallet,
-      esgFundWallet,
-      minterWallet,
-      pauserWallet,
-      whitelisterWallet,
-      blacklisterWallet,
-      feelessAdminWallet,
-      companyRestrictionWhitelistWallet,
-      allocationsAdminWallet,
-      crowdsalesClientPurchaserWallet
-    ] = await ethers.getSigners();
-
-    const BITMarketsTokenFactory = (await ethers.getContractFactory(
-      "BITMarketsToken",
-      companyLiquidityWallet
-    )) as BITMarketsToken__factory;
-
-    const token = await BITMarketsTokenFactory.deploy({
-      initialSupply,
-      finalSupply,
-      allocationsWalletTokens,
-      crowdsalesWalletTokens,
-      maxCompanyWalletTransfer,
-      companyRate,
-      esgFundRate,
-      burnRate,
-      allocationsWallet: allocationsWallet.address,
-      crowdsalesWallet: crowdsalesWallet.address,
-      companyRewardsWallet: companyRewardsWallet.address,
-      esgFundWallet: esgFundWallet.address,
-      minterWallet: minterWallet.address,
-      pauserWallet: pauserWallet.address,
-      blacklisterWallet: blacklisterWallet.address,
-      feelessAdminWallet: feelessAdminWallet.address,
-      companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
-    });
-    await token.deployed();
-
-    const totalSupply = await token.totalSupply();
-    const cap = totalSupply.div(3);
-
-    const BITMarketsTokenAllocationsFactory = (await ethers.getContractFactory(
-      "BITMarketsTokenAllocations",
-      companyLiquidityWallet
-    )) as BITMarketsTokenAllocations__factory;
-    const allocations = await BITMarketsTokenAllocationsFactory.deploy(
-      allocationsWallet.address,
-      allocationsAdminWallet.address,
-      token.address,
-      cliff,
-      vestingDuration
-    );
-    await allocations.deployed();
-
-    await token.connect(feelessAdminWallet).addFeeless(allocations.address);
-    await token.connect(feelessAdminWallet).addFeeless(allocationsWallet.address);
-    await token
-      .connect(companyRestrictionWhitelistWallet)
-      .addUnrestrictedReceiver(
-        companyLiquidityWallet.address,
-        allocationsWallet.address,
-        ethers.utils.parseEther(`${allocationsWalletTokens}`)
-      );
-    await token.transfer(
-      allocationsWallet.address,
-      ethers.utils.parseEther(`${allocationsWalletTokens}`)
-    );
-    await token
-      .connect(companyRestrictionWhitelistWallet)
-      .addUnrestrictedReceiver(
-        allocationsWallet.address,
-        allocations.address,
-        ethers.utils.parseEther(`${allocationsWalletTokens}`)
-      );
-    await token.connect(feelessAdminWallet).addFeelessAdmin(allocations.address);
-
-    await token.connect(allocationsWallet).approve(allocations.address, cap);
-    // await token.transfer(crowdsale.address, cap);
-    // await token.increaseAllowance(crowdsale.address, cap);
-
-    return {
-      token,
-      allocations,
-      companyLiquidityWallet,
-      addr1,
-      addr2,
-      allocationsWallet,
-      crowdsalesWallet,
-      companyRewardsWallet,
-      esgFundWallet,
-      minterWallet,
-      pauserWallet,
-      whitelisterWallet,
-      blacklisterWallet,
-      feelessAdminWallet,
-      companyRestrictionWhitelistWallet,
-      allocationsAdminWallet,
-      crowdsalesClientPurchaserWallet
-    };
-  };
-
-  describe("Deployment", () => {
-    it("Should assign a percentage of the total supply of the token to the allocations contract and all initial stuff should be ok", async () => {
-      const { token, allocations, allocationsWallet, allocationsAdminWallet } = await loadFixture(
-        loadContracts
-      );
-
-      const totalSupply = await token.totalSupply();
-      const allocationsSupply = totalSupply.div(3); // 1/5th of total supply
-      expect(await allocations.token()).to.equal(token.address);
-      expect(await allocations.wallet()).to.equal(allocationsWallet.address);
-      expect(await allocations.admin()).to.equal(allocationsAdminWallet.address);
-      expect(await token.allowance(allocationsWallet.address, allocations.address)).to.equal(
-        allocationsSupply
-      );
-    });
-
-    it("Should not be possible to deploy with zero token address", async () => {
-      const { companyLiquidityWallet, allocationsWallet, allocationsAdminWallet } =
-        await loadFixture(loadContracts);
-
-      const BITMarketsTokenAllocationsFactory = (await ethers.getContractFactory(
-        "BITMarketsTokenAllocations",
-        companyLiquidityWallet
-      )) as BITMarketsTokenAllocations__factory;
-      await expect(
-        BITMarketsTokenAllocationsFactory.deploy(
-          allocationsWallet.address,
-          allocationsAdminWallet.address,
-          ethers.constants.AddressZero,
-          cliff,
-          vestingDuration
-        )
-      ).to.revertedWith("Token 0 address");
-    });
-
-    it("Should not be possible to deploy with zero token wallet address", async () => {
-      const { token, companyLiquidityWallet, allocationsAdminWallet } = await loadFixture(
-        loadContracts
-      );
-
-      const BITMarketsTokenAllocationsFactory = (await ethers.getContractFactory(
-        "BITMarketsTokenAllocations",
-        companyLiquidityWallet
-      )) as BITMarketsTokenAllocations__factory;
-      await expect(
-        BITMarketsTokenAllocationsFactory.deploy(
-          ethers.constants.AddressZero,
-          allocationsAdminWallet.address,
-          token.address,
-          cliff,
-          vestingDuration
-        )
-      ).to.revertedWith("Token wallet 0 address");
-    });
-
-    it("Should not be possible to deploy with zero admin wallet address", async () => {
-      const { token, companyLiquidityWallet, allocationsWallet } = await loadFixture(loadContracts);
-
-      const BITMarketsTokenAllocationsFactory = (await ethers.getContractFactory(
-        "BITMarketsTokenAllocations",
-        companyLiquidityWallet
-      )) as BITMarketsTokenAllocations__factory;
-      await expect(
-        BITMarketsTokenAllocationsFactory.deploy(
-          allocationsWallet.address,
-          ethers.constants.AddressZero,
-          token.address,
-          cliff,
-          vestingDuration
-        )
-      ).to.revertedWith("Admin wallet 0 address");
-    });
-  });
-
   describe("Allocation", () => {
     it("Should be possible to allocate", async () => {
       const { token, allocations, addr1, allocationsAdminWallet } = await loadFixture(
@@ -342,6 +148,14 @@ describe("BITMarkets ERC20 token allocations tests", () => {
       await expect(allocations.connect(addr1).vestedAmount(addr1.address)).to.revertedWith(
         "No vesting wallet"
       );
+    });
+
+    it("Should only be possible to do transfers to the allocations smart contract.", async () => {
+      const { token, allocationsWallet, addr1 } = await loadFixture(loadContracts);
+
+      await expect(
+        token.connect(allocationsWallet).transfer(addr1.address, ethers.utils.parseEther("1"))
+      ).to.revertedWith("Illegal transfer");
     });
 
     it("Should be possible for BITMarkets allocations to happen", async () => {

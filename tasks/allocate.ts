@@ -46,14 +46,10 @@ const provider =
     ? new ethers.providers.AlchemyProvider("maticmum", env.ALCHEMY_API_KEY || "")
     : new ethers.providers.AlchemyProvider("matic", env.ALCHEMY_API_KEY || "");
 
-console.log(env.ALCHEMY_API_KEY);
-
 const allocations = BITMarketsTokenAllocations__factory.connect(
   env.ALLOCATIONS_CONTRACT_ADDRESS || "BITMarketsTokenAllocations",
   provider
 );
-
-console.log(env.ALLOCATIONS_CONTRACT_ADDRESS);
 
 const allocationsWalletTokens = 100000000;
 

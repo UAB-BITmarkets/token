@@ -62,10 +62,9 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
     it("Should allow whitelisting.", async () => {
       const { crowdsale, addr1, whitelisterWallet } = await loadFixture(loadContracts);
 
-      expect(await crowdsale.connect(whitelisterWallet).addWhitelisted(addr1.address)).to.emit(
-        "BITMarketsTokenWhitelistedCrowdsale",
-        "Account added to whitelist"
-      );
+      await expect(crowdsale.connect(whitelisterWallet).addWhitelisted(addr1.address))
+        .to.emit(crowdsale, "WhitelistedAdded")
+        .withArgs(addr1.address);
     });
 
     it("Should allow de-whitelisting.", async () => {
@@ -73,10 +72,9 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
 
       await crowdsale.connect(whitelisterWallet).addWhitelisted(addr1.address);
 
-      expect(await crowdsale.connect(whitelisterWallet).removeWhitelisted(addr1.address)).to.emit(
-        "BITMarketsTokenWhitelistedCrowdsale",
-        "Account removed from whitelist"
-      );
+      await expect(crowdsale.connect(whitelisterWallet).removeWhitelisted(addr1.address))
+        .to.emit(crowdsale, "WhitelistedRemoved")
+        .withArgs(addr1.address);
     });
 
     it("Should be possible for the whitelist admin to add a participant to the crowdsale", async () => {
