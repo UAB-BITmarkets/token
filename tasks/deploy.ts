@@ -7,9 +7,9 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 const privateSaleOpeningTime =
   process.env.NODE_ENV === "production"
-    ? Math.trunc(new Date(`2023-02-15T09:00:00`).valueOf() / 1000)
+    ? Math.trunc(new Date(`2023-03-08T17:00:00`).valueOf() / 1000)
     : Math.trunc((Date.now() + 2 * 60 * 1000) / 1000);
-const privateSaleClosingTime = Math.trunc(new Date("2023-06-26T17:00:00").valueOf() / 1000);
+const privateSaleClosingTime = Math.trunc(new Date("2023-06-18T17:00:00").valueOf() / 1000);
 
 // const publicSaleOpeningTime =
 //   process.env.NODE_ENV === "production"
@@ -26,17 +26,32 @@ const crowdsalesWalletTokens = initialSupply / 3;
 
 const maxCompanyWalletTransfer = companyWalletTokens / 10;
 
-const companyRate = 10; // 1 over 1000 = 0.1%
-const esgFundRate = 10;
-const burnRate = 10;
+const companyRate = 2; // 1 over 1000 = 0.1%
+const esgFundRate = 2;
+const burnRate = 1;
 
 const investorTariff = ethers.utils.parseEther("500.0"); // 500 matic
 const investorCap = ethers.utils.parseEther("50000.0"); // 50000 matic
 
-const cliff = 180; // three minutes = 180 seconds locked
-const vestingDuration = 360; // six minute = 360 seconds after cliff for full vesting
+const allocationsCliff =
+  process.env.NODE_ENV === "production"
+    ? 9 * 30 * 24 * 60 * 60 // 9 months after purchase = 9 * 30 days * 24 hours * 60 minutes * 60 seconds locked
+    : 3 * 60; // 3 minutes after purchase = 3 * 60 seconds locked
+const allocationsVestingDuration =
+  process.env.NODE_ENV === "production"
+    ? 10 * 30 * 24 * 60 * 60 // 10 months linear after cliff = 10 * 30 days * 24 hours * 60 minutes * 60 seconds
+    : 6 * 60; // 6 minutes linear after cliff = 360 seconds after cliff for full vesting
 
-const whitelistedRate = 20;
+const privateSaleCliff =
+  process.env.NODE_ENV === "production"
+    ? 6 * 30 * 24 * 60 * 60 // 6 months after purchase = 6 * 30 days * 24 hours * 60 minutes * 60 seconds locked
+    : 3 * 60; // 3 minutes after purchase = 3 * 60 seconds locked
+const privateSaleVestingDuration =
+  process.env.NODE_ENV === "production"
+    ? 10 * 30 * 24 * 60 * 60 // 10 months linear after cliff = 10 * 30 days * 24 hours * 60 minutes * 60 seconds
+    : 6 * 60; // 6 minutes linear after cliff = 360 seconds after cliff for full vesting
+
+const whitelistedRate = 20; // 1 MATIC = 20 BTMT
 
 task("deploy", "Deploy contracts").setAction(
   async (_, hre: HardhatRuntimeEnvironment): Promise<void> => {
@@ -85,8 +100,8 @@ task("deploy", "Deploy contracts").setAction(
       allocationsWallet.address,
       allocationsAdminWallet.address,
       btmt.address,
-      cliff,
-      vestingDuration
+      allocationsCliff,
+      allocationsVestingDuration
     );
     await allocations.deployed();
 
@@ -130,8 +145,8 @@ task("deploy", "Deploy contracts").setAction(
       closingTime: privateSaleClosingTime,
       investorTariff,
       investorCap,
-      cliff,
-      vestingDuration
+      cliff: privateSaleCliff,
+      vestingDuration: privateSaleVestingDuration
     });
     await whitelisted.deployed();
 

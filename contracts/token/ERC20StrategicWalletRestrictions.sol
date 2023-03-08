@@ -154,7 +154,7 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
   }
 
   function removeUnrestrictedReceiver(address wallet) public virtual onlyRestrictionsAdmin {
-    require(wallet == _companyLiquidityWallet, "Cannot remove allowance");
+    // require(wallet == _companyLiquidityWallet, "Cannot remove allowance");
 
     StrategicWallet storage strategicWallet = _strategicWallet[wallet];
 

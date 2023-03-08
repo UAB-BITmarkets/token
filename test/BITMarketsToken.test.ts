@@ -22,7 +22,9 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const addr1TransferredAmount = ethers.utils.parseEther("50");
 
       // const totalSupplyBefore = await token.totalSupply();
-      // const companyLiquidityWalletBalanceBefore = await token.balanceOf(companyLiquidityWallet.address);
+      const companyLiquidityWalletBalanceBefore = await token.balanceOf(
+        companyLiquidityWallet.address
+      );
       const addr1BalanceBefore = await token.balanceOf(addr1.address);
       await token.connect(companyLiquidityWallet).transfer(addr1.address, addr1TransferredAmount);
 
@@ -31,13 +33,22 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const addr1BalanceAfter = await token.balanceOf(addr1.address);
 
       // expect(totalSupplyAfter).to.be.lessThan(totalSupplyBefore);
-      // expect(companyLiquidityWalletBalanceBefore).to.be.lessThan(companyLiquidityWalletBalanceAfter);
       expect(addr1BalanceBefore).to.be.lessThan(addr1BalanceAfter);
+      expect(await token.balanceOf(companyLiquidityWallet.address)).to.be.equal(
+        companyLiquidityWalletBalanceBefore
+          .sub(addr1TransferredAmount)
+          .sub(addr1TransferredAmount.mul(5).div(1000))
+      );
+      // expect(addr1BalanceAfter).to.be.equal(addr1BalanceBefore.sub(addr1TransferredAmount));
       // expect(addr1BalanceAfter.lt(addr1TransferredAmount)).to.be.equal(true);
 
       // Transfer 50 tokens from addr1 to addr2
       // We use .connect(signer) to send a transaction from another account
-      const addr2TransferredAmount = ethers.utils.parseEther("49");
+      await expect(
+        token.connect(addr1).transfer(addr2.address, ethers.utils.parseEther("49.9"))
+      ).to.revertedWith("Not enough to pay");
+
+      const addr2TransferredAmount = ethers.utils.parseEther("40");
       await token.connect(addr1).transfer(addr2.address, addr2TransferredAmount);
 
       const addr2Balance = await token.balanceOf(addr2.address);
@@ -311,7 +322,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
         token
           .connect(companyRestrictionWhitelistWallet)
           .removeUnrestrictedReceiver(allocationsWallet.address)
-      ).to.revertedWith("Cannot remove allowance");
+      ).to.emit(token, "UnrestrictedReceiverRemoved");
 
       await expect(
         token.connect(addr1).addUnrestrictedReceiver(allocationsWallet.address, addr1.address, 1)

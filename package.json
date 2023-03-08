@@ -55,10 +55,13 @@
     "coverage": "npx hardhat coverage",
     "deploy:dev": "cross-env NODE_ENV=development npx hardhat deploy --network localhost",
     "deploy:test": "cross-env NODE_ENV=testing npx hardhat deploy --network polygon_mumbai",
+    "deploy:prod": "cross-env NODE_ENV=production npx hardhat deploy --network matic",
     "allocate:test": "cross-env NODE_ENV=testing npx hardhat allocate --network polygon_mumbai",
-    "deploy:prod": "cross-env NODE_ENV=production npx hardhat deploy",
+    "allocate:prod": "cross-env NODE_ENV=testing npx hardhat allocate --network matic",
     "start": "cross-env NODE_ENV=development npx hardhat node",
-    "generateAddresses": "node scripts/generateWallets.mjs"
+    "generateAddresses": "node scripts/generateWallets.mjs",
+    "combineKeys": "node scripts/combineKeys.mjs",
+    "generateAllocationsWallets": "node scripts/generateAllocationsWallets.mjs"
   },
   "dependencies": {
     "@deliberative/crypto": "^0.8.3"

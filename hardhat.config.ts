@@ -149,8 +149,8 @@ const config: HardhatUserConfig = {
       }
     }),
     ...(process.env.NODE_ENV === "production" && {
-      polygon_mumbai: {
-        url: process.env.ALCHEMY_POLYGON_URL_PROD || "",
+      matic: {
+        url: process.env.ALCHEMY_POLYGON_MAINNET_URL || "",
         accounts: [
           process.env.COMPANY_LIQUIDITY_WALLET_PRIVATE_KEY || "", // needed
           process.env.ALLOCATIONS_WALLET_PRIVATE_KEY || "", // needed

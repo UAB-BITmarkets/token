@@ -2,14 +2,12 @@ import { ethers } from "ethers";
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { env } from "node:process";
-import { existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 
 import dotenv from "dotenv";
 
 import { BITMarketsTokenAllocations__factory } from "../typechain-types/factories/contracts/BITMarketsTokenAllocations__factory";
-
-import type { Wallet } from "ethers";
 
 if (
   existsSync(
@@ -51,32 +49,6 @@ const allocations = BITMarketsTokenAllocations__factory.connect(
   provider
 );
 
-const allocationsWalletTokens = 100000000;
-
-const salesWalletsLen = 10;
-const salesWallets: Wallet[] = [];
-for (let i = 0; i < salesWalletsLen; i++) {
-  salesWallets.push(ethers.Wallet.createRandom());
-}
-const salesAllocationPerWallet = (allocationsWalletTokens * 40) / 100 / salesWalletsLen;
-
-const marketingWallet = ethers.Wallet.createRandom();
-const marketingAllocation = (allocationsWalletTokens * 25) / 100;
-
-const teamWalletsLen = 3;
-const teamWallets: Wallet[] = [];
-for (let i = 0; i < teamWalletsLen; i++) {
-  teamWallets.push(ethers.Wallet.createRandom());
-}
-const teamAllocationPerWallet = (allocationsWalletTokens * 30) / 100 / teamWalletsLen;
-
-const airdropsWalletsLen = 10;
-const airdropsWallets: Wallet[] = [];
-for (let i = 0; i < airdropsWalletsLen; i++) {
-  airdropsWallets.push(ethers.Wallet.createRandom());
-}
-const airdropsAllocationPerWallet = (allocationsWalletTokens * 5) / 100 / airdropsWalletsLen;
-
 task("allocate", "Allocate to team etc.").setAction(
   async (_, hre: HardhatRuntimeEnvironment): Promise<void> => {
     const [
@@ -93,32 +65,50 @@ task("allocate", "Allocate to team etc.").setAction(
       crowdsalesClientPurchaserWallet
     ] = await hre.ethers.getSigners();
 
-    let i = 0;
+    const teamWalletsLen = 1070;
 
-    const salesAllocationPerWalletDecimals = ethers.utils.parseEther(`${salesAllocationPerWallet}`);
-    for (i = 0; i < salesWalletsLen; i++) {
+    writeFileSync(join(__dirname, "teamAllocationsWallets.csv"), `PRIVATE_KEY,ADDRESS,AMOUNT`);
+
+    for (let i = 0; i < teamWalletsLen; i++) {
+      const file = readFileSync(join(__dirname, "teamAllocationsWallets.csv"), "utf8");
+
+      const wallet = ethers.Wallet.createRandom();
+
+      const amount = i < 10 ? 1000000 : i < 20 ? 500000 : i < 70 ? 100000 : 10000;
+
+      writeFileSync(
+        join(__dirname, "teamAllocationsWallets.csv"),
+        `${file}\n${wallet.privateKey},${wallet.address},${amount}`
+      );
+
       await allocations
         .connect(allocationsAdminWallet)
-        .allocate(salesWallets[i].address, salesAllocationPerWalletDecimals);
+        .allocate(wallet.address, ethers.utils.parseEther(`${amount}`));
+
+      console.log(`Allocated to ${wallet.address} amount ${amount} for team`);
     }
 
-    const teamAllocationPerWalletDecimals = ethers.utils.parseEther(`${teamAllocationPerWallet}`);
-    for (i = 0; i < teamWalletsLen; i++) {
+    const salesWalletsLen = 565;
+
+    writeFileSync(join(__dirname, "salesAllocationsWallets.csv"), `PRIVATE_KEY,ADDRESS,AMOUNT`);
+
+    for (let i = 0; i < salesWalletsLen; i++) {
+      const file = readFileSync(join(__dirname, "salesAllocationsWallets.csv"), "utf8");
+
+      const wallet = ethers.Wallet.createRandom();
+
+      const amount = i < 5 ? 1000000 : i < 15 ? 500000 : i < 65 ? 100000 : 10000;
+
+      writeFileSync(
+        join(__dirname, "salesAllocationsWallets.csv"),
+        `${file}\n${wallet.privateKey},${wallet.address},${amount}`
+      );
+
       await allocations
         .connect(allocationsAdminWallet)
-        .allocate(teamWallets[i].address, teamAllocationPerWalletDecimals);
-    }
+        .allocate(wallet.address, ethers.utils.parseEther(`${amount}`));
 
-    const marketingAllocationDecimals = ethers.utils.parseEther(`${marketingAllocation}`);
-    await allocations
-      .connect(allocationsAdminWallet)
-      .allocate(marketingWallet.address, marketingAllocationDecimals);
-
-    const airdropsAllocationDecimals = ethers.utils.parseEther(`${airdropsAllocationPerWallet}`);
-    for (i = 0; i < airdropsWalletsLen; i++) {
-      await allocations
-        .connect(allocationsAdminWallet)
-        .allocate(airdropsWallets[i].address, airdropsAllocationDecimals);
+      console.log(`Allocated to ${wallet.address} amount ${amount} for sales`);
     }
   }
 );

@@ -19,3 +19,5 @@ typechain-types
 artifacts
 cache
 gasReporterOutput.json
+
+*.csv

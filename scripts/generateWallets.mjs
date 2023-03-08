@@ -11,10 +11,8 @@ const crowdsalesWallet = ethers.Wallet.createRandom();
 const companyRewardsWallet = ethers.Wallet.createRandom();
 const esgFundWallet = ethers.Wallet.createRandom();
 
-const minterWallet = ethers.Wallet.createRandom();
 const pauserWallet = ethers.Wallet.createRandom();
 const whitelisterWallet = ethers.Wallet.createRandom();
-const blacklisterWallet = ethers.Wallet.createRandom();
 const feelessAdminWallet = ethers.Wallet.createRandom();
 const companyRestrictionWhitelistWallet = ethers.Wallet.createRandom();
 
@@ -92,8 +90,20 @@ The address of this wallet is ${companyLiquidityWallet.address} .\
   await split(wallet, totalShares, threshold, filename, nameOfPrivateKey);
 })();
 
+(async () => {
+  const wallet = companyRestrictionWhitelistWallet;
+  const totalShares = 9;
+  const threshold = 5;
+  const filename = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "company_restrictions_shamir_shares.txt"
+  );
+  const nameOfPrivateKey = "company restrictions wallet";
+  await split(wallet, totalShares, threshold, filename, nameOfPrivateKey);
+})();
+
 writeFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), ".env"),
+  join(dirname(fileURLToPath(import.meta.url)), ".env_prod"),
   `\
 COMPANY_LIQUIDITY_WALLET_PRIVATE_KEY=${companyLiquidityWallet.privateKey}\n\
 COMPANY_LIQUIDITY_WALLET_ADDRESS=${companyLiquidityWallet.address}\n\
@@ -109,14 +119,10 @@ COMPANY_REWARDS_WALLET_PRIVATE_KEY=${companyRewardsWallet.privateKey}\n\
 COMPANY_REWARDS_WALLET_ADDRESS=${companyRewardsWallet.address}\n\
 ESG_FUND_WALLET_PRIVATE_KEY=${esgFundWallet.privateKey}\n\
 ESG_FUND_WALLET_ADDRESS=${esgFundWallet.address}\n\
-MINTER_WALLET_PRIVATE_KEY=${minterWallet.privateKey}\n\
-MINTER_WALLET_ADDRESS=${minterWallet.address}\n\
 PAUSER_WALLET_PRIVATE_KEY=${pauserWallet.privateKey}\n\
 PAUSER_WALLET_ADDRESS=${pauserWallet.address}\n\
 WHITELISTER_WALLET_PRIVATE_KEY=${whitelisterWallet.privateKey}\n\
 WHITELISTER_WALLET_ADDRESS=${whitelisterWallet.address}\n\
-BLACKLISTER_WALLET_PRIVATE_KEY=${blacklisterWallet.privateKey}\n\
-BLACKLISTER_WALLET_ADDRESS=${blacklisterWallet.address}\n\
 # This wallet can add feeless addresses and feeless admins such as\n\
 # smart contracts generating vesting wallets\n\
 FEELESS_ADMIN_WALLET_PRIVATE_KEY=${feelessAdminWallet.privateKey}\n\

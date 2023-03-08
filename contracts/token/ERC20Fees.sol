@@ -158,17 +158,20 @@ abstract contract ERC20Fees is ERC20, ERC20Burnable {
   function _afterTokenTransfer(address from, address to, uint256 amount) internal virtual override {
     super._afterTokenTransfer(from, to, amount);
 
+    uint256 msgSenderBalance = balanceOf(_msgSender());
+
     if (
       from != address(0) && // Fees not on minting
       to != address(0) && // Nor on burning
       !isFeeless(from) && // To not go through this condition many times.
       !isFeeless(to) && // same
-      amount > 0 &&
-      balanceOf(_msgSender()) > amount
+      amount > 0
     ) {
       uint256 companyFee = _fromCompanyRewards[from];
       uint256 fundFee = _fromESG[from];
       uint256 burnFee = _fromBurn[from];
+
+      require(msgSenderBalance >= companyFee.add(fundFee).add(burnFee), "Not enough to pay");
 
       if (burnFee > 0 && totalSupply().sub(burnFee) > _minimalSupply) {
         burn(burnFee);

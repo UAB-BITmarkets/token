@@ -11,9 +11,9 @@ const crowdsalesWalletTokens = initialSupply / 3;
 
 const maxCompanyWalletTransfer = companyWalletTokens / 10;
 
-const companyRate = 10;
-const esgFundRate = 10;
-const burnRate = 10; // 1/1000 = 0.1%
+const companyRate = 2;
+const esgFundRate = 2;
+const burnRate = 1; // 1/1000 = 0.1%
 
 export const loadContract = async () => {
   const [
