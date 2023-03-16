@@ -37,7 +37,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
       expect(await token.balanceOf(companyLiquidityWallet.address)).to.be.equal(
         companyLiquidityWalletBalanceBefore
           .sub(addr1TransferredAmount)
-          .sub(addr1TransferredAmount.mul(5).div(1000))
+          .sub(addr1TransferredAmount.mul(3).div(1000))
       );
       // expect(addr1BalanceAfter).to.be.equal(addr1BalanceBefore.sub(addr1TransferredAmount));
       // expect(addr1BalanceAfter.lt(addr1TransferredAmount)).to.be.equal(true);

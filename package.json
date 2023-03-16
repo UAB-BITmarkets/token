@@ -1,6 +1,6 @@
 {
   "name": "bitmarkets",
-  "version": "0.1.2",
+  "version": "0.9.1",
   "license": "Apache-2.0",
   "description": "Crypto made simple",
   "engines": {
@@ -61,6 +61,7 @@
     "start": "cross-env NODE_ENV=development npx hardhat node",
     "generateAddresses": "node scripts/generateWallets.mjs",
     "combineKeys": "node scripts/combineKeys.mjs",
+    "splitWallets": "node scripts/splitWallets.mjs",
     "generateAllocationsWallets": "node scripts/generateAllocationsWallets.mjs"
   },
   "dependencies": {

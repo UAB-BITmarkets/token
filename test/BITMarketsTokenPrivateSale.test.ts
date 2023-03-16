@@ -365,6 +365,31 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       ).to.be.revertedWith("Allowance too low");
     });
 
+    it("Should be possible to remove restriction", async () => {
+      const { token, companyRestrictionWhitelistWallet, crowdsale, crowdsalesWallet } =
+        await loadFixture(loadContracts);
+
+      await expect(
+        token
+          .connect(companyRestrictionWhitelistWallet)
+          .removeUnrestrictedReceiver(crowdsalesWallet.address)
+      ).not.to.be.reverted;
+
+      expect(
+        await token.connect(crowdsalesWallet).getApprovedReceiver(crowdsalesWallet.address)
+      ).to.be.equal(ethers.constants.AddressZero);
+
+      await expect(
+        token
+          .connect(companyRestrictionWhitelistWallet)
+          .addUnrestrictedReceiver(
+            crowdsalesWallet.address,
+            crowdsale.address,
+            ethers.utils.parseEther(`40`)
+          )
+      ).not.to.be.reverted;
+    });
+
     it("Should not be possible to withdraw if no vesting wallet.", async () => {
       const { crowdsale, addr1 } = await loadFixture(loadContracts);
 

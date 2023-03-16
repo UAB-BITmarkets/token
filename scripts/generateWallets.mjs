@@ -51,7 +51,7 @@ ${data}\n\
 These are the validated Shamir shares for the ${nameOfPrivateKey} private key.\n\
 They are ${totalShares} total.\n\
 You need at least ${threshold} to recreate the secret.\n\
-The address of this wallet is ${companyLiquidityWallet.address} .\
+The address of this wallet is ${wallet.address} .\
 `
     );
   }
@@ -99,6 +99,18 @@ The address of this wallet is ${companyLiquidityWallet.address} .\
     "company_restrictions_shamir_shares.txt"
   );
   const nameOfPrivateKey = "company restrictions wallet";
+  await split(wallet, totalShares, threshold, filename, nameOfPrivateKey);
+})();
+
+(async () => {
+  const wallet = allocationsAdminWallet;
+  const totalShares = 9;
+  const threshold = 5;
+  const filename = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "allocations_admin_shamir_shares.txt"
+  );
+  const nameOfPrivateKey = "allocations admin wallet";
   await split(wallet, totalShares, threshold, filename, nameOfPrivateKey);
 })();
 
