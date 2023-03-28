@@ -14,7 +14,7 @@ import { HardhatUserConfig } from "hardhat/config";
 // import '@nomiclabs/hardhat-web3';
 
 import "./tasks/deploy";
-import "./tasks/allocate";
+// import "./tasks/allocate";
 
 import {
   companyLiquidityWallet,

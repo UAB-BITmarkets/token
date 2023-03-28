@@ -74,27 +74,25 @@ task("deploy", "Deploy contracts").setAction(
 
     const { maxFeePerGas, maxPriorityFeePerGas } = await getGasData(); // await hre.ethers.provider.getFeeData();
 
-    const tx1 = await companyLiquidityWallet.sendTransaction({
-      to: allocationsWallet.address,
-      value: ethers.utils.parseEther("0.8"),
-      maxFeePerGas,
-      maxPriorityFeePerGas
-    });
-
-    await tx1.wait();
-
-    console.log(tx1);
-
-    const tx2 = await companyLiquidityWallet.sendTransaction({
-      to: crowdsalesWallet.address,
-      value: ethers.utils.parseEther("0.8"),
-      maxFeePerGas,
-      maxPriorityFeePerGas
-    });
-
-    await tx2.wait();
-
-    console.log(tx2);
+    // const tx1 = await companyLiquidityWallet.sendTransaction({
+    //   to: allocationsWallet.address,
+    //   value: ethers.utils.parseEther("0.8"),
+    //   maxFeePerGas,
+    //   maxPriorityFeePerGas
+    // });
+    //
+    // await tx1.wait();
+    // console.log(tx1);
+    //
+    // const tx2 = await companyLiquidityWallet.sendTransaction({
+    //   to: crowdsalesWallet.address,
+    //   value: ethers.utils.parseEther("0.8"),
+    //   maxFeePerGas,
+    //   maxPriorityFeePerGas
+    // });
+    //
+    // await tx2.wait();
+    // console.log(tx2);
 
     const BTMT = await hre.ethers.getContractFactory("BITMarketsToken");
     const btmt = await BTMT.connect(companyLiquidityWallet).deploy(
@@ -124,7 +122,8 @@ task("deploy", "Deploy contracts").setAction(
     await btmt.deployed();
     // const btmt = BTMT.connect(companyLiquidityWallet).attach(
     //   // "0x3F008388Ba138d31C0373Fd930402f3173D09507"
-    //   "0xf1dcfbA25b8be56c4d706B0C0cf43Ae28E062688"
+    //   // "0xf1dcfbA25b8be56c4d706B0C0cf43Ae28E062688"
+    //   "0x7cCC4a4759d2Bd969eAd5C1353F061873CF19B1d"
     // );
 
     console.log(`TOKEN_CONTRACT_ADDRESS=${btmt.address}`);
@@ -149,15 +148,15 @@ task("deploy", "Deploy contracts").setAction(
     await allocations.deployed();
     // const allocations = ALLOCATIONS.connect(companyLiquidityWallet).attach(
     //   // "0xda441798840005cF8A726B711Aa54c1708bbb29d"
-    //   "0x310AD8a6a34a23330aEF455d9B730c32b12935C0"
+    //   // "0x310AD8a6a34a23330aEF455d9B730c32b12935C0"
+    //   "0x34Db248d75A8F4C9FF9b5392C22Cb474b0ab3f50"
     // );
 
     console.log(`ALLOCATIONS_CONTRACT_ADDRESS=${allocations.address}`);
 
     const tx3 = await btmt.connect(feelessAdminWallet).addFeeless(allocations.address, {
       maxFeePerGas: maxFeePerGas.mul(3),
-      maxPriorityFeePerGas: maxPriorityFeePerGas.mul(3),
-      nonce: 8
+      maxPriorityFeePerGas: maxPriorityFeePerGas.mul(3)
     });
     console.log(tx3);
     await tx3.wait();
@@ -230,7 +229,6 @@ task("deploy", "Deploy contracts").setAction(
       {
         maxFeePerGas,
         maxPriorityFeePerGas
-        // nonce: 15
       }
     );
     console.log(whitelisted);
@@ -259,7 +257,6 @@ task("deploy", "Deploy contracts").setAction(
           {
             maxFeePerGas: maxFeePerGas.mul(10),
             maxPriorityFeePerGas: maxPriorityFeePerGas.mul(10)
-            // nonce: 6
           }
         );
 
@@ -293,7 +290,6 @@ task("deploy", "Deploy contracts").setAction(
       console.log(tx14);
       await tx14.wait();
     }
-    console.log("here");
     const tx15 = await btmt.connect(feelessAdminWallet).addFeelessAdmin(whitelisted.address);
     console.log(tx15);
     await tx15.wait();
