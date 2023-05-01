@@ -73,6 +73,7 @@ abstract contract ERC20Fees is ERC20, ERC20Burnable {
     require(companyRate >= 0 && companyRate < 1000, "Company rate out of bounds");
     require(esgFundRate >= 0 && esgFundRate < 1000, "ESG Fund rate out of bounds");
     require(burnRate >= 0 && burnRate < 1000, "Burn rate out of bounds");
+    require(companyRate + esgFundRate + burnRate <= 1000, "Rates add to > 1000");
     require(companyRewardsWallet != address(0), "Invalid rewards wallet");
     require(esgFundWallet != address(0), "Invalid esg fund wallet");
     require(feelessAdminWallet != address(0), "Invalid admin wallet");
@@ -83,7 +84,7 @@ abstract contract ERC20Fees is ERC20, ERC20Burnable {
     _fundR = esgFundRate;
     _burnR = burnRate;
 
-    _companyWallet = companyWallet; // is also feeless admin
+    _companyWallet = companyWallet;
     _companyRewardsWallet = companyRewardsWallet;
     _esgFundWallet = esgFundWallet;
 

@@ -1,6 +1,6 @@
 {
   "name": "bitmarkets",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "license": "Apache-2.0",
   "description": "Crypto made simple",
   "engines": {
@@ -56,6 +56,8 @@
     "deploy:dev": "cross-env NODE_ENV=development npx hardhat deploy --network localhost",
     "deploy:test": "cross-env NODE_ENV=testing npx hardhat deploy --network polygon_mumbai",
     "deploy:prod": "cross-env NODE_ENV=production npx hardhat deploy --network matic",
+    "deployPublicSale:dev": "cross-env NODE_ENV=development npx hardhat deployPublicSale --network localhost",
+    "deployPublicSale:test": "cross-env NODE_ENV=testing npx hardhat deployPublicSale --network polygon_mumbai",
     "allocate:test": "cross-env NODE_ENV=testing npx hardhat allocate --network polygon_mumbai",
     "allocate:prod": "cross-env NODE_ENV=testing npx hardhat allocate --network matic",
     "start": "cross-env NODE_ENV=development npx hardhat node",

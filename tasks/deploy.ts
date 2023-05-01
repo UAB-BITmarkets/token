@@ -4,21 +4,12 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 import getGasData from "../utils/getGasData";
 
-// const publicSaleInitialRate = 10;
-// const publicSaleFinalRate = 3;
-
 const privateSaleOpeningTime =
   process.env.NODE_ENV === "production"
     ? // ? Math.trunc(new Date(`2023-03-08T17:00:00`).valueOf() / 1000)
       Math.trunc((Date.now() + 1 * 60 * 60 * 1000) / 1000)
     : Math.trunc((Date.now() + 2 * 60 * 1000) / 1000);
 const privateSaleClosingTime = Math.trunc(new Date("2023-06-18T17:00:00").valueOf() / 1000);
-
-// const publicSaleOpeningTime =
-//   process.env.NODE_ENV === "production"
-//     ? Math.trunc(new Date(`2023-09-01T09:00:00`).valueOf() / 1000)
-//     : Math.trunc((Date.now() + 10 * 60 * 1000) / 1000);
-// const publicSaleClosingTime = Math.trunc(new Date("2023-12-23T17:00:00").valueOf() / 1000);
 
 const initialSupply = 300000000;
 const finalSupply = 200000000;
@@ -296,35 +287,5 @@ task("deploy", "Deploy contracts").setAction(
     const tx16 = await btmt.connect(crowdsalesWallet).approve(whitelisted.address, privateSaleCap);
     console.log(tx16);
     await tx16.wait();
-
-    // const PUBLIC_SALE = await hre.ethers.getContractFactory("BITMarketsTokenPublicSale");
-    // const publicSale = await PUBLIC_SALE.deploy({
-    //   initialRate: publicSaleInitialRate,
-    //   finalRate: publicSaleFinalRate,
-    //   wallet: crowdsalesWallet.address,
-    //   purchaser: crowdsalesClientPurchaserWallet.address,
-    //   token: btmt.address,
-    //   cap: publicSaleCap,
-    //   openingTime: publicSaleOpeningTime,
-    //   closingTime: publicSaleClosingTime,
-    //   investorTariff,
-    //   investorCap,
-    //   cliff,
-    //   vestingDuration
-    // });
-    //
-    // await publicSale.deployed();
-    // await btmt.connect(feelessAdminWallet).addFeeless(publicSale.address);
-    // await btmt
-    //   .connect(companyRestrictionWhitelistWallet)
-    //   .addUnrestrictedReceiver(
-    //     crowdsalesWallet.address,
-    //     publicSale.address,
-    //     ethers.utils.parseEther(`${publicSaleCap}`)
-    //   );
-    // await btmt.connect(feelessAdminWallet).addFeelessAdmin(publicSale.address);
-    // await btmt.connect(crowdsalesWallet).approve(publicSale.address, publicSaleCap);
-    //
-    // console.log(`PUBLIC_SALE_CONTRACT_ADDRESS=${publicSale.address}`);
   }
 );

@@ -7,10 +7,6 @@ import {Sale} from "./Sale.sol";
  * @dev Sale in which only whitelisted users can contribute.
  */
 abstract contract Whitelist is Sale {
-  // numAddressesWhitelisted would be used to keep track of how many addresses have been whitelisted
-  // NOTE: Don't change this variable name, as it will be part of verification
-  uint32 private _numWhitelisteds;
-
   // Create a mapping of whitelistedAddresses
   // if an address is whitelisted, we would set it to true, it is false by default for all other addresses.
   mapping(address => bool) private _whitelisteds;
@@ -32,6 +28,8 @@ abstract contract Whitelist is Sale {
    * @param whitelister The wallet that can add wallets to whitelist
    */
   constructor(address whitelister) {
+    require(whitelister != address(0), "Zero whitelister address");
+
     _whitelistAdmin = whitelister;
   }
 
@@ -40,8 +38,7 @@ abstract contract Whitelist is Sale {
     require(!_whitelisteds[account], "Account already whitelisted");
     // Add the address which called the function to the whitelistedAddress array
     _whitelisteds[account] = true;
-    // Increase the number of whitelisted addresses
-    _numWhitelisteds += 1;
+
     emit WhitelistedAdded(account);
   }
 

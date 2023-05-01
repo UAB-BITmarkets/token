@@ -40,6 +40,8 @@ abstract contract Vesting is Sale {
    * linear fashion.
    */
   constructor(address wallet, uint64 cliff, uint64 vestingDuration) {
+    require(wallet != address(0), "Zero holder address");
+
     _tokenWallet = wallet;
     _btmt = BITMarketsToken(address(token()));
 

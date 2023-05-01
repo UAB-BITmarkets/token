@@ -30,14 +30,6 @@ abstract contract IncreasingPrice is TimedSale {
     _finalRate = fRate;
   }
 
-  // /**
-  //  * The base rate function is overridden to revert, since this crowdsale doesn't use it, and
-  //  * all calls to it are a mistake.
-  //  */
-  // function rate() virtual public override view returns (uint256) {
-  //     revert("Increasing price crowdsale: rate() called error");
-  // }
-
   /**
    * @return the initial rate of the crowdsale.
    */

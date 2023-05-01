@@ -116,6 +116,12 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
     uint32 companyLiquidityTransferLimit,
     uint16 monthsOfRestrictionForTransfers
   ) {
+    require(companyRestrictionWhitelistWallet != address(0), "Zero admin address");
+    require(allocationsWallet != address(0), "Zero allocations address");
+    require(crowdsalesWallet != address(0), "Zero crowdsales address");
+    require(companyLiquidityTransferLimit > 0, "Tranfer limit <=0");
+    require(monthsOfRestrictionForTransfers > 0, "Month restrict <=0");
+
     _restrictionAdminWallet = companyRestrictionWhitelistWallet;
 
     _isStrategicWallet[_msgSender()] = true;
@@ -126,10 +132,7 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
     _companyLiquidityTransfers = 0;
     _companyLiquidityTransfersLimit = SafeMath.mul(companyLiquidityTransferLimit, 10 ** 18);
     _companyLiquidityTransfersLockStartTime = 0;
-    _companyLiquidityTransfersLockPeriod = SafeMath.mul(
-      monthsOfRestrictionForTransfers,
-      30 * 24 * 60 * 60
-    );
+    _companyLiquidityTransfersLockPeriod = SafeMath.mul(monthsOfRestrictionForTransfers, 30 days);
   }
 
   function addUnrestrictedReceiver(
