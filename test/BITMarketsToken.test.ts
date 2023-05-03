@@ -125,6 +125,18 @@ describe("BITMarkets ERC20 token contract tests", () => {
       expect(totalSupplyBefore).to.be.equal(totalSupplyAfter);
     });
 
+    it("Should reverse if not enough for fees and burning from transfers.", async () => {
+      const { token, companyLiquidityWallet, addr1, addr2 } = await loadFixture(loadContract);
+
+      const transferBalance = ethers.utils.parseEther("100");
+
+      await token.connect(companyLiquidityWallet).transfer(addr2.address, transferBalance);
+
+      await expect(
+        token.connect(addr2).transfer(addr1.address, transferBalance)
+      ).to.be.revertedWith("Not enough to pay");
+    });
+
     it("Should be possible to do feeless transfers", async () => {
       const {
         token,

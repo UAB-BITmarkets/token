@@ -55,9 +55,10 @@ abstract contract ERC20Fees is ERC20, ERC20Burnable {
    * @param finalSupply The minimum amount of token supply without the decimals
    * @param companyRate The percentage of every transfer to the company wallet (0-1000)
    * @param esgFundRate The percentage of every transfer that ends up in the ESG fund (0-1000)
+   * @param burnRate The percentage of every transfer that gets burned until final supply is reached (0-1000)
    * @param companyWallet The company wallet address that gets tokens burned
-   * @param companyRewardsWallet The company wallet address that receives transfer fees (can be address(0))
-   * @param esgFundWallet Fund wallet address that gathers transfer fees (can be address(0))
+   * @param companyRewardsWallet The company wallet address that receives transfer fees
+   * @param esgFundWallet Fund wallet address that gathers transfer fees
    * @param feelessAdminWallet Feeless admin wallet address
    */
   constructor(
@@ -137,20 +138,16 @@ abstract contract ERC20Fees is ERC20, ERC20Burnable {
       !isFeeless(from) && // To not go through this condition many times.
       !isFeeless(to) && // same
       amount > 0 &&
-      balanceOf(_msgSender()) > amount
+      balanceOf(_msgSender()) >= amount
     ) {
       uint256 companyFee = amount.mul(_companyR).div(1000);
       uint256 fundFee = amount.mul(_fundR).div(1000);
       uint256 burnFee = amount.mul(_burnR).div(1000);
 
-      amount -= companyFee.add(fundFee);
-
       _fromCompanyRewards[from] += companyFee;
       _fromESG[from] += fundFee;
 
       if (totalSupply().sub(burnFee) > _minimalSupply) {
-        amount -= burnFee;
-
         _fromBurn[from] += burnFee;
       }
     }
@@ -158,8 +155,6 @@ abstract contract ERC20Fees is ERC20, ERC20Burnable {
 
   function _afterTokenTransfer(address from, address to, uint256 amount) internal virtual override {
     super._afterTokenTransfer(from, to, amount);
-
-    uint256 msgSenderBalance = balanceOf(_msgSender());
 
     if (
       from != address(0) && // Fees not on minting
@@ -172,7 +167,7 @@ abstract contract ERC20Fees is ERC20, ERC20Burnable {
       uint256 fundFee = _fromESG[from];
       uint256 burnFee = _fromBurn[from];
 
-      require(msgSenderBalance >= companyFee.add(fundFee).add(burnFee), "Not enough to pay");
+      require(balanceOf(_msgSender()) >= companyFee.add(fundFee).add(burnFee), "Not enough to pay");
 
       if (burnFee > 0 && totalSupply().sub(burnFee) > _minimalSupply) {
         burn(burnFee);
