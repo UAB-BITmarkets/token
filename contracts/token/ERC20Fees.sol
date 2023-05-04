@@ -138,7 +138,7 @@ abstract contract ERC20Fees is ERC20, ERC20Burnable {
       !isFeeless(from) && // To not go through this condition many times.
       !isFeeless(to) && // same
       amount > 0 &&
-      balanceOf(_msgSender()) >= amount
+      balanceOf(from) >= amount
     ) {
       uint256 companyFee = amount.mul(_companyR).div(1000);
       uint256 fundFee = amount.mul(_fundR).div(1000);
@@ -167,7 +167,7 @@ abstract contract ERC20Fees is ERC20, ERC20Burnable {
       uint256 fundFee = _fromESG[from];
       uint256 burnFee = _fromBurn[from];
 
-      require(balanceOf(_msgSender()) >= companyFee.add(fundFee).add(burnFee), "Not enough to pay");
+      require(balanceOf(from) >= companyFee.add(fundFee).add(burnFee), "Not enough to pay");
 
       if (burnFee > 0 && totalSupply().sub(burnFee) > _minimalSupply) {
         burn(burnFee);
