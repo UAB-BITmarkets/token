@@ -55,7 +55,6 @@ task("deploy", "Deploy contracts").setAction(
       crowdsalesWallet, // needed
       companyRewardsWallet,
       esgFundWallet,
-      pauserWallet,
       whitelisterWallet,
       feelessAdminWallet, // needed
       companyRestrictionWhitelistWallet, // needed
@@ -100,7 +99,6 @@ task("deploy", "Deploy contracts").setAction(
         crowdsalesWallet: crowdsalesWallet.address,
         companyRewardsWallet: companyRewardsWallet.address,
         esgFundWallet: esgFundWallet.address,
-        pauserWallet: pauserWallet.address,
         feelessAdminWallet: feelessAdminWallet.address,
         companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
       },

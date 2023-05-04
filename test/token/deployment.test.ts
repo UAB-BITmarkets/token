@@ -52,7 +52,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         crowdsalesWallet,
         companyRewardsWallet,
         esgFundWallet,
-        pauserWallet,
         feelessAdminWallet,
         companyRestrictionWhitelistWallet
       } = await loadFixture(loadContract);
@@ -76,7 +75,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: esgFundWallet.address,
-          pauserWallet: pauserWallet.address,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -90,7 +88,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         crowdsalesWallet,
         companyRewardsWallet,
         esgFundWallet,
-        pauserWallet,
         feelessAdminWallet,
         companyRestrictionWhitelistWallet
       } = await loadFixture(loadContract);
@@ -114,7 +111,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: esgFundWallet.address,
-          pauserWallet: pauserWallet.address,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -128,7 +124,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         crowdsalesWallet,
         companyRewardsWallet,
         esgFundWallet,
-        pauserWallet,
         feelessAdminWallet,
         companyRestrictionWhitelistWallet
       } = await loadFixture(loadContract);
@@ -152,7 +147,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: esgFundWallet.address,
-          pauserWallet: pauserWallet.address,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -168,7 +162,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         crowdsalesWallet,
         companyRewardsWallet,
         esgFundWallet,
-        pauserWallet,
         feelessAdminWallet,
         companyRestrictionWhitelistWallet
       } = await loadFixture(loadContract);
@@ -192,7 +185,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: esgFundWallet.address,
-          pauserWallet: pauserWallet.address,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -212,7 +204,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: esgFundWallet.address,
-          pauserWallet: pauserWallet.address,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -232,7 +223,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: esgFundWallet.address,
-          pauserWallet: pauserWallet.address,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -252,7 +242,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: ethers.constants.AddressZero,
           esgFundWallet: esgFundWallet.address,
-          pauserWallet: pauserWallet.address,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -272,7 +261,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: ethers.constants.AddressZero,
-          pauserWallet: pauserWallet.address,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -292,7 +280,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: esgFundWallet.address,
-          pauserWallet: pauserWallet.address,
           feelessAdminWallet: ethers.constants.AddressZero,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })

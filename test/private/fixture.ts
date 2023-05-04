@@ -36,7 +36,6 @@ export const loadContracts = async () => {
     crowdsalesWallet,
     companyRewardsWallet,
     esgFundWallet,
-    pauserWallet,
     feelessAdminWallet,
     companyRestrictionWhitelistWallet,
     whitelisterWallet,
@@ -61,7 +60,6 @@ export const loadContracts = async () => {
     crowdsalesWallet: crowdsalesWallet.address,
     companyRewardsWallet: companyRewardsWallet.address,
     esgFundWallet: esgFundWallet.address,
-    pauserWallet: pauserWallet.address,
     feelessAdminWallet: feelessAdminWallet.address,
     companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
   });
@@ -125,7 +123,6 @@ export const loadContracts = async () => {
     crowdsalesWallet,
     companyRewardsWallet,
     esgFundWallet,
-    pauserWallet,
     feelessAdminWallet,
     companyRestrictionWhitelistWallet,
     whitelisterWallet,

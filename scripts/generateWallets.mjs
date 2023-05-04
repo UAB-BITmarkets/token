@@ -11,7 +11,6 @@ const crowdsalesWallet = ethers.Wallet.createRandom();
 const companyRewardsWallet = ethers.Wallet.createRandom();
 const esgFundWallet = ethers.Wallet.createRandom();
 
-const pauserWallet = ethers.Wallet.createRandom();
 const whitelisterWallet = ethers.Wallet.createRandom();
 const feelessAdminWallet = ethers.Wallet.createRandom();
 const companyRestrictionWhitelistWallet = ethers.Wallet.createRandom();
@@ -131,8 +130,6 @@ COMPANY_REWARDS_WALLET_PRIVATE_KEY=${companyRewardsWallet.privateKey}\n\
 COMPANY_REWARDS_WALLET_ADDRESS=${companyRewardsWallet.address}\n\
 ESG_FUND_WALLET_PRIVATE_KEY=${esgFundWallet.privateKey}\n\
 ESG_FUND_WALLET_ADDRESS=${esgFundWallet.address}\n\
-PAUSER_WALLET_PRIVATE_KEY=${pauserWallet.privateKey}\n\
-PAUSER_WALLET_ADDRESS=${pauserWallet.address}\n\
 WHITELISTER_WALLET_PRIVATE_KEY=${whitelisterWallet.privateKey}\n\
 WHITELISTER_WALLET_ADDRESS=${whitelisterWallet.address}\n\
 # This wallet can add feeless addresses and feeless admins such as\n\

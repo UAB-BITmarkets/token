@@ -270,24 +270,6 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       ).to.be.revertedWith("Only purchaser wallet");
     });
 
-    it("Should not allow transfers if paused.", async () => {
-      const { token, crowdsale, addr1, whitelisterWallet, pauserWallet } = await loadFixture(
-        loadContracts
-      );
-
-      await ethers.provider.send("evm_mine", [openingTime]);
-
-      await crowdsale.connect(whitelisterWallet).addWhitelisted(addr1.address);
-
-      await token.connect(pauserWallet).pause();
-
-      const oneWei = await crowdsale.getInvestorTariff();
-
-      await expect(
-        crowdsale.connect(addr1).buyTokens(addr1.address, { value: oneWei })
-      ).to.be.revertedWith("ERC20Pausable: token transfer while paused");
-    });
-
     it("Should allow a msg.sender to send tokens to contract directly to buy.", async () => {
       const { token, crowdsale, addr1, whitelisterWallet } = await loadFixture(loadContracts);
 

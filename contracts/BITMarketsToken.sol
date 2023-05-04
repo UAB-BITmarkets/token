@@ -4,7 +4,6 @@ pragma solidity ^0.8.14;
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC20Snapshot} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
-import {ERC20Pausable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
 import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
@@ -26,7 +25,6 @@ import {IBITMarketsToken} from "./utils/IBITMarketsToken.sol";
  * @param crowdsalesWallet The address of the crowdsales token holder wallet
  * @param companyRewardsWallet The address that receives the transfer fees for the company
  * @param esgFundWallet The address that handles the ESG fund from gathered transfer fees
- * @param pauserWallet The address with the authority to pause the ERC20 token
  */
 struct BTMTArgs {
   uint32 initialSupply;
@@ -41,7 +39,6 @@ struct BTMTArgs {
   address crowdsalesWallet;
   address companyRewardsWallet;
   address esgFundWallet;
-  address pauserWallet;
   address feelessAdminWallet;
   address companyRestrictionWhitelistWallet;
 }
@@ -51,7 +48,6 @@ contract BITMarketsToken is
   IBITMarketsToken,
   ERC20,
   ERC20Snapshot,
-  ERC20Pausable,
   ERC20Burnable,
   ERC20StrategicWalletRestrictions,
   ERC20Fees,
@@ -59,7 +55,6 @@ contract BITMarketsToken is
 {
   using SafeMath for uint256;
 
-  bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
   bytes32 public constant SNAPSHOT_ROLE = keccak256("SNAPSHOT_ROLE");
 
   constructor(
@@ -98,7 +93,6 @@ contract BITMarketsToken is
     _approve(msg.sender, args.crowdsalesWallet, args.crowdsalesWalletTokens * 10 ** decimals());
 
     // Setup roles
-    _setupRole(PAUSER_ROLE, args.pauserWallet);
     _setupRole(SNAPSHOT_ROLE, msg.sender);
   }
 
@@ -110,30 +104,13 @@ contract BITMarketsToken is
   }
 
   /**
-   * @dev Freezes transfers, burning, minting
-   */
-  function pause() public virtual override onlyRole(PAUSER_ROLE) {
-    _pause();
-  }
-
-  /**
-   * @dev Unfreezes transfers, burning, minting
-   */
-  function unpause() public virtual override onlyRole(PAUSER_ROLE) {
-    _unpause();
-  }
-
-  /**
    * @dev Overridable function
    */
   function _beforeTokenTransfer(
     address from,
     address to,
     uint256 amount
-  )
-    internal
-    override(ERC20, ERC20Snapshot, ERC20Pausable, ERC20StrategicWalletRestrictions, ERC20Fees)
-  {
+  ) internal override(ERC20, ERC20Snapshot, ERC20StrategicWalletRestrictions, ERC20Fees) {
     super._beforeTokenTransfer(from, to, amount);
   }
 
