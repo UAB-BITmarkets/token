@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.14;
 
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 import {TimedSale} from "./TimedSale.sol";
 
 /**
@@ -12,8 +10,6 @@ import {TimedSale} from "./TimedSale.sol";
  * the amount of tokens per wei contributed. Thus, the initial rate must be greater than the final rate.
  */
 abstract contract IncreasingPrice is TimedSale {
-  using SafeMath for uint256;
-
   uint256 private _initialRate;
   uint256 private _finalRate;
 
@@ -55,10 +51,10 @@ abstract contract IncreasingPrice is TimedSale {
     }
 
     // solhint-disable-next-line not-rely-on-time
-    uint256 elapsedTime = block.timestamp.sub(openingTime());
-    uint256 timeRange = closingTime().sub(openingTime());
-    uint256 rateRange = _initialRate.sub(_finalRate);
-    return _initialRate.sub(elapsedTime.mul(rateRange).div(timeRange));
+    uint256 elapsedTime = block.timestamp - openingTime();
+    uint256 timeRange = closingTime() - openingTime();
+    uint256 rateRange = _initialRate - _finalRate;
+    return _initialRate - (elapsedTime * rateRange) / timeRange;
   }
 
   /**
@@ -69,6 +65,6 @@ abstract contract IncreasingPrice is TimedSale {
   function _getTokenAmount(uint256 weiAmount) internal view virtual override returns (uint256) {
     uint256 currentRate = getCurrentRate();
 
-    return currentRate.mul(weiAmount);
+    return currentRate * weiAmount;
   }
 }

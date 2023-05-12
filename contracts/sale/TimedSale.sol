@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.14;
 
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 import {Sale} from "./Sale.sol";
 
 /**
@@ -10,8 +8,6 @@ import {Sale} from "./Sale.sol";
  * @dev Sale accepting contributions only within a time frame.
  */
 abstract contract TimedSale is Sale {
-  using SafeMath for uint256;
-
   uint256 private _openingTime;
   uint256 private _closingTime;
 

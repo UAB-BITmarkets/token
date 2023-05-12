@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.14;
 
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 import {Sale} from "./Sale.sol";
 
 /**
@@ -10,8 +8,6 @@ import {Sale} from "./Sale.sol";
  * @dev Sale with per-beneficiary caps.
  */
 abstract contract PurchaseTariffCap is Sale {
-  using SafeMath for uint256;
-
   mapping(address => uint256) private _contributions;
 
   uint256 private _tariff;
@@ -66,7 +62,7 @@ abstract contract PurchaseTariffCap is Sale {
   ) internal virtual override {
     super._updatePurchasingState(beneficiary, weiAmount);
 
-    _contributions[beneficiary] = _contributions[beneficiary].add(weiAmount);
+    _contributions[beneficiary] += weiAmount;
   }
 
   /**
@@ -82,6 +78,6 @@ abstract contract PurchaseTariffCap is Sale {
 
     require(weiAmount >= _tariff, "Crowdsale: wei < tariff");
     require(weiAmount <= _cap, "Crowdsale: wei > cap");
-    require(_contributions[beneficiary].add(weiAmount) <= _cap, "Crowdsale: cap >= hardCap");
+    require(_contributions[beneficiary] + weiAmount <= _cap, "Crowdsale: cap >= hardCap");
   }
 }

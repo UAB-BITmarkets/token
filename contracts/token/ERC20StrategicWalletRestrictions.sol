@@ -73,7 +73,7 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
       if (to == strategicWallet.approvedReceiver) {
         // Require the approved amount to be less than the total transfered
         require(
-          strategicWallet.amountTransferredLimit >= strategicWallet.amountTransferred.add(amount),
+          strategicWallet.amountTransferredLimit >= strategicWallet.amountTransferred + amount,
           "Amount > approved limit"
         );
       } else if (!isTransfer && !fromIsCompanyLiquidityWallet) {
@@ -86,12 +86,12 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
         require(
           // solhint-disable-next-line not-rely-on-time
           block.timestamp >
-            _companyLiquidityTransfersLockStartTime.add(_companyLiquidityTransfersLockPeriod),
+            _companyLiquidityTransfersLockStartTime + _companyLiquidityTransfersLockPeriod,
           "Last max transfer too close"
         );
 
         require(
-          _companyLiquidityTransfersLimit >= _companyLiquidityTransfers.add(amount),
+          _companyLiquidityTransfersLimit >= _companyLiquidityTransfers + amount,
           "Amount > transfer limit"
         );
       }
@@ -182,9 +182,7 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
 
   function getApprovedReceiverRemaining(address wallet) public view returns (uint256) {
     return
-      _strategicWallet[wallet].amountTransferredLimit.sub(
-        _strategicWallet[wallet].amountTransferred
-      );
+      _strategicWallet[wallet].amountTransferredLimit - _strategicWallet[wallet].amountTransferred;
   }
 
   function companyLiquidityTransfersLimit() public view returns (uint256) {
@@ -204,7 +202,7 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
     return
       // solhint-disable-next-line not-rely-on-time
       block.timestamp <
-      _companyLiquidityTransfersLockStartTime.add(_companyLiquidityTransfersLockPeriod);
+      _companyLiquidityTransfersLockStartTime + _companyLiquidityTransfersLockPeriod;
   }
 
   /**
@@ -226,9 +224,7 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
       bool caseTwo = isTransfer && strategicWallet.approvedReceiver == to;
 
       if (caseOne || caseTwo) {
-        uint256 diff = strategicWallet.amountTransferredLimit.sub(
-          strategicWallet.amountTransferred
-        );
+        uint256 diff = strategicWallet.amountTransferredLimit - strategicWallet.amountTransferred;
 
         if (amount == diff) emit StrategicWalletCapReached(from);
 
@@ -242,7 +238,7 @@ abstract contract ERC20StrategicWalletRestrictions is ERC20 {
           emit UnrestrictedTransferOccured(from, to, amount);
         }
       } else if (!caseTwo) {
-        uint256 diff = _companyLiquidityTransfersLimit.sub(_companyLiquidityTransfers);
+        uint256 diff = _companyLiquidityTransfersLimit - _companyLiquidityTransfers;
 
         if (amount == diff) {
           emit StrategicWalletCapReached(from);

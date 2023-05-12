@@ -4,7 +4,6 @@ pragma solidity ^0.8.14;
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
@@ -20,7 +19,6 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
  * behavior.
  */
 abstract contract Sale is Context, ReentrancyGuard {
-  using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
   // The token being sold
@@ -95,7 +93,7 @@ abstract contract Sale is Context, ReentrancyGuard {
     uint256 tokens = _getTokenAmount(weiAmount);
 
     // update state
-    _weiRaised = _weiRaised.add(weiAmount);
+    _weiRaised += weiAmount;
 
     _processPurchase(beneficiary, tokens);
 
@@ -126,7 +124,7 @@ abstract contract Sale is Context, ReentrancyGuard {
     uint256 tokens = _getTokenAmount(weiAmount);
 
     // update state
-    _weiRaised = _weiRaised.add(weiAmount);
+    _weiRaised += weiAmount;
 
     _processPurchase(beneficiary, tokens);
 
@@ -201,7 +199,7 @@ abstract contract Sale is Context, ReentrancyGuard {
    * @return Number of tokens that can be purchased with the specified _weiAmount
    */
   function _getTokenAmount(uint256 weiAmount) internal virtual returns (uint256) {
-    return weiAmount.mul(_rate);
+    return weiAmount * _rate;
   }
 
   /**

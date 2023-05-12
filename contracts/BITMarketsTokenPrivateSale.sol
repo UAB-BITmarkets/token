@@ -2,7 +2,6 @@
 pragma solidity ^0.8.14;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import {Sale} from "./sale/Sale.sol";
 import {PurchaseTariffCap} from "./sale/PurchaseTariffCap.sol";
@@ -35,8 +34,6 @@ contract BITMarketsTokenPrivateSale is
   Whitelist,
   Vesting
 {
-  using SafeMath for uint256;
-
   uint256 private _rate;
 
   /**

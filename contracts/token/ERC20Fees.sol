@@ -5,11 +5,9 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 /// @custom:security-contact security@bitmarkets.com
 abstract contract ERC20Fees is ERC20, ERC20Burnable {
-  using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
   uint16 private _companyR;
@@ -140,14 +138,14 @@ abstract contract ERC20Fees is ERC20, ERC20Burnable {
       amount > 0 &&
       balanceOf(from) >= amount
     ) {
-      uint256 companyFee = amount.mul(_companyR).div(1000);
-      uint256 fundFee = amount.mul(_fundR).div(1000);
-      uint256 burnFee = amount.mul(_burnR).div(1000);
+      uint256 companyFee = (amount * _companyR) / 1000;
+      uint256 fundFee = (amount * _fundR) / 1000;
+      uint256 burnFee = (amount * _burnR) / 1000;
 
       _fromCompanyRewards[from] += companyFee;
       _fromESG[from] += fundFee;
 
-      if (totalSupply().sub(burnFee) > _minimalSupply) {
+      if (totalSupply() - burnFee > _minimalSupply) {
         _fromBurn[from] += burnFee;
       }
     }
@@ -167,9 +165,9 @@ abstract contract ERC20Fees is ERC20, ERC20Burnable {
       uint256 fundFee = _fromESG[from];
       uint256 burnFee = _fromBurn[from];
 
-      require(balanceOf(from) >= companyFee.add(fundFee).add(burnFee), "Not enough to pay");
+      require(balanceOf(from) >= companyFee + fundFee + burnFee, "Not enough to pay");
 
-      if (burnFee > 0 && totalSupply().sub(burnFee) > _minimalSupply) {
+      if (burnFee > 0 && totalSupply() - burnFee > _minimalSupply) {
         burn(burnFee);
         _fromBurn[from] = 0;
       }

@@ -5,7 +5,6 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC20Snapshot} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
 import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import {ERC20StrategicWalletRestrictions} from "./token/ERC20StrategicWalletRestrictions.sol";
 import {ERC20Fees} from "./token/ERC20Fees.sol";
@@ -53,8 +52,6 @@ contract BITMarketsToken is
   ERC20Fees,
   AccessControl
 {
-  using SafeMath for uint256;
-
   bytes32 public constant SNAPSHOT_ROLE = keccak256("SNAPSHOT_ROLE");
 
   constructor(
