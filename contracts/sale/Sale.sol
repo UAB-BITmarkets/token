@@ -115,7 +115,7 @@ abstract contract Sale is Context, ReentrancyGuard {
   function participateOnBehalfOf(
     address beneficiary,
     uint256 weiAmount
-  ) public payable nonReentrant {
+  ) public nonReentrant {
     require(_msgSender() == _purchaser, "Only purchaser wallet");
 
     _preValidatePurchase(beneficiary, weiAmount);
