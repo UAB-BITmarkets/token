@@ -284,7 +284,7 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       await crowdsale.connect(whitelisterWallet).addWhitelisted(addr1.address);
       await crowdsale
         .connect(crowdsalesClientPurchaserWallet)
-        .participateOnBehalfOf(addr1.address, oneWei);
+        .participateOnBehalfOf(addr1.address, oneWei, 0);
       // await crowdsale.connect(companyLiquidityWallet).buyTokens(addr1.address, { value: oneWei });
 
       const companyLiquidityWalletCurrentTokenBalance = await token.balanceOf(
@@ -310,7 +310,7 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
 
       await expect(
         // crowdsale.connect(addr1).buyTokens(addr2.address, { value: oneWei })
-        crowdsale.connect(addr1).participateOnBehalfOf(addr2.address, oneWei)
+        crowdsale.connect(addr1).participateOnBehalfOf(addr2.address, oneWei, 0)
       ).to.be.revertedWith("Only purchaser wallet");
     });
 
@@ -346,11 +346,13 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       await expect(
         crowdsale
           .connect(crowdsalesClientPurchaserWallet)
-          .participateOnBehalfOf(ethers.constants.AddressZero, oneWei)
+          .participateOnBehalfOf(ethers.constants.AddressZero, oneWei, 0)
       ).to.be.revertedWith("Crowdsale: beneficiary 0 address");
 
       await expect(
-        crowdsale.connect(crowdsalesClientPurchaserWallet).participateOnBehalfOf(addr1.address, 0)
+        crowdsale
+          .connect(crowdsalesClientPurchaserWallet)
+          .participateOnBehalfOf(addr1.address, 0, 0)
       ).to.be.revertedWith("Crowdsale: weiAmount is 0");
     });
 
@@ -379,7 +381,7 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
         await crowdsale.connect(whitelisterWallet).addWhitelisted(wallet.address);
         await crowdsale
           .connect(crowdsalesClientPurchaserWallet)
-          .participateOnBehalfOf(wallet.address, investorCapBN);
+          .participateOnBehalfOf(wallet.address, investorCapBN, 0);
       }
 
       const wallet = ethers.Wallet.createRandom();
@@ -387,8 +389,54 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       await expect(
         crowdsale
           .connect(crowdsalesClientPurchaserWallet)
-          .participateOnBehalfOf(wallet.address, investorCapBN)
+          .participateOnBehalfOf(wallet.address, investorCapBN, 0)
       ).to.be.revertedWith("Allowance too low");
+    });
+
+    it("Should be able to change cliff if purchaser wallet.", async () => {
+      const { crowdsale, crowdsalesClientPurchaserWallet, whitelisterWallet } = await loadFixture(
+        loadContracts
+      );
+
+      await ethers.provider.send("evm_mine", [openingTime]);
+
+      const wallet1 = ethers.Wallet.createRandom();
+      const wallet2 = ethers.Wallet.createRandom();
+      const wallet3 = ethers.Wallet.createRandom();
+
+      const cliff2 = 5; // less than 10 in fixture
+      const cliff3 = 15; // more than 10 in fixture
+
+      const amount = ethers.utils.parseEther("600");
+
+      await crowdsale.connect(whitelisterWallet).addWhitelisted(wallet1.address);
+      await crowdsale.connect(whitelisterWallet).addWhitelisted(wallet2.address);
+      await crowdsale.connect(whitelisterWallet).addWhitelisted(wallet3.address);
+      await crowdsale
+        .connect(crowdsalesClientPurchaserWallet)
+        .participateOnBehalfOf(wallet1.address, amount, 0);
+      await crowdsale
+        .connect(crowdsalesClientPurchaserWallet)
+        .participateOnBehalfOf(wallet2.address, amount, cliff2);
+      await crowdsale
+        .connect(crowdsalesClientPurchaserWallet)
+        .participateOnBehalfOf(wallet3.address, amount, cliff3);
+
+      const vestingWallet1Cliff = await crowdsale
+        .connect(crowdsalesClientPurchaserWallet)
+        .getVestingWalletCliff(wallet1.address);
+      const vestingWallet2Cliff = await crowdsale
+        .connect(crowdsalesClientPurchaserWallet)
+        .getVestingWalletCliff(wallet2.address);
+      const vestingWallet3Cliff = await crowdsale
+        .connect(crowdsalesClientPurchaserWallet)
+        .getVestingWalletCliff(wallet3.address);
+
+      // Paradox since second purchase happened after first
+      expect(vestingWallet2Cliff).to.be.lessThan(vestingWallet1Cliff);
+      // Since cliff3 < _cliff it will be equal to _cliff
+      expect(vestingWallet1Cliff).to.be.lessThan(vestingWallet3Cliff);
+      expect(vestingWallet2Cliff).to.be.lessThan(vestingWallet3Cliff);
     });
 
     it("Should be possible to remove restriction", async () => {

@@ -95,7 +95,7 @@ abstract contract Sale is Context, ReentrancyGuard {
     // update state
     _weiRaised += weiAmount;
 
-    _processPurchase(beneficiary, tokens);
+    _processPurchase(beneficiary, tokens, 0);
 
     emit TokensPurchased(_msgSender(), beneficiary, weiAmount, tokens);
 
@@ -112,7 +112,11 @@ abstract contract Sale is Context, ReentrancyGuard {
    * another `nonReentrant` function.
    * @param beneficiary Recipient of the token purchase
    */
-  function participateOnBehalfOf(address beneficiary, uint256 weiAmount) public nonReentrant {
+  function participateOnBehalfOf(
+    address beneficiary,
+    uint256 weiAmount,
+    uint64 cliffSeconds
+  ) public nonReentrant {
     require(_msgSender() == _purchaser, "Only purchaser wallet");
 
     _preValidatePurchase(beneficiary, weiAmount);
@@ -123,7 +127,7 @@ abstract contract Sale is Context, ReentrancyGuard {
     // update state
     _weiRaised += weiAmount;
 
-    _processPurchase(beneficiary, tokens);
+    _processPurchase(beneficiary, tokens, cliffSeconds);
 
     emit TokensPurchased(_msgSender(), beneficiary, weiAmount, tokens);
 
@@ -165,8 +169,13 @@ abstract contract Sale is Context, ReentrancyGuard {
    * its tokens.
    * @param beneficiary Address performing the token purchase
    * @param tokenAmount Number of tokens to be emitted
+   * @param cliffSeconds User only by the client purchaser wallet for reduced cliff
    */
-  function _deliverTokens(address beneficiary, uint256 tokenAmount) internal virtual {
+  function _deliverTokens(
+    address beneficiary,
+    uint256 tokenAmount,
+    uint64 cliffSeconds
+  ) internal virtual {
     _token.safeTransfer(beneficiary, tokenAmount);
   }
 
@@ -175,9 +184,14 @@ abstract contract Sale is Context, ReentrancyGuard {
    * tokens.
    * @param beneficiary Address receiving the tokens
    * @param tokenAmount Number of tokens to be purchased
+   * @param cliffSeconds User only by the client purchaser wallet for reduced cliff
    */
-  function _processPurchase(address beneficiary, uint256 tokenAmount) internal virtual {
-    _deliverTokens(beneficiary, tokenAmount);
+  function _processPurchase(
+    address beneficiary,
+    uint256 tokenAmount,
+    uint64 cliffSeconds
+  ) internal virtual {
+    _deliverTokens(beneficiary, tokenAmount, cliffSeconds);
   }
 
   /**

@@ -24,6 +24,7 @@ abstract contract Vesting is Sale {
   BITMarketsToken private _btmt;
 
   address private _tokenWallet;
+  address private _purchaser;
 
   uint64 private _cliffSeconds;
   uint64 private _vestingDurationAfterCliffSeconds;
@@ -37,10 +38,11 @@ abstract contract Vesting is Sale {
    * @param vestingDuration The time in milliseconds after cliff happens when tokens are being released in a
    * linear fashion.
    */
-  constructor(address wallet, uint64 cliff, uint64 vestingDuration) {
+  constructor(address wallet, address purchaser, uint64 cliff, uint64 vestingDuration) {
     require(wallet != address(0), "Zero holder address");
 
     _tokenWallet = wallet;
+    _purchaser = purchaser;
     _btmt = BITMarketsToken(address(token()));
 
     _cliffSeconds = cliff;
@@ -103,20 +105,43 @@ abstract contract Vesting is Sale {
   }
 
   /**
+   * @dev Checks the cliff timestamp of the beneficiary's vesting wallet.
+   * @return Amount of retrievable tokens from vesting wallet.
+   */
+  function getVestingWalletCliff(address beneficiary) public view returns (uint256) {
+    address vestingWalletAddress = _vestingWallets[beneficiary];
+    require(vestingWalletAddress != address(0), "No vesting wallet");
+
+    IVestingWallet vwallet = IVestingWallet(vestingWalletAddress);
+
+    // solhint-disable-next-line not-rely-on-time
+    return vwallet.start();
+  }
+
+  /**
    * @dev Overrides parent behavior by transferring tokens to the vesting wallets.
    * @param beneficiary Token purchaser
    * @param tokenAmount Amount of tokens purchased
    */
-  function _deliverTokens(address beneficiary, uint256 tokenAmount) internal virtual override {
+  function _deliverTokens(
+    address beneficiary,
+    uint256 tokenAmount,
+    uint64 cliffSeconds
+  ) internal virtual override {
     require(remainingTokens() >= tokenAmount, "Allowance too low");
+    require(cliffSeconds == 0 || _msgSender() == _purchaser, "Invalid custom cliff");
 
     address vestingWalletAddress = _vestingWallets[beneficiary];
 
     if (vestingWalletAddress == address(0)) {
+      uint64 cliffAdd = cliffSeconds > 0 && cliffSeconds < _cliffSeconds
+        ? cliffSeconds
+        : _cliffSeconds;
+
       VestingWallet vwallet = new VestingWallet(
         beneficiary,
         // solhint-disable-next-line not-rely-on-time
-        uint64(block.timestamp + _cliffSeconds),
+        uint64(block.timestamp + cliffAdd),
         _vestingDurationAfterCliffSeconds
       );
       _vestingWallets[beneficiary] = address(vwallet);
@@ -130,6 +155,6 @@ abstract contract Vesting is Sale {
 
     tokenAmount = 0;
 
-    super._deliverTokens(beneficiary, tokenAmount);
+    super._deliverTokens(beneficiary, tokenAmount, cliffSeconds);
   }
 }

@@ -46,7 +46,7 @@ contract BITMarketsTokenPrivateSale is
     PurchaseTariffCap(args.investorTariff, args.investorCap)
     TimedSale(args.openingTime, args.closingTime)
     Whitelist(args.whitelister)
-    Vesting(args.wallet, args.cliff, args.vestingDuration)
+    Vesting(args.wallet, args.purchaser, args.cliff, args.vestingDuration)
   {
     _rate = args.rate;
   }
@@ -57,9 +57,10 @@ contract BITMarketsTokenPrivateSale is
 
   function _deliverTokens(
     address beneficiary,
-    uint256 tokenAmount
+    uint256 tokenAmount,
+    uint64 cliffSeconds
   ) internal override(Sale, Vesting) {
-    super._deliverTokens(beneficiary, tokenAmount);
+    super._deliverTokens(beneficiary, tokenAmount, cliffSeconds);
   }
 
   function _updatePurchasingState(

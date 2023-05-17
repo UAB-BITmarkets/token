@@ -48,7 +48,7 @@ contract BITMarketsTokenPublicSale is Sale, PurchaseTariffCap, TimedSale, Increa
     PurchaseTariffCap(args.investorTariff, args.investorCap)
     TimedSale(args.openingTime, args.closingTime)
     IncreasingPrice(args.initialRate, args.finalRate)
-    Vesting(args.wallet, args.cliff, args.vestingDuration)
+    Vesting(args.wallet, args.purchaser, args.cliff, args.vestingDuration)
   {
     // solhint-disable-previous-line no-empty-blocks
   }
@@ -58,9 +58,10 @@ contract BITMarketsTokenPublicSale is Sale, PurchaseTariffCap, TimedSale, Increa
    */
   function _deliverTokens(
     address beneficiary,
-    uint256 tokenAmount
+    uint256 tokenAmount,
+    uint64 cliffSeconds
   ) internal override(Sale, Vesting) {
-    super._deliverTokens(beneficiary, tokenAmount);
+    super._deliverTokens(beneficiary, tokenAmount, cliffSeconds);
   }
 
   function _updatePurchasingState(
