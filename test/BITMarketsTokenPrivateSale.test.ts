@@ -130,7 +130,7 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       );
 
       expect(await crowdsale.connect(addr2).vestedAmount(addr2.address)).to.be.equal(
-        ethers.utils.parseEther("450")
+        ethers.utils.parseEther("4500")
       );
 
       await crowdsale.connect(addr2).withdrawTokens(addr2.address);
@@ -185,9 +185,8 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
     });
 
     it("Should enforce tariffs and caps to individual investors", async () => {
-      const { token, crowdsale, addr1, addr2, whitelisterWallet } = await loadFixture(
-        loadContracts
-      );
+      const { token, crowdsale, addr1, addr2, whitelisterWallet, crowdsalesClientPurchaserWallet } =
+        await loadFixture(loadContracts);
 
       expect(await crowdsale.getInvestorTariff()).to.equal(investorTariff);
       expect(await crowdsale.getInvestorCap()).to.equal(investorCap);
@@ -220,6 +219,50 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       await expect(
         crowdsale.connect(addr2).buyTokens(addr2.address, { value: investorTariff })
       ).to.be.revertedWith("Crowdsale: cap >= hardCap");
+
+      await ethers.provider.send("hardhat_setBalance", [
+        addr1.address,
+        investorCap.mul(2).toHexString().replace("0x0", "0x")
+      ]);
+      await crowdsale
+        .connect(addr1)
+        .buyTokens(addr1.address, { value: investorCap.sub(investorTariff.sub(1)) });
+      // Passes even though weiAmont < tariff
+      await expect(
+        crowdsale.connect(addr1).buyTokens(addr1.address, { value: investorTariff.sub(1) })
+      ).to.not.be.reverted;
+
+      await ethers.provider.send("hardhat_setBalance", [
+        crowdsalesClientPurchaserWallet.address,
+        investorCap.mul(2).toHexString().replace("0x0", "0x")
+      ]);
+
+      await crowdsale
+        .connect(whitelisterWallet)
+        .addWhitelisted(crowdsalesClientPurchaserWallet.address);
+      await crowdsale
+        .connect(crowdsalesClientPurchaserWallet)
+        .buyTokens(crowdsalesClientPurchaserWallet.address, {
+          value: investorCap.sub(investorTariff.sub(1))
+        });
+      await expect(
+        crowdsale
+          .connect(crowdsalesClientPurchaserWallet)
+          .buyTokens(crowdsalesClientPurchaserWallet.address, { value: investorTariff.sub(2) })
+      ).to.be.revertedWith("Crowdsale: wei < tariff");
+      await expect(
+        crowdsale
+          .connect(crowdsalesClientPurchaserWallet)
+          .buyTokens(crowdsalesClientPurchaserWallet.address, { value: investorTariff.add(1) })
+      ).to.be.revertedWith("Crowdsale: cap >= hardCap");
+      const remainingContribution = await crowdsale
+        .connect(crowdsalesClientPurchaserWallet)
+        .getRemainingContribution(crowdsalesClientPurchaserWallet.address);
+      await expect(
+        crowdsale
+          .connect(crowdsalesClientPurchaserWallet)
+          .buyTokens(crowdsalesClientPurchaserWallet.address, { value: remainingContribution })
+      ).to.not.be.reverted;
     });
 
     it("Should allow participation on behalf of investors", async () => {

@@ -112,10 +112,7 @@ abstract contract Sale is Context, ReentrancyGuard {
    * another `nonReentrant` function.
    * @param beneficiary Recipient of the token purchase
    */
-  function participateOnBehalfOf(
-    address beneficiary,
-    uint256 weiAmount
-  ) public nonReentrant {
+  function participateOnBehalfOf(address beneficiary, uint256 weiAmount) public nonReentrant {
     require(_msgSender() == _purchaser, "Only purchaser wallet");
 
     _preValidatePurchase(beneficiary, weiAmount);

@@ -52,6 +52,15 @@ abstract contract PurchaseTariffCap is Sale {
   }
 
   /**
+   * @dev Returns the amount that can still be contributed by the beneficiary.
+   * @param beneficiary Address of contributor
+   * @return Beneficiary contribution so far
+   */
+  function getRemainingContribution(address beneficiary) public view returns (uint256) {
+    return _cap - _contributions[beneficiary];
+  }
+
+  /**
    * @dev Extend parent behavior to update beneficiary contributions.
    * @param beneficiary Token purchaser
    * @param weiAmount Amount of wei contributed
@@ -76,8 +85,10 @@ abstract contract PurchaseTariffCap is Sale {
   ) internal view virtual override {
     super._preValidatePurchase(beneficiary, weiAmount);
 
-    require(weiAmount >= _tariff, "Crowdsale: wei < tariff");
+    uint256 diff = _cap - _contributions[beneficiary];
+    bool diffException = diff < _cap && diff > 0 && diff == weiAmount;
     require(weiAmount <= _cap, "Crowdsale: wei > cap");
+    require(weiAmount >= _tariff || diffException, "Crowdsale: wei < tariff");
     require(_contributions[beneficiary] + weiAmount <= _cap, "Crowdsale: cap >= hardCap");
   }
 }

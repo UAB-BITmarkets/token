@@ -3,13 +3,13 @@ import { ethers } from "hardhat";
 import type { BITMarketsToken__factory } from "../../typechain-types/factories/contracts/BITMarketsToken__factory";
 import type { BITMarketsTokenPrivateSale__factory } from "../../typechain-types/factories/contracts/BITMarketsTokenPrivateSale__factory";
 
-export const investorTariff = ethers.utils.parseEther("100.0");
-export const investorCap = ethers.utils.parseEther("4000000.0");
+export const investorTariff = ethers.utils.parseEther("500.0"); // 500 matic
+export const investorCap = ethers.utils.parseEther("50000.0"); // 50000 matic
 
 export const cliff = 10; // seconds locked
 export const vestingDuration = 20; // seconds after cliff for full vesting
 
-export const rate = 10;
+export const rate = 20;
 
 const initialSupply = 300000000;
 const finalSupply = 200000000;
@@ -25,7 +25,7 @@ const esgFundRate = 1;
 const burnRate = 1; // 1/1000 = 0.1%
 
 export const openingTime = Date.now() + 60; // Starts in one minute
-export const closingTime = openingTime + 2 * 60; // 2 minutes from start
+export const closingTime = openingTime + 3 * 60; // 2 minutes from start
 
 export const loadContracts = async () => {
   const [
