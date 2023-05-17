@@ -467,6 +467,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const {
         token,
         companyLiquidityWallet,
+        crowdsalesWallet,
         feelessAdminWallet,
         companyRestrictionWhitelistWallet,
         addr1,
@@ -503,6 +504,18 @@ describe("BITMarkets ERC20 token contract tests", () => {
       await expect(
         token
           .connect(addr1)
+          .transferFrom(companyLiquidityWallet.address, addr2.address, limit.mul(4))
+      ).to.be.revertedWith("ERC20: insufficient allowance");
+
+      await expect(
+        token
+          .connect(addr1)
+          .transferFrom(companyLiquidityWallet.address, addr2.address, closeToLimit.add(1))
+      ).to.be.revertedWith("Amount > approved limit");
+
+      await expect(
+        token
+          .connect(addr1)
           .transferFrom(companyLiquidityWallet.address, addr2.address, closeToLimit)
       )
         .to.emit(token, "StrategicWalletCapReached")
@@ -519,6 +532,25 @@ describe("BITMarkets ERC20 token contract tests", () => {
 
       const remaining = await token.getApprovedReceiverRemaining(companyLiquidityWallet.address);
       expect(remaining).to.be.equal(ethers.constants.Zero);
+
+      const approvedEths = ethers.utils.parseEther("100000000");
+      await token
+        .connect(companyRestrictionWhitelistWallet)
+        .addUnrestrictedReceiver(
+          companyLiquidityWallet.address,
+          crowdsalesWallet.address,
+          approvedEths
+        );
+      await token.transfer(crowdsalesWallet.address, approvedEths);
+      await token
+        .connect(companyRestrictionWhitelistWallet)
+        .addUnrestrictedReceiver(crowdsalesWallet.address, addr2.address, approvedEths);
+      await token.connect(crowdsalesWallet).approve(addr1.address, approvedEths);
+      await expect(
+        token
+          .connect(addr1)
+          .transferFrom(crowdsalesWallet.address, addr1.address, closeToLimit.add(1))
+      ).to.be.revertedWith("Receiver not approved");
     });
 
     it("Should be possible to do only one transfer from company liquidity below the limit to an approved receiver when liquidity locked", async () => {

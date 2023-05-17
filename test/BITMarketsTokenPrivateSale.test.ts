@@ -258,6 +258,7 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       const remainingContribution = await crowdsale
         .connect(crowdsalesClientPurchaserWallet)
         .getRemainingContribution(crowdsalesClientPurchaserWallet.address);
+      expect(remainingContribution).to.be.lessThan(investorTariff);
       await expect(
         crowdsale
           .connect(crowdsalesClientPurchaserWallet)
