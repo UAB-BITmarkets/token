@@ -95,6 +95,7 @@ abstract contract ERC20Fees is ERC20, ERC20Burnable {
   }
 
   function addFeelessAdmin(address contractAddress) public virtual onlyFeelessAdmin {
+    require(contractAddress != address(0), "Invalid address");
     require(!_feelessAdmins[contractAddress], "Already feeless admin");
 
     _feelessAdmins[contractAddress] = true;

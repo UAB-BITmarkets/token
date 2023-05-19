@@ -43,7 +43,11 @@ abstract contract Whitelist is Sale {
   }
 
   function removeWhitelisted(address account) public virtual onlyWhitelistAdmin {
+    // check if the user has already been whitelisted
+    require(whitelisteds[account], "Account not whitelisted");
+
     _whitelisteds[account] = false;
+
     emit WhitelistedRemoved(account);
   }
 
