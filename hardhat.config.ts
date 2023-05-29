@@ -14,8 +14,9 @@ import { HardhatUserConfig } from "hardhat/config";
 // import '@nomiclabs/hardhat-web3';
 
 import "./tasks/deploy";
+import "./tasks/deployPreSale";
 import "./tasks/deployPublicSale";
-// import "./tasks/allocate";
+import "./tasks/allocate";
 
 import {
   companyLiquidityWallet,
@@ -23,7 +24,6 @@ import {
   crowdsalesWallet,
   companyRewardsWallet,
   esgFundWallet,
-  pauserWallet,
   whitelisterWallet,
   feelessAdminWallet,
   allocationsAdminWallet,
@@ -99,10 +99,6 @@ const config: HardhatUserConfig = {
             balance: `${10000 * 10 ** 18}`
           },
           {
-            privateKey: pauserWallet.privateKey,
-            balance: `${10000 * 10 ** 18}`
-          },
-          {
             privateKey: whitelisterWallet.privateKey,
             balance: `${10000 * 10 ** 18}`
           },
@@ -140,7 +136,6 @@ const config: HardhatUserConfig = {
           process.env.CROWDSALES_WALLET_PRIVATE_KEY || "", // needed
           process.env.COMPANY_REWARDS_WALLET_PRIVATE_KEY || "",
           process.env.ESG_FUND_WALLET_PRIVATE_KEY || "",
-          process.env.PAUSER_WALLET_PRIVATE_KEY || "",
           process.env.WHITELISTER_WALLET_PRIVATE_KEY || "",
           process.env.FEELESS_ADMIN_WALLET_PRIVATE_KEY || "", // needed
           process.env.COMPANY_RESTRICTION_WHITELIST_WALLET_PRIVATE_KEY || "", // needed
@@ -158,7 +153,6 @@ const config: HardhatUserConfig = {
           process.env.CROWDSALES_WALLET_PRIVATE_KEY || "", // needed
           process.env.COMPANY_REWARDS_WALLET_PRIVATE_KEY || "",
           process.env.ESG_FUND_WALLET_PRIVATE_KEY || "",
-          process.env.PAUSER_WALLET_PRIVATE_KEY || "",
           process.env.WHITELISTER_WALLET_PRIVATE_KEY || "",
           process.env.FEELESS_ADMIN_WALLET_PRIVATE_KEY || "", // needed
           process.env.COMPANY_RESTRICTION_WHITELIST_WALLET_PRIVATE_KEY || "", // needed

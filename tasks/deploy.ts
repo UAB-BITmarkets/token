@@ -7,9 +7,15 @@ import getGasData from "../utils/getGasData";
 const privateSaleOpeningTime =
   process.env.NODE_ENV === "production"
     ? // ? Math.trunc(new Date(`2023-03-08T17:00:00`).valueOf() / 1000)
-      Math.trunc((Date.now() + 1 * 60 * 60 * 1000) / 1000)
-    : Math.trunc((Date.now() + 2 * 60 * 1000) / 1000);
-const privateSaleClosingTime = Math.trunc(new Date("2023-06-18T17:00:00").valueOf() / 1000);
+      Math.trunc((Date.now() + 10 * 60 * 1000) / 1000) // 10 minutes
+    : Math.trunc((Date.now() + 5 * 60 * 1000) / 1000); // 5 minutes
+// const privateSaleClosingTime = Math.trunc(new Date("2023-06-18T17:00:00").valueOf() / 1000);
+const privateSaleClosingTime =
+  process.env.NODE_ENV === "production"
+    ? // ? Math.trunc(new Date(`2023-03-08T17:00:00`).valueOf() / 1000)
+      // Math.trunc((Date.now() + 10 * 60 * 1000) / 1000) // 10 minutes
+      Math.trunc((Date.now() + 18 * 24 * 60 * 60 * 1000) / 1000) // 18 days
+    : Math.trunc((Date.now() + 1 * 30 * 24 * 60 * 60 * 1000) / 1000); // 1 month
 
 const initialSupply = 300000000;
 const finalSupply = 200000000;
@@ -64,26 +70,6 @@ task("deploy", "Deploy contracts").setAction(
 
     const { maxFeePerGas, maxPriorityFeePerGas } = await getGasData(); // await hre.ethers.provider.getFeeData();
 
-    // const tx1 = await companyLiquidityWallet.sendTransaction({
-    //   to: allocationsWallet.address,
-    //   value: ethers.utils.parseEther("0.8"),
-    //   maxFeePerGas,
-    //   maxPriorityFeePerGas
-    // });
-    //
-    // await tx1.wait();
-    // console.log(tx1);
-    //
-    // const tx2 = await companyLiquidityWallet.sendTransaction({
-    //   to: crowdsalesWallet.address,
-    //   value: ethers.utils.parseEther("0.8"),
-    //   maxFeePerGas,
-    //   maxPriorityFeePerGas
-    // });
-    //
-    // await tx2.wait();
-    // console.log(tx2);
-
     const BTMT = await hre.ethers.getContractFactory("BITMarketsToken");
     const btmt = await BTMT.connect(companyLiquidityWallet).deploy(
       {
@@ -107,12 +93,14 @@ task("deploy", "Deploy contracts").setAction(
         maxPriorityFeePerGas
       }
     );
-    console.log(btmt);
+    console.log(
+      `1) Token deployment transaction hash ${btmt.deployTransaction.hash} with nonce ${btmt.deployTransaction.nonce}`
+    );
     await btmt.deployed();
     // const btmt = BTMT.connect(companyLiquidityWallet).attach(
-    //   // "0x3F008388Ba138d31C0373Fd930402f3173D09507"
-    //   // "0xf1dcfbA25b8be56c4d706B0C0cf43Ae28E062688"
-    //   "0x7cCC4a4759d2Bd969eAd5C1353F061873CF19B1d"
+    //   process.env.NODE_ENV === "production"
+    //     ? "0xa0c91763732a2AceEAbcb7328A88368C250a9a9B"
+    //     : "0xa0c91763732a2AceEAbcb7328A88368C250a9a9B"
     // );
 
     console.log(`TOKEN_CONTRACT_ADDRESS=${btmt.address}`);
@@ -133,7 +121,9 @@ task("deploy", "Deploy contracts").setAction(
         maxPriorityFeePerGas
       }
     );
-    console.log(allocations);
+    console.log(
+      `2) Allocations contract deployment transaction hash ${allocations.deployTransaction.hash} with nonce ${allocations.deployTransaction.nonce}`
+    );
     await allocations.deployed();
     // const allocations = ALLOCATIONS.connect(companyLiquidityWallet).attach(
     //   // "0xda441798840005cF8A726B711Aa54c1708bbb29d"
@@ -144,41 +134,56 @@ task("deploy", "Deploy contracts").setAction(
     console.log(`ALLOCATIONS_CONTRACT_ADDRESS=${allocations.address}`);
 
     const tx3 = await btmt.connect(feelessAdminWallet).addFeeless(allocations.address, {
-      maxFeePerGas: maxFeePerGas.mul(3),
-      maxPriorityFeePerGas: maxPriorityFeePerGas.mul(3)
+      maxFeePerGas,
+      maxPriorityFeePerGas
     });
-    console.log(tx3);
+    console.log(
+      `3) Make allocations contract feeless transaction hash ${tx3.hash} with nonce ${tx3.nonce}`
+    );
     await tx3.wait();
-    const tx4 = await btmt.connect(feelessAdminWallet).addFeeless(allocationsWallet.address);
-    console.log(tx4);
+
+    const tx4 = await btmt.connect(feelessAdminWallet).addFeeless(allocationsWallet.address, {
+      maxFeePerGas,
+      maxPriorityFeePerGas
+    });
+    console.log(
+      `4) Make allocations wallet feeless transaction hash ${tx4.hash} with nonce ${tx4.nonce}`
+    );
     await tx4.wait();
-    if (
-      (await btmt
-        .connect(companyRestrictionWhitelistWallet)
-        .getApprovedReceiver(companyLiquidityWallet.address)) !== allocationsWallet.address
-    ) {
-      const tx5 = await btmt
-        .connect(companyRestrictionWhitelistWallet)
-        .addUnrestrictedReceiver(
-          companyLiquidityWallet.address,
-          allocationsWallet.address,
-          ethers.utils.parseEther(`${allocationsWalletTokens}`),
-          {
-            maxFeePerGas,
-            maxPriorityFeePerGas
-          }
-        );
-      console.log(tx5);
-      await tx5.wait();
-    }
+
+    // if (
+    //   (await btmt
+    //     .connect(companyRestrictionWhitelistWallet)
+    //     .getApprovedReceiver(companyLiquidityWallet.address)) !== allocationsWallet.address
+    // ) {
+    const tx5 = await btmt
+      .connect(companyRestrictionWhitelistWallet)
+      .addUnrestrictedReceiver(
+        companyLiquidityWallet.address,
+        allocationsWallet.address,
+        ethers.utils.parseEther(`${allocationsWalletTokens}`),
+        {
+          maxFeePerGas,
+          maxPriorityFeePerGas
+        }
+      );
+    console.log(
+      `5) Make allocations wallet an unrestricted receiver for company liquidity transaction hash ${tx5.hash} with nonce ${tx5.nonce}`
+    );
+    await tx5.wait();
+    // }
+
     const tx6 = await btmt
       .connect(companyLiquidityWallet)
       .transfer(allocationsWallet.address, ethers.utils.parseEther(`${allocationsWalletTokens}`), {
         maxFeePerGas,
         maxPriorityFeePerGas
       });
-    console.log(tx6);
+    console.log(
+      `6) Do the unrestricted transfer from liquidity to allocations wallet transaction hash ${tx6.hash} with nonce ${tx6.nonce}`
+    );
     await tx6.wait();
+
     const tx7 = await btmt
       .connect(companyRestrictionWhitelistWallet)
       .addUnrestrictedReceiver(
@@ -187,21 +192,33 @@ task("deploy", "Deploy contracts").setAction(
         ethers.utils.parseEther(`${allocationsWalletTokens}`),
         { maxFeePerGas, maxPriorityFeePerGas }
       );
-    console.log(tx7);
+    console.log(
+      `7) Make allocations contract an unrestricted receiver for allocations wallet transaction hash ${tx7.hash} with nonce ${tx7.nonce}`
+    );
     await tx7.wait();
-    const tx8 = await btmt.connect(feelessAdminWallet).addFeelessAdmin(allocations.address);
-    console.log(tx8);
+
+    const tx8 = await btmt
+      .connect(feelessAdminWallet)
+      .addFeelessAdmin(allocations.address, { maxFeePerGas, maxPriorityFeePerGas });
+    console.log(
+      `8) Make allocations contract a feeless admin transaction hash ${tx8.hash} with nonce ${tx8.nonce}`
+    );
     await tx8.wait();
-    const tx9 = await btmt.connect(allocationsWallet).approve(allocations.address, allocationsCap);
-    console.log(tx9);
+
+    const tx9 = await btmt
+      .connect(allocationsWallet)
+      .approve(allocations.address, allocationsCap, { maxFeePerGas, maxPriorityFeePerGas });
+    console.log(
+      `9) Give allowance to the allocations contract from the allocations wallet transaction hash ${tx9.hash} with nonce ${tx9.nonce}`
+    );
     await tx9.wait();
 
     const totalSalesSupply = btmtTotalSupply.div(3);
     const privateSaleCap = totalSalesSupply.mul(4).div(10);
     // const publicSaleCap = totalSalesSupply.mul(6).div(10);
 
-    const WHITELISTED = await hre.ethers.getContractFactory("BITMarketsTokenPrivateSale");
-    const whitelisted = await WHITELISTED.connect(companyLiquidityWallet).deploy(
+    const PRIVATE_SALE = await hre.ethers.getContractFactory("BITMarketsTokenPrivateSale");
+    const privateSale = await PRIVATE_SALE.connect(companyLiquidityWallet).deploy(
       {
         rate: whitelistedRate,
         wallet: crowdsalesWallet.address,
@@ -220,38 +237,53 @@ task("deploy", "Deploy contracts").setAction(
         maxPriorityFeePerGas
       }
     );
-    console.log(whitelisted);
-    await whitelisted.deployed();
+    console.log(
+      `10) Private sale deployment transaction hash ${privateSale.deployTransaction.hash} with nonce ${privateSale.deployTransaction.nonce}`
+    );
+    await privateSale.deployed();
     // const whitelisted = WHITELISTED.connect(companyLiquidityWallet).attach(
     //   "0x22844D242cBb9B0D1DAA4af07600084d370EabB8"
     // );
 
-    console.log(`WHITELISTED_CONTRACT_ADDRESS=${whitelisted.address}`);
+    console.log(`WHITELISTED_CONTRACT_ADDRESS=${privateSale.address}`);
 
-    const tx10 = await btmt.connect(feelessAdminWallet).addFeeless(whitelisted.address);
-    console.log(tx10);
+    const tx10 = await btmt.connect(feelessAdminWallet).addFeeless(privateSale.address, {
+      maxFeePerGas,
+      maxPriorityFeePerGas
+    });
+    console.log(
+      `11) Make private sale contract feeless transaction hash ${tx10.hash} with nonce ${tx10.nonce}`
+    );
     await tx10.wait();
-    const tx11 = await btmt.connect(feelessAdminWallet).addFeeless(crowdsalesWallet.address);
-    console.log(tx11);
-    await tx11.wait();
-    if (
-      (await btmt.getApprovedReceiver(companyLiquidityWallet.address)) !== crowdsalesWallet.address
-    ) {
-      const tx12 = await btmt
-        .connect(companyRestrictionWhitelistWallet)
-        .addUnrestrictedReceiver(
-          companyLiquidityWallet.address,
-          crowdsalesWallet.address,
-          ethers.utils.parseEther(`${crowdsalesWalletTokens}`),
-          {
-            maxFeePerGas: maxFeePerGas.mul(10),
-            maxPriorityFeePerGas: maxPriorityFeePerGas.mul(10)
-          }
-        );
 
-      console.log(tx12);
-      await tx12.wait();
-    }
+    const tx11 = await btmt.connect(feelessAdminWallet).addFeeless(crowdsalesWallet.address, {
+      maxFeePerGas,
+      maxPriorityFeePerGas
+    });
+    console.log(
+      `12) Make crowdsales wallet feeless transaction hash ${tx11.hash} with nonce ${tx11.nonce}`
+    );
+    await tx11.wait();
+
+    // if (
+    //   (await btmt.getApprovedReceiver(companyLiquidityWallet.address)) !== crowdsalesWallet.address
+    // ) {
+    const tx12 = await btmt
+      .connect(companyRestrictionWhitelistWallet)
+      .addUnrestrictedReceiver(
+        companyLiquidityWallet.address,
+        crowdsalesWallet.address,
+        ethers.utils.parseEther(`${crowdsalesWalletTokens}`),
+        {
+          maxFeePerGas,
+          maxPriorityFeePerGas
+        }
+      );
+    console.log(
+      `13) Make crowdsales wallet an unrestricted receiver for company liquidity transaction hash ${tx12.hash} with nonce ${tx12.nonce}`
+    );
+    await tx12.wait();
+    // }
 
     const tx13 = await btmt
       .connect(companyLiquidityWallet)
@@ -259,31 +291,45 @@ task("deploy", "Deploy contracts").setAction(
         maxFeePerGas,
         maxPriorityFeePerGas
       });
-
-    console.log(tx13);
+    console.log(
+      `14) Do the unrestricted transfer from liquidity to crowdsales wallet transaction hash ${tx13.hash} with nonce ${tx13.nonce}`
+    );
     await tx13.wait();
 
-    if ((await btmt.getApprovedReceiver(crowdsalesWallet.address)) !== whitelisted.address) {
-      const tx14 = await btmt
-        .connect(companyRestrictionWhitelistWallet)
-        .addUnrestrictedReceiver(
-          crowdsalesWallet.address,
-          whitelisted.address,
-          ethers.utils.parseEther(`${privateSaleCap}`),
-          {
-            maxFeePerGas,
-            maxPriorityFeePerGas
-          }
-        );
+    // if ((await btmt.getApprovedReceiver(crowdsalesWallet.address)) !== whitelisted.address) {
+    const tx14 = await btmt
+      .connect(companyRestrictionWhitelistWallet)
+      .addUnrestrictedReceiver(
+        crowdsalesWallet.address,
+        privateSale.address,
+        ethers.utils.parseEther(`${privateSaleCap}`),
+        {
+          maxFeePerGas,
+          maxPriorityFeePerGas
+        }
+      );
+    console.log(
+      `15) Make private sale contract an unrestricted receiver for crowdsales wallet transaction hash ${tx14.hash} with nonce ${tx14.nonce}`
+    );
+    await tx14.wait();
+    // }
 
-      console.log(tx14);
-      await tx14.wait();
-    }
-    const tx15 = await btmt.connect(feelessAdminWallet).addFeelessAdmin(whitelisted.address);
-    console.log(tx15);
+    const tx15 = await btmt.connect(feelessAdminWallet).addFeelessAdmin(privateSale.address, {
+      maxFeePerGas,
+      maxPriorityFeePerGas
+    });
+    console.log(
+      `16) Make private sale contract a feeless admin transaction hash ${tx15.hash} with nonce ${tx15.nonce}`
+    );
     await tx15.wait();
-    const tx16 = await btmt.connect(crowdsalesWallet).approve(whitelisted.address, privateSaleCap);
-    console.log(tx16);
+
+    const tx16 = await btmt.connect(crowdsalesWallet).approve(privateSale.address, privateSaleCap, {
+      maxFeePerGas,
+      maxPriorityFeePerGas
+    });
+    console.log(
+      `17) Give allowance to the private sale contract from the crowdsales wallet transaction hash ${tx16.hash} with nonce ${tx16.nonce}`
+    );
     await tx16.wait();
   }
 );

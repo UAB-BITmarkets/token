@@ -8,7 +8,7 @@ interface IBITMarketsTokenAllocations {
   /**
    * @dev Expects amount converted to 10 ** 18
    */
-  function allocate(address beneficiary, uint256 amount) external;
+  function allocate(address beneficiary, uint256 amount, uint64 cliffSeconds) external;
 
   /**
    * @dev Function to withdraw already vested tokens.

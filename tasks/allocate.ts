@@ -7,6 +7,8 @@ import { join, dirname, resolve } from "node:path";
 
 import dotenv from "dotenv";
 
+import getGasData from "../utils/getGasData";
+
 import { BITMarketsTokenAllocations__factory } from "../typechain-types/factories/contracts/BITMarketsTokenAllocations__factory";
 
 if (
@@ -57,7 +59,6 @@ task("allocate", "Allocate to team etc.").setAction(
       crowdsalesWallet, // needed
       companyRewardsWallet,
       esgFundWallet,
-      pauserWallet,
       whitelisterWallet,
       feelessAdminWallet, // needed
       companyRestrictionWhitelistWallet, // needed
@@ -67,7 +68,13 @@ task("allocate", "Allocate to team etc.").setAction(
 
     const teamWalletsLen = 1070;
 
-    writeFileSync(join(__dirname, "teamAllocationsWallets.csv"), `PRIVATE_KEY,ADDRESS,AMOUNT`);
+    writeFileSync(
+      join(__dirname, "teamAllocationsWallets.csv"),
+      `PRIVATE_KEY,ADDRESS,AMOUNT,TX_HASH,NONCE`
+    );
+
+    let maxFeePerGas = ethers.utils.parseEther("0");
+    let maxPriorityFeePerGas = ethers.utils.parseEther("0");
 
     for (let i = 0; i < teamWalletsLen; i++) {
       const file = readFileSync(join(__dirname, "teamAllocationsWallets.csv"), "utf8");
@@ -76,21 +83,39 @@ task("allocate", "Allocate to team etc.").setAction(
 
       const amount = i < 10 ? 1000000 : i < 20 ? 500000 : i < 70 ? 100000 : 10000;
 
-      writeFileSync(
-        join(__dirname, "teamAllocationsWallets.csv"),
-        `${file}\n${wallet.privateKey},${wallet.address},${amount}`
+      if (i % 5 === 0) {
+        const fees = await getGasData();
+        maxFeePerGas = fees.maxFeePerGas;
+        maxPriorityFeePerGas = fees.maxPriorityFeePerGas;
+      }
+
+      const tx = await allocations
+        .connect(allocationsAdminWallet)
+        .allocate(wallet.address, ethers.utils.parseEther(`${amount}`), 0, {
+          maxFeePerGas,
+          maxPriorityFeePerGas
+        });
+
+      console.log(
+        `Iteration #${i + 1}. Allocated to ${wallet.address} amount ${amount} for team. Tx hash ${
+          tx.hash
+        } with nonce ${tx.nonce}.`
       );
 
-      await allocations
-        .connect(allocationsAdminWallet)
-        .allocate(wallet.address, ethers.utils.parseEther(`${amount}`));
+      writeFileSync(
+        join(__dirname, "teamAllocationsWallets.csv"),
+        `${file}\n${wallet.privateKey},${wallet.address},${amount},${tx.hash},${tx.nonce}`
+      );
 
-      console.log(`Allocated to ${wallet.address} amount ${amount} for team`);
+      await tx.wait();
     }
 
     const salesWalletsLen = 565;
 
-    writeFileSync(join(__dirname, "salesAllocationsWallets.csv"), `PRIVATE_KEY,ADDRESS,AMOUNT`);
+    writeFileSync(
+      join(__dirname, "salesAllocationsWallets.csv"),
+      `PRIVATE_KEY,ADDRESS,AMOUNT,TX_HASH,NONCE`
+    );
 
     for (let i = 0; i < salesWalletsLen; i++) {
       const file = readFileSync(join(__dirname, "salesAllocationsWallets.csv"), "utf8");
@@ -99,16 +124,31 @@ task("allocate", "Allocate to team etc.").setAction(
 
       const amount = i < 5 ? 1000000 : i < 15 ? 500000 : i < 65 ? 100000 : 10000;
 
-      writeFileSync(
-        join(__dirname, "salesAllocationsWallets.csv"),
-        `${file}\n${wallet.privateKey},${wallet.address},${amount}`
+      if (i % 5 === 0) {
+        const fees = await getGasData();
+        maxFeePerGas = fees.maxFeePerGas;
+        maxPriorityFeePerGas = fees.maxPriorityFeePerGas;
+      }
+
+      const tx = await allocations
+        .connect(allocationsAdminWallet)
+        .allocate(wallet.address, ethers.utils.parseEther(`${amount}`), 0, {
+          maxFeePerGas,
+          maxPriorityFeePerGas
+        });
+
+      console.log(
+        `Iteration #${i + 1}. Allocated to ${wallet.address} amount ${amount} for sales. Tx hash ${
+          tx.hash
+        } with nonce ${tx.nonce}.`
       );
 
-      await allocations
-        .connect(allocationsAdminWallet)
-        .allocate(wallet.address, ethers.utils.parseEther(`${amount}`));
+      writeFileSync(
+        join(__dirname, "salesAllocationsWallets.csv"),
+        `${file}\n${wallet.privateKey},${wallet.address},${amount},${tx.hash},${tx.nonce}`
+      );
 
-      console.log(`Allocated to ${wallet.address} amount ${amount} for sales`);
+      await tx.wait();
     }
   }
 );

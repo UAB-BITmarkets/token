@@ -1,6 +1,6 @@
 {
   "name": "bitmarkets",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "license": "Apache-2.0",
   "description": "Crypto made simple",
   "engines": {
@@ -17,11 +17,11 @@
     "@openzeppelin/contracts-upgradeable": "^4.7.1",
     "@openzeppelin/hardhat-upgrades": "^1.19.0",
     "@openzeppelin/test-helpers": "^0.5.15",
-    "@typechain/ethers-v5": "^10.1.0",
-    "@typechain/hardhat": "^6.1.2",
+    "@typechain/ethers-v5": "^11.0.0",
+    "@typechain/hardhat": "^7.0.0",
     "@types/chai": "^4.2.21",
     "@types/mocha": "^10.0.0",
-    "@types/node": "^18.0.6",
+    "@types/node": "^20.2.3",
     "@typescript-eslint/eslint-plugin": "^5.30.7",
     "@typescript-eslint/parser": "^5.30.7",
     "chai": "^4.2.0",
@@ -44,7 +44,7 @@
     "solidity-coverage": "^0.8.2",
     "ts-node": "^10.9.1",
     "typechain": "^8.1.0",
-    "typescript": "^4.5.2",
+    "typescript": "^5.0.4",
     "web3": "^1.7.4"
   },
   "scripts": {
@@ -59,7 +59,7 @@
     "deployPublicSale:dev": "cross-env NODE_ENV=development npx hardhat deployPublicSale --network localhost",
     "deployPublicSale:test": "cross-env NODE_ENV=testing npx hardhat deployPublicSale --network polygon_mumbai",
     "allocate:test": "cross-env NODE_ENV=testing npx hardhat allocate --network polygon_mumbai",
-    "allocate:prod": "cross-env NODE_ENV=testing npx hardhat allocate --network matic",
+    "allocate:prod": "cross-env NODE_ENV=production npx hardhat allocate --network matic",
     "start": "cross-env NODE_ENV=development npx hardhat node",
     "generateAddresses": "node scripts/generateWallets.mjs",
     "combineKeys": "node scripts/combineKeys.mjs",

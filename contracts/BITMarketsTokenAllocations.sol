@@ -25,7 +25,7 @@ contract BITMarketsTokenAllocations is IBITMarketsTokenAllocations {
   uint64 private _cliffSeconds;
   uint64 private _vestingDurationAfterCliffSeconds;
 
-  mapping(address => address) public vestingWallets;
+  mapping(address => address) public _vestingWallets;
 
   /**
    * @dev Constructor
@@ -59,25 +59,33 @@ contract BITMarketsTokenAllocations is IBITMarketsTokenAllocations {
   /**
    * @dev Expects amount converted to 10 ** 18
    */
-  function allocate(address beneficiary, uint256 amount) public virtual override {
+  function allocate(address beneficiary, uint256 amount, uint64 cliffSeconds) public virtual override {
     require(msg.sender == _allocationsAdmin, "Invalid message sender");
-    require(vestingWallets[beneficiary] == address(0), "Vesting wallet exists");
     require(
       amount <=
         Math.min(_token.balanceOf(_tokenWallet), _token.allowance(_tokenWallet, address(this))),
       "Amount too large"
     );
 
-    VestingWallet vwallet = new VestingWallet(
-      beneficiary,
-      // solhint-disable-next-line not-rely-on-time
-      uint64(block.timestamp + _cliffSeconds),
-      _vestingDurationAfterCliffSeconds
-    );
-    address vestingWalletAddress = address(vwallet);
-    vestingWallets[beneficiary] = vestingWalletAddress;
+    address vestingWalletAddress = _vestingWallets[beneficiary];
 
-    _btmt.addFeeless(vestingWalletAddress);
+    if (vestingWalletAddress == address(0)) {
+      uint64 cliffAdd = cliffSeconds > 0 && cliffSeconds < _cliffSeconds
+        ? cliffSeconds
+        : _cliffSeconds;
+
+      VestingWallet vwallet = new VestingWallet(
+        beneficiary,
+        // solhint-disable-next-line not-rely-on-time
+        uint64(block.timestamp + cliffAdd),
+        _vestingDurationAfterCliffSeconds
+      );
+      _vestingWallets[beneficiary] = address(vwallet);
+      vestingWalletAddress = address(vwallet);
+
+      _btmt.addFeeless(vestingWalletAddress);
+    }
+
     _token.safeTransferFrom(_tokenWallet, vestingWalletAddress, amount);
   }
 
@@ -85,9 +93,8 @@ contract BITMarketsTokenAllocations is IBITMarketsTokenAllocations {
    * @dev Function to withdraw already vested tokens.
    */
   function withdraw(address beneficiary) public virtual override {
-    address vestingWalletAddress = vestingWallets[beneficiary];
+    address vestingWalletAddress = _vestingWallets[beneficiary];
     require(vestingWalletAddress != address(0), "No vesting wallet");
-    // require(msg.sender == beneficiary || msg.sender == _tokenWallet, "Invalid msg sender");
 
     IVestingWallet vwallet = IVestingWallet(vestingWalletAddress);
 
@@ -119,10 +126,24 @@ contract BITMarketsTokenAllocations is IBITMarketsTokenAllocations {
    * @return the address of the vesting wallet.
    */
   function vestingWallet(address beneficiary) public view override returns (address) {
-    address vestingWalletAddress = vestingWallets[beneficiary];
+    address vestingWalletAddress = _vestingWallets[beneficiary];
     require(vestingWalletAddress != address(0), "No vesting wallet");
 
     return vestingWalletAddress;
+  }
+
+  /**
+   * @dev Checks the cliff timestamp of the beneficiary's vesting wallet.
+   * @return Amount of retrievable tokens from vesting wallet.
+   */
+  function getVestingWalletCliff(address beneficiary) public view returns (uint256) {
+    address vestingWalletAddress = _vestingWallets[beneficiary];
+    require(vestingWalletAddress != address(0), "No vesting wallet");
+
+    IVestingWallet vwallet = IVestingWallet(vestingWalletAddress);
+
+    // solhint-disable-next-line not-rely-on-time
+    return vwallet.start();
   }
 
   /**
@@ -130,7 +151,7 @@ contract BITMarketsTokenAllocations is IBITMarketsTokenAllocations {
    * @return Amount of retrievable tokens from vesting wallet.
    */
   function vestedAmount(address beneficiary) public view override returns (uint256) {
-    address vestingWalletAddress = vestingWallets[beneficiary];
+    address vestingWalletAddress = _vestingWallets[beneficiary];
     require(vestingWalletAddress != address(0), "No vesting wallet");
 
     IVestingWallet vwallet = IVestingWallet(vestingWalletAddress);
