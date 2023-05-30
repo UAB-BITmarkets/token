@@ -7,14 +7,14 @@ import getGasData from "../utils/getGasData";
 const privateSaleOpeningTime =
   process.env.NODE_ENV === "production"
     ? // ? Math.trunc(new Date(`2023-03-08T17:00:00`).valueOf() / 1000)
-      Math.trunc((Date.now() + 10 * 60 * 1000) / 1000) // 10 minutes
+      Math.trunc((Date.now() + 15 * 60 * 1000) / 1000) // 15 minutes
     : Math.trunc((Date.now() + 5 * 60 * 1000) / 1000); // 5 minutes
 // const privateSaleClosingTime = Math.trunc(new Date("2023-06-18T17:00:00").valueOf() / 1000);
 const privateSaleClosingTime =
   process.env.NODE_ENV === "production"
     ? // ? Math.trunc(new Date(`2023-03-08T17:00:00`).valueOf() / 1000)
       // Math.trunc((Date.now() + 10 * 60 * 1000) / 1000) // 10 minutes
-      Math.trunc((Date.now() + 18 * 24 * 60 * 60 * 1000) / 1000) // 18 days
+      Math.trunc((Date.now() + 20 * 24 * 60 * 60 * 1000) / 1000) // 20 days
     : Math.trunc((Date.now() + 1 * 30 * 24 * 60 * 60 * 1000) / 1000); // 1 month
 
 const initialSupply = 300000000;
@@ -68,7 +68,12 @@ task("deploy", "Deploy contracts").setAction(
       crowdsalesClientPurchaserWallet
     ] = await hre.ethers.getSigners();
 
-    const { maxFeePerGas, maxPriorityFeePerGas } = await getGasData(); // await hre.ethers.provider.getFeeData();
+    let maxFeePerGas = ethers.utils.parseEther("0");
+    let maxPriorityFeePerGas = ethers.utils.parseEther("0");
+
+    const fees = await getGasData();
+    maxFeePerGas = fees.maxFeePerGas;
+    maxPriorityFeePerGas = fees.maxPriorityFeePerGas;
 
     const BTMT = await hre.ethers.getContractFactory("BITMarketsToken");
     const btmt = await BTMT.connect(companyLiquidityWallet).deploy(
@@ -109,6 +114,10 @@ task("deploy", "Deploy contracts").setAction(
 
     const allocationsCap = btmtTotalSupply.div(3);
 
+    const fees1 = await getGasData();
+    maxFeePerGas = fees1.maxFeePerGas;
+    maxPriorityFeePerGas = fees1.maxPriorityFeePerGas;
+
     const ALLOCATIONS = await hre.ethers.getContractFactory("BITMarketsTokenAllocations");
     const allocations = await ALLOCATIONS.connect(companyLiquidityWallet).deploy(
       allocationsWallet.address,
@@ -132,6 +141,10 @@ task("deploy", "Deploy contracts").setAction(
     // );
 
     console.log(`ALLOCATIONS_CONTRACT_ADDRESS=${allocations.address}`);
+
+    const fees2 = await getGasData();
+    maxFeePerGas = fees2.maxFeePerGas;
+    maxPriorityFeePerGas = fees2.maxPriorityFeePerGas;
 
     const tx3 = await btmt.connect(feelessAdminWallet).addFeeless(allocations.address, {
       maxFeePerGas,
@@ -213,6 +226,10 @@ task("deploy", "Deploy contracts").setAction(
     );
     await tx9.wait();
 
+    const fees3 = await getGasData();
+    maxFeePerGas = fees3.maxFeePerGas;
+    maxPriorityFeePerGas = fees3.maxPriorityFeePerGas;
+
     const totalSalesSupply = btmtTotalSupply.div(3);
     const privateSaleCap = totalSalesSupply.mul(4).div(10);
     // const publicSaleCap = totalSalesSupply.mul(6).div(10);
@@ -246,6 +263,10 @@ task("deploy", "Deploy contracts").setAction(
     // );
 
     console.log(`WHITELISTED_CONTRACT_ADDRESS=${privateSale.address}`);
+
+    const fees4 = await getGasData();
+    maxFeePerGas = fees4.maxFeePerGas;
+    maxPriorityFeePerGas = fees4.maxPriorityFeePerGas;
 
     const tx10 = await btmt.connect(feelessAdminWallet).addFeeless(privateSale.address, {
       maxFeePerGas,
