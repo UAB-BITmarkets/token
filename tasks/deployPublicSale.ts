@@ -45,24 +45,22 @@ task("deployPublicSale", "Deploy public sale contract and stop presale").setActi
       crowdsalesClientPurchaserWallet
     ] = await hre.ethers.getSigners();
 
-    const { maxFeePerGas, maxPriorityFeePerGas } = await getGasData(); // await hre.ethers.provider.getFeeData();
+    let maxFeePerGas = ethers.utils.parseEther("0");
+    let maxPriorityFeePerGas = ethers.utils.parseEther("0");
+
+    const fees = await getGasData();
+    maxFeePerGas = fees.maxFeePerGas;
+    maxPriorityFeePerGas = fees.maxPriorityFeePerGas;
 
     const BTMT = await hre.ethers.getContractFactory("BITMarketsToken");
     const btmt = BTMT.connect(companyLiquidityWallet).attach(
-      "0xcd14236cBCf827cdd59e05588a4200762209BbD4"
+      "0x247f8786C70A8CDE1df4EDDB6dE16CB926dcc408"
     );
 
-    const PRE_SALE = await hre.ethers.getContractFactory("BITMarketsTokenPrivateSale");
-    const preSale = PRE_SALE.connect(companyLiquidityWallet).attach(
-      "0x931483EF29cbab74876849B0d2301A21EFd96829"
+    const PRESALE = await hre.ethers.getContractFactory("BITMarketsTokenPrivateSale");
+    const preSale = PRESALE.connect(companyLiquidityWallet).attach(
+      "0x5e255de70b2F825041442035eC8330FbbED96145"
     );
-
-    // const WHITELISTED = await hre.ethers.getContractFactory("BITMarketsTokenPublicSale");
-    // const whitelisted = WHITELISTED.connect(companyLiquidityWallet).attach(
-    //   "0xF115c943117D326aa40a9632F430029E3FE14A7E"
-    // );
-    //
-    // console.log(`WHITELISTED_CONTRACT_ADDRESS=${whitelisted.address}`);
 
     const tx1 = await btmt
       .connect(companyRestrictionWhitelistWallet)
@@ -86,9 +84,15 @@ task("deployPublicSale", "Deploy public sale contract and stop presale").setActi
       maxPriorityFeePerGas
     });
     console.log(
-      `2) Remove presale contract from unrestricted receiver of crowdsales wallet transaction hash ${tx2.hash} with nonce ${tx2.nonce}`
+      `2) Remove sales wallet allowance from private sale contract transaction hash ${tx2.hash} with nonce ${tx2.nonce}`
     );
     await tx2.wait();
+
+    await new Promise((resolve) => setTimeout(resolve, 2 + Math.random() * 1000));
+
+    const fees1 = await getGasData();
+    maxFeePerGas = fees1.maxFeePerGas;
+    maxPriorityFeePerGas = fees1.maxPriorityFeePerGas;
 
     const PUBLIC_SALE = await hre.ethers.getContractFactory("BITMarketsTokenPublicSale");
     const publicSale = await PUBLIC_SALE.connect(companyLiquidityWallet).deploy(
@@ -119,6 +123,10 @@ task("deployPublicSale", "Deploy public sale contract and stop presale").setActi
     // );
     console.log(`ICO_CONTRACT_ADDRESS=${publicSale.address}`);
 
+    const fees2 = await getGasData();
+    maxFeePerGas = fees2.maxFeePerGas;
+    maxPriorityFeePerGas = fees2.maxPriorityFeePerGas;
+
     const tx3 = await btmt.connect(feelessAdminWallet).addFeeless(publicSale.address, {
       maxFeePerGas,
       maxPriorityFeePerGas
@@ -145,6 +153,10 @@ task("deployPublicSale", "Deploy public sale contract and stop presale").setActi
       `5) Make public sale contract an unrestricted receiver for crowdsales wallet transaction hash ${tx4.hash} with nonce ${tx4.nonce}`
     );
     await tx4.wait();
+
+    const fees3 = await getGasData();
+    maxFeePerGas = fees3.maxFeePerGas;
+    maxPriorityFeePerGas = fees3.maxPriorityFeePerGas;
 
     const tx5 = await btmt.connect(feelessAdminWallet).addFeelessAdmin(publicSale.address, {
       maxFeePerGas,

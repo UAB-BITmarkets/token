@@ -45,7 +45,7 @@ const allocationsVestingDuration =
 const privateSaleCliff =
   process.env.NODE_ENV === "production"
     ? 6 * 30 * 24 * 60 * 60 // 6 months after purchase = 6 * 30 days * 24 hours * 60 minutes * 60 seconds locked
-    : 3 * 60; // 3 minutes after purchase = 3 * 60 seconds locked
+    : 10 * 60; // 10 minutes after purchase = 10 * 60 seconds locked
 const privateSaleVestingDuration =
   process.env.NODE_ENV === "production"
     ? 10 * 30 * 24 * 60 * 60 // 10 months linear after cliff = 10 * 30 days * 24 hours * 60 minutes * 60 seconds

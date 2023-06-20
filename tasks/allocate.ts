@@ -68,13 +68,19 @@ task("allocate", "Allocate to team etc.").setAction(
 
     const teamWalletsLen = 1070;
 
-    writeFileSync(
-      join(__dirname, "teamAllocationsWallets.csv"),
-      `PRIVATE_KEY,ADDRESS,AMOUNT,TX_HASH,NONCE`
-    );
+    if (!existsSync(join(__dirname, "teamAllocationsWallets.csv"))) {
+      writeFileSync(
+        join(__dirname, "teamAllocationsWallets.csv"),
+        `PRIVATE_KEY,ADDRESS,AMOUNT,TX_HASH,NONCE`
+      );
+    }
 
     let maxFeePerGas = ethers.utils.parseEther("0");
     let maxPriorityFeePerGas = ethers.utils.parseEther("0");
+
+    const fees = await getGasData();
+    maxFeePerGas = fees.maxFeePerGas;
+    maxPriorityFeePerGas = fees.maxPriorityFeePerGas;
 
     for (let i = 0; i < teamWalletsLen; i++) {
       const file = readFileSync(join(__dirname, "teamAllocationsWallets.csv"), "utf8");
@@ -108,14 +114,18 @@ task("allocate", "Allocate to team etc.").setAction(
       );
 
       await tx.wait();
+
+      await new Promise((resolve) => setTimeout(resolve, 1 + Math.random() * 1000));
     }
 
     const salesWalletsLen = 565;
 
-    writeFileSync(
-      join(__dirname, "salesAllocationsWallets.csv"),
-      `PRIVATE_KEY,ADDRESS,AMOUNT,TX_HASH,NONCE`
-    );
+    if (!existsSync(join(__dirname, "salesAllocationsWallets.csv"))) {
+      writeFileSync(
+        join(__dirname, "salesAllocationsWallets.csv"),
+        `PRIVATE_KEY,ADDRESS,AMOUNT,TX_HASH,NONCE`
+      );
+    }
 
     for (let i = 0; i < salesWalletsLen; i++) {
       const file = readFileSync(join(__dirname, "salesAllocationsWallets.csv"), "utf8");
@@ -149,6 +159,8 @@ task("allocate", "Allocate to team etc.").setAction(
       );
 
       await tx.wait();
+
+      await new Promise((resolve) => setTimeout(resolve, 1 + Math.random() * 1000));
     }
   }
 );

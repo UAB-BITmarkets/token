@@ -44,8 +44,7 @@
     "solidity-coverage": "^0.8.2",
     "ts-node": "^10.9.1",
     "typechain": "^8.1.0",
-    "typescript": "^5.0.4",
-    "web3": "^1.7.4"
+    "typescript": "^5.0.4"
   },
   "scripts": {
     "prelint": "eslint test/**/*.test.ts test/*.test.ts",
@@ -56,15 +55,20 @@
     "deploy:dev": "cross-env NODE_ENV=development npx hardhat deploy --network localhost",
     "deploy:test": "cross-env NODE_ENV=testing npx hardhat deploy --network polygon_mumbai",
     "deploy:prod": "cross-env NODE_ENV=production npx hardhat deploy --network matic",
+    "deployPreSale:dev": "cross-env NODE_ENV=development npx hardhat deployPreSale --network localhost",
+    "deployPreSale:test": "cross-env NODE_ENV=testing npx hardhat deployPreSale --network polygon_mumbai",
+    "deployPreSale:prod": "cross-env NODE_ENV=production npx hardhat deployPreSale --network matic",
     "deployPublicSale:dev": "cross-env NODE_ENV=development npx hardhat deployPublicSale --network localhost",
     "deployPublicSale:test": "cross-env NODE_ENV=testing npx hardhat deployPublicSale --network polygon_mumbai",
+    "deployPublicSale:prod": "cross-env NODE_ENV=production npx hardhat deployPublicSale --network matic",
     "allocate:test": "cross-env NODE_ENV=testing npx hardhat allocate --network polygon_mumbai",
     "allocate:prod": "cross-env NODE_ENV=production npx hardhat allocate --network matic",
     "start": "cross-env NODE_ENV=development npx hardhat node",
     "generateAddresses": "node scripts/generateWallets.mjs",
     "combineKeys": "node scripts/combineKeys.mjs",
     "splitWallets": "node scripts/splitWallets.mjs",
-    "generateAllocationsWallets": "node scripts/generateAllocationsWallets.mjs"
+    "generateAllocationsWallets": "node scripts/generateAllocationsWallets.mjs",
+    "purchases": "node scripts/purchasesFixer.mjs"
   },
   "dependencies": {
     "@deliberative/crypto": "^0.8.3"
