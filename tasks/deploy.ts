@@ -320,15 +320,10 @@ task("deploy", "Deploy contracts").setAction(
     // if ((await btmt.getApprovedReceiver(crowdsalesWallet.address)) !== whitelisted.address) {
     const tx14 = await btmt
       .connect(companyRestrictionWhitelistWallet)
-      .addUnrestrictedReceiver(
-        crowdsalesWallet.address,
-        privateSale.address,
-        ethers.utils.parseEther(`${privateSaleCap}`),
-        {
-          maxFeePerGas,
-          maxPriorityFeePerGas
-        }
-      );
+      .addUnrestrictedReceiver(crowdsalesWallet.address, privateSale.address, privateSaleCap, {
+        maxFeePerGas,
+        maxPriorityFeePerGas
+      });
     console.log(
       `15) Make private sale contract an unrestricted receiver for crowdsales wallet transaction hash ${tx14.hash} with nonce ${tx14.nonce}`
     );

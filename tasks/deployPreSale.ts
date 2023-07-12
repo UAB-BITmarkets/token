@@ -12,22 +12,22 @@ const preSaleOpeningTime =
 const preSaleClosingTime =
   process.env.NODE_ENV === "production"
     ? // Math.trunc(new Date("2023-12-23T17:00:00").valueOf() / 1000)
-      Math.trunc((Date.now() + 2 * 30 * 24 * 60 * 60 * 1000) / 1000) // 2 months
-    : Math.trunc((Date.now() + 24 * 60 * 60 * 1000) / 1000); // 1 day
+      Math.trunc((Date.now() + 4 * 30 * 24 * 60 * 60 * 1000) / 1000) // 4 months
+    : Math.trunc((Date.now() + 4 * 30 * 24 * 60 * 60 * 1000) / 1000); // 1 day
 
 const investorTariff = ethers.utils.parseEther("500.0"); // 500 matic
 const investorCap = ethers.utils.parseEther("50000.0"); // 50000 matic
 
 const cliff =
   process.env.NODE_ENV === "production"
-    ? 3 * 30 * 24 * 60 * 60 // 3 months after purchase
+    ? 6 * 30 * 24 * 60 * 60 // 3 months after purchase
     : 3 * 60; // 3 minutes after purchase = 3 * 60 seconds locked
 const vestingDuration =
   process.env.NODE_ENV === "production"
     ? 100 * 24 * 60 * 60 // 100 days linear after cliff = 100 days * 24 hours * 60 minutes * 60 seconds
     : 100 * 60; // 100 minutes linear after cliff
 
-const rate = 18; // 1 MATIC = 18 BTMT
+const rate = 12; // 1 MATIC = 12 BTMT
 
 task("deployPreSale", "Deploy presale contract and stop private sale").setAction(
   async (_, hre: HardhatRuntimeEnvironment): Promise<void> => {
@@ -53,12 +53,16 @@ task("deployPreSale", "Deploy presale contract and stop private sale").setAction
 
     const BTMT = await hre.ethers.getContractFactory("BITMarketsToken");
     const btmt = BTMT.connect(companyLiquidityWallet).attach(
-      "0x247f8786C70A8CDE1df4EDDB6dE16CB926dcc408"
+      process.env.NODE_ENV === "production"
+        ? "0x0fCed30234C3ea94A7B47cC88006ECb7A39Dc30E"
+        : "0x247f8786C70A8CDE1df4EDDB6dE16CB926dcc408"
     );
 
     const PRIVATE_SALE = await hre.ethers.getContractFactory("BITMarketsTokenPrivateSale");
     const privateSale = PRIVATE_SALE.connect(companyLiquidityWallet).attach(
-      "0xBC315Cb74eDb37DBb5d37735C870D9322605808f"
+      process.env.NODE_ENV === "production"
+        ? "0xCda8fB1225be662574f7b3FDd7e79EB883207B98"
+        : "0x5e255de70b2F825041442035eC8330FbbED96145"
     );
 
     const tx1 = await btmt
@@ -131,19 +135,22 @@ task("deployPreSale", "Deploy presale contract and stop private sale").setAction
     );
     await tx3.wait();
 
-    const preSaleCap = await btmt.balanceOf(crowdsalesWallet.address);
+    const crowdsalesWalletBalance = await btmt
+      .connect(companyLiquidityWallet)
+      .balanceOf(crowdsalesWallet.address);
+    const publicSaleCap = ethers.utils.parseEther("60000000");
+    const preSaleCap = crowdsalesWalletBalance.sub(publicSaleCap);
+    console.log(`Presale cap is ${ethers.utils.formatEther(preSaleCap)} BTMT`);
 
-    const tx4 = await btmt
-      .connect(companyRestrictionWhitelistWallet)
-      .addUnrestrictedReceiver(
-        crowdsalesWallet.address,
-        preSale.address,
-        ethers.utils.parseEther(`${preSaleCap}`),
-        {
-          maxFeePerGas,
-          maxPriorityFeePerGas
-        }
-      );
+    const tx4 = await btmt.connect(companyRestrictionWhitelistWallet).addUnrestrictedReceiver(
+      crowdsalesWallet.address,
+      preSale.address,
+      preSaleCap, // ethers.utils.parseEther(`${preSaleCap}`),
+      {
+        maxFeePerGas,
+        maxPriorityFeePerGas
+      }
+    );
     console.log(
       `5) Make presale contract an unrestricted receiver for crowdsales wallet transaction hash ${tx4.hash} with nonce ${tx4.nonce}`
     );

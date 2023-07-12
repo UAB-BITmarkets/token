@@ -3,7 +3,7 @@
 This repo contains the source code for the [BITMarkets token](https://bitmarkets.com) (BTMT) and its private and public sale.
 It is a [Hardhat project](https://github.com/NomicFoundation/hardhat) that uses components from the battle-tested [OpenZeppelin contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) library.
 
-This repo can be useful to anyone looking to author their own ERC20 token in Solidity with fees, anti-corruption measures and native currency - token sales contracts on the blockchain.
+This repo can be useful to anyone looking to author their own ERC20 token in Solidity with fees, strategic wallet measures and native currency - token sales contracts on the blockchain.
 
 ## Table of contents
 
@@ -33,6 +33,7 @@ and run the following commands to get setup and running locally.
 
 ```shell
 npm i
+npm test
 npm start
 npm run deploy:dev
 ```
