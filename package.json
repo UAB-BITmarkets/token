@@ -22,8 +22,8 @@
     "@types/chai": "^4.2.21",
     "@types/mocha": "^10.0.0",
     "@types/node": "^20.2.3",
-    "@typescript-eslint/eslint-plugin": "^5.30.7",
-    "@typescript-eslint/parser": "^5.30.7",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
     "chai": "^4.2.0",
     "cross-env": "^7.0.3",
     "dotenv": "^16.0.1",
@@ -71,6 +71,6 @@
     "purchases": "node scripts/purchasesFixer.mjs"
   },
   "dependencies": {
-    "@deliberative/crypto": "^0.8.3"
+    "@deliberative/crypto": "^0.9.3"
   }
 }
