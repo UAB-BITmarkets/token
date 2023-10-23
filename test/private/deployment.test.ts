@@ -13,7 +13,7 @@ import {
   closingTime
 } from "./fixture";
 
-import type { BITMarketsTokenPrivateSale__factory } from "../../typechain-types/factories/contracts/BITMarketsTokenPrivateSale__factory";
+import { BITMarketsTokenPrivateSale__factory } from "../../typechain-types/factories/contracts/BITMarketsTokenPrivateSale__factory";
 
 describe("BITMarkets ERC20 token contract deployment tests", () => {
   describe("Main contract deployment", () => {
@@ -21,13 +21,13 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
       const { token, crowdsale, crowdsalesWallet } = await loadFixture(loadContracts);
 
       const totalSupply = await token.totalSupply();
-      const icoSupply = totalSupply.div(5); // 1/5th of total supply
-      expect(await crowdsale.token()).to.equal(token.address);
+      const icoSupply = totalSupply / BigInt(5); // 1/5th of total supply
+      expect(await crowdsale.token()).to.equal(await token.getAddress());
       expect(await crowdsale.tokenWallet()).to.equal(crowdsalesWallet.address);
       expect(await crowdsale.wallet()).to.equal(crowdsalesWallet.address);
-      expect(await token.allowance(crowdsalesWallet.address, crowdsale.address)).to.equal(
-        icoSupply
-      );
+      expect(
+        await token.allowance(crowdsalesWallet.address, await crowdsale.getAddress())
+      ).to.equal(icoSupply);
     });
 
     it("Should have not started yet", async () => {
@@ -57,17 +57,15 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         whitelisterWallet
       } = await loadFixture(loadContracts);
 
-      const BITMarketsTokenPrivateSaleFactory = (await ethers.getContractFactory(
-        "BITMarketsTokenPrivateSale",
+      const BITMarketsTokenPrivateSaleFactory = new BITMarketsTokenPrivateSale__factory(
         companyLiquidityWallet
-      )) as BITMarketsTokenPrivateSale__factory;
-
+      );
       await expect(
         BITMarketsTokenPrivateSaleFactory.deploy({
           rate: 0,
           wallet: crowdsalesWallet.address,
           purchaser: crowdsalesClientPurchaserWallet.address,
-          token: token.address,
+          token: await token.getAddress(),
           whitelister: whitelisterWallet.address,
           openingTime,
           closingTime,
@@ -81,9 +79,9 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
       await expect(
         BITMarketsTokenPrivateSaleFactory.deploy({
           rate,
-          wallet: ethers.constants.AddressZero,
+          wallet: ethers.ZeroAddress,
           purchaser: crowdsalesClientPurchaserWallet.address,
-          token: token.address,
+          token: await token.getAddress(),
           whitelister: whitelisterWallet.address,
           openingTime,
           closingTime,
@@ -98,8 +96,8 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         BITMarketsTokenPrivateSaleFactory.deploy({
           rate,
           wallet: crowdsalesWallet.address,
-          purchaser: ethers.constants.AddressZero,
-          token: token.address,
+          purchaser: ethers.ZeroAddress,
+          token: await token.getAddress(),
           whitelister: whitelisterWallet.address,
           openingTime,
           closingTime,
@@ -115,7 +113,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           rate,
           wallet: crowdsalesWallet.address,
           purchaser: crowdsalesClientPurchaserWallet.address,
-          token: ethers.constants.AddressZero,
+          token: ethers.ZeroAddress,
           whitelister: whitelisterWallet.address,
           openingTime,
           closingTime,
@@ -136,21 +134,19 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         whitelisterWallet
       } = await loadFixture(loadContracts);
 
-      const BITMarketsTokenPrivateSaleFactory = (await ethers.getContractFactory(
-        "BITMarketsTokenPrivateSale",
+      const BITMarketsTokenPrivateSaleFactory = new BITMarketsTokenPrivateSale__factory(
         companyLiquidityWallet
-      )) as BITMarketsTokenPrivateSale__factory;
-
+      );
       await expect(
         BITMarketsTokenPrivateSaleFactory.deploy({
           rate,
           wallet: crowdsalesWallet.address,
           purchaser: crowdsalesClientPurchaserWallet.address,
-          token: token.address,
+          token: await token.getAddress(),
           whitelister: whitelisterWallet.address,
           openingTime,
           closingTime,
-          investorTariff: ethers.utils.parseEther("0"),
+          investorTariff: ethers.parseEther("0"),
           investorCap,
           cliff,
           vestingDuration
@@ -162,12 +158,12 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           rate,
           wallet: crowdsalesWallet.address,
           purchaser: crowdsalesClientPurchaserWallet.address,
-          token: token.address,
+          token: await token.getAddress(),
           whitelister: whitelisterWallet.address,
           openingTime,
           closingTime,
           investorTariff,
-          investorCap: investorTariff.sub(1),
+          investorCap: investorTariff - BigInt(1),
           cliff,
           vestingDuration
         })
@@ -183,11 +179,9 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         whitelisterWallet
       } = await loadFixture(loadContracts);
 
-      const BITMarketsTokenPrivateSaleFactory = (await ethers.getContractFactory(
-        "BITMarketsTokenPrivateSale",
+      const BITMarketsTokenPrivateSaleFactory = new BITMarketsTokenPrivateSale__factory(
         companyLiquidityWallet
-      )) as BITMarketsTokenPrivateSale__factory;
-
+      );
       await ethers.provider.send("evm_mine", [openingTime - 10]);
 
       await expect(
@@ -195,7 +189,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           rate,
           wallet: crowdsalesWallet.address,
           purchaser: crowdsalesClientPurchaserWallet.address,
-          token: token.address,
+          token: await token.getAddress(),
           whitelister: whitelisterWallet.address,
           openingTime: openingTime - 10 * 30 * 24 * 60 * 60,
           closingTime,
@@ -211,7 +205,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           rate,
           wallet: crowdsalesWallet.address,
           purchaser: crowdsalesClientPurchaserWallet.address,
-          token: token.address,
+          token: await token.getAddress(),
           whitelister: whitelisterWallet.address,
           openingTime: openingTime + 1,
           closingTime: openingTime - 1,

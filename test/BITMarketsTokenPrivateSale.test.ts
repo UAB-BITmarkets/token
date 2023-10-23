@@ -78,20 +78,21 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
     });
 
     it("Should be possible for the whitelist admin to add a participant to the crowdsale", async () => {
-      const { token, crowdsale, addr2, crowdsalesWallet, whitelisterWallet } = await loadFixture(
-        loadContracts
-      );
+      const { token, crowdsale, addr2, crowdsalesWallet, whitelisterWallet } =
+        await loadFixture(loadContracts);
 
       await crowdsale.connect(whitelisterWallet).addWhitelisted(addr2.address);
 
       const weiAmount = await crowdsale.getInvestorTariff();
 
-      const companyLiquidityWalletInitialEthBalance = await crowdsalesWallet.getBalance();
+      const companyLiquidityWalletInitialEthBalance = await crowdsalesWallet.provider.getBalance(
+        crowdsalesWallet.address
+      );
       const companyLiquidityWalletInitialTokenBalance = await token.balanceOf(
         crowdsalesWallet.address
       );
       // const addr1InitialEthBalance = await addr1.getBalance();
-      const addr2InitialEthBalance = await addr2.getBalance();
+      const addr2InitialEthBalance = await addr2.provider.getBalance(addr2.address);
 
       await ethers.provider.send("evm_mine", [openingTime]);
 
@@ -107,30 +108,32 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
         .connect(addr2)
         .vestedAmount(addr2.address);
 
-      expect(addr2VestedAmountBeforeCliff).to.be.equal(ethers.utils.parseEther("0"));
+      expect(addr2VestedAmountBeforeCliff).to.be.equal(ethers.parseEther("0"));
 
       // const addr2VestingWallet = await crowdsale.connect(addr2).vestingWallet(addr2.address);
       // const addr2VestingTokens = await token.balanceOf(addr2VestingWallet);
 
       await ethers.provider.send("evm_mine", [openingTime + cliff + vestingDuration / 2]);
 
-      const companyLiquidityWalletCurrentEthBalance = await crowdsalesWallet.getBalance();
+      const companyLiquidityWalletCurrentEthBalance = await crowdsalesWallet.provider.getBalance(
+        crowdsalesWallet.address
+      );
       const companyLiquidityWalletCurrentTokenBalance = await token.balanceOf(
         crowdsalesWallet.address
       );
       // const addr1CurrentEthBalance = await addr1.getBalance();
-      const addr2CurrentEthBalance = await addr2.getBalance();
+      const addr2CurrentEthBalance = await addr2.provider.getBalance(addr2.address);
 
       const addr2TokenBalanceAfterCliffBeforeCompleteVestingNoWithdraw = await token.balanceOf(
         addr2.address
       );
 
       expect(addr2TokenBalanceAfterCliffBeforeCompleteVestingNoWithdraw).to.be.equal(
-        ethers.utils.parseEther("0")
+        ethers.parseEther("0")
       );
 
       expect(await crowdsale.connect(addr2).vestedAmount(addr2.address)).to.be.equal(
-        ethers.utils.parseEther("4500")
+        ethers.parseEther("4500")
       );
 
       await crowdsale.connect(addr2).withdrawTokens(addr2.address);
@@ -147,10 +150,10 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
         companyLiquidityWalletCurrentEthBalance
       );
       expect(
-        companyLiquidityWalletCurrentEthBalance.sub(companyLiquidityWalletInitialEthBalance)
+        companyLiquidityWalletCurrentEthBalance - companyLiquidityWalletInitialEthBalance
       ).to.equal(weiAmount);
       expect(addr2CurrentEthBalance).to.lessThan(addr2InitialEthBalance);
-      expect(weiAmount).to.lessThan(addr2InitialEthBalance.sub(addr2CurrentEthBalance));
+      expect(weiAmount).to.lessThan(addr2InitialEthBalance - addr2CurrentEthBalance);
       expect(companyLiquidityWalletCurrentTokenBalance).to.lessThan(
         companyLiquidityWalletInitialTokenBalance
       );
@@ -197,22 +200,22 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       await ethers.provider.send("evm_mine", [openingTime]);
 
       await expect(
-        crowdsale.connect(addr1).buyTokens(addr1.address, { value: investorTariff.sub(1) })
+        crowdsale.connect(addr1).buyTokens(addr1.address, { value: investorTariff - BigInt(1) })
       ).to.be.revertedWith("Crowdsale: wei < tariff");
 
       await ethers.provider.send("hardhat_setBalance", [
         addr2.address,
-        investorCap.mul(2).toHexString().replace("0x0", "0x")
+        `0x${(investorCap * BigInt(2)).toString()}`
       ]);
 
       await expect(
-        crowdsale.connect(addr2).buyTokens(addr2.address, { value: investorCap.add(1) })
+        crowdsale.connect(addr2).buyTokens(addr2.address, { value: investorCap + BigInt(1) })
       ).to.be.revertedWith("Crowdsale: wei > cap");
 
       await crowdsale.connect(addr2).buyTokens(addr2.address, { value: investorCap });
 
       expect(await token.balanceOf(crowdsale.vestingWallet(addr2.address))).to.equal(
-        investorCap.mul(rate)
+        investorCap * BigInt(rate)
       );
       expect(await crowdsale.getContribution(addr2.address)).to.equal(investorCap);
 
@@ -222,19 +225,19 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
 
       await ethers.provider.send("hardhat_setBalance", [
         addr1.address,
-        investorCap.mul(2).toHexString().replace("0x0", "0x")
+        `0x${(investorCap * BigInt(2)).toString()}`
       ]);
       await crowdsale
         .connect(addr1)
-        .buyTokens(addr1.address, { value: investorCap.sub(investorTariff.sub(1)) });
+        .buyTokens(addr1.address, { value: investorCap - (investorTariff - BigInt(1)) });
       // Passes even though weiAmont < tariff
       await expect(
-        crowdsale.connect(addr1).buyTokens(addr1.address, { value: investorTariff.sub(1) })
+        crowdsale.connect(addr1).buyTokens(addr1.address, { value: investorTariff - BigInt(1) })
       ).to.not.be.reverted;
 
       await ethers.provider.send("hardhat_setBalance", [
         crowdsalesClientPurchaserWallet.address,
-        investorCap.mul(2).toHexString().replace("0x0", "0x")
+        `0x${(investorCap * BigInt(2)).toString()}`
       ]);
 
       await crowdsale
@@ -243,17 +246,17 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       await crowdsale
         .connect(crowdsalesClientPurchaserWallet)
         .buyTokens(crowdsalesClientPurchaserWallet.address, {
-          value: investorCap.sub(investorTariff.sub(1))
+          value: investorCap - (investorTariff - BigInt(1))
         });
       await expect(
         crowdsale
           .connect(crowdsalesClientPurchaserWallet)
-          .buyTokens(crowdsalesClientPurchaserWallet.address, { value: investorTariff.sub(2) })
+          .buyTokens(crowdsalesClientPurchaserWallet.address, { value: investorTariff - BigInt(2) })
       ).to.be.revertedWith("Crowdsale: wei < tariff");
       await expect(
         crowdsale
           .connect(crowdsalesClientPurchaserWallet)
-          .buyTokens(crowdsalesClientPurchaserWallet.address, { value: investorTariff.add(1) })
+          .buyTokens(crowdsalesClientPurchaserWallet.address, { value: investorTariff + BigInt(1) })
       ).to.be.revertedWith("Crowdsale: cap >= hardCap");
       const remainingContribution = await crowdsale
         .connect(crowdsalesClientPurchaserWallet)
@@ -300,7 +303,7 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
         companyLiquidityWalletCurrentTokenBalance
       );
       expect(0).to.lessThan(addr1VestingAmount);
-      expect(addr1VestingAmount).to.be.equal(rate.mul(oneWei));
+      expect(addr1VestingAmount).to.be.equal(rate * oneWei);
 
       await expect(
         crowdsale.connect(companyLiquidityWallet).buyTokens(addr2.address, { value: oneWei })
@@ -323,7 +326,7 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
 
       const oneWei = await crowdsale.getInvestorTariff();
 
-      await addr1.sendTransaction({ to: crowdsale.address, value: oneWei });
+      await addr1.sendTransaction({ to: crowdsale.getAddress(), value: oneWei });
 
       await ethers.provider.send("evm_mine", [openingTime + 3]);
 
@@ -331,13 +334,12 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
 
       const rate = await crowdsale.getCurrentRate();
 
-      expect(await token.balanceOf(vestingWalletAddress)).to.be.equal(oneWei.mul(rate));
+      expect(await token.balanceOf(vestingWalletAddress)).to.be.equal(oneWei * rate);
     });
 
     it("Should not allow purchase on behalf of zero address.", async () => {
-      const { crowdsale, crowdsalesClientPurchaserWallet, addr1 } = await loadFixture(
-        loadContracts
-      );
+      const { crowdsale, crowdsalesClientPurchaserWallet, addr1 } =
+        await loadFixture(loadContracts);
 
       await ethers.provider.send("evm_mine", [openingTime]);
 
@@ -346,7 +348,7 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       await expect(
         crowdsale
           .connect(crowdsalesClientPurchaserWallet)
-          .participateOnBehalfOf(ethers.constants.AddressZero, oneWei, 0)
+          .participateOnBehalfOf(ethers.ZeroAddress, oneWei, 0)
       ).to.be.revertedWith("Crowdsale: beneficiary 0 address");
 
       await expect(
@@ -368,9 +370,9 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       await ethers.provider.send("evm_mine", [openingTime]);
 
       const investorCapBN = await crowdsale.getInvestorCap();
-      const investorCap = Number(ethers.utils.formatEther(investorCapBN));
-      const capBN = await token.allowance(crowdsalesWallet.address, crowdsale.address);
-      const cap = Number(ethers.utils.formatEther(capBN));
+      const investorCap = Number(ethers.formatEther(investorCapBN));
+      const capBN = await token.allowance(crowdsalesWallet.address, crowdsale.getAddress());
+      const cap = Number(ethers.formatEther(capBN));
       const rateBN = await crowdsale.getCurrentRate();
       const rate = Number(rateBN);
 
@@ -394,9 +396,8 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
     });
 
     it("Should be able to change cliff if purchaser wallet.", async () => {
-      const { crowdsale, crowdsalesClientPurchaserWallet, whitelisterWallet } = await loadFixture(
-        loadContracts
-      );
+      const { crowdsale, crowdsalesClientPurchaserWallet, whitelisterWallet } =
+        await loadFixture(loadContracts);
 
       await ethers.provider.send("evm_mine", [openingTime]);
 
@@ -407,7 +408,7 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
       const cliff2 = 5; // less than 10 in fixture
       const cliff3 = 15; // more than 10 in fixture
 
-      const amount = ethers.utils.parseEther("600");
+      const amount = ethers.parseEther("600");
 
       await crowdsale.connect(whitelisterWallet).addWhitelisted(wallet1.address);
       await crowdsale.connect(whitelisterWallet).addWhitelisted(wallet2.address);
@@ -451,15 +452,15 @@ describe("BITMarkets ERC20 token whitelisted vesting crowdsale contract tests", 
 
       expect(
         await token.connect(crowdsalesWallet).getApprovedReceiver(crowdsalesWallet.address)
-      ).to.be.equal(ethers.constants.AddressZero);
+      ).to.be.equal(ethers.ZeroAddress);
 
       await expect(
         token
           .connect(companyRestrictionWhitelistWallet)
           .addUnrestrictedReceiver(
             crowdsalesWallet.address,
-            crowdsale.address,
-            ethers.utils.parseEther(`40`)
+            crowdsale.getAddress(),
+            ethers.parseEther(`40`)
           )
       ).not.to.be.reverted;
     });

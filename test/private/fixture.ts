@@ -1,10 +1,10 @@
 import { ethers } from "hardhat";
 
-import type { BITMarketsToken__factory } from "../../typechain-types/factories/contracts/BITMarketsToken__factory";
-import type { BITMarketsTokenPrivateSale__factory } from "../../typechain-types/factories/contracts/BITMarketsTokenPrivateSale__factory";
+import { BITMarketsToken__factory } from "../../typechain-types/factories/contracts/BITMarketsToken__factory";
+import { BITMarketsTokenPrivateSale__factory } from "../../typechain-types/factories/contracts/BITMarketsTokenPrivateSale__factory";
 
-export const investorTariff = ethers.utils.parseEther("500.0"); // 500 matic
-export const investorCap = ethers.utils.parseEther("50000.0"); // 50000 matic
+export const investorTariff = ethers.parseEther("500.0"); // 500 matic
+export const investorCap = ethers.parseEther("50000.0"); // 50000 matic
 
 export const cliff = 10; // seconds locked
 export const vestingDuration = 20; // seconds after cliff for full vesting
@@ -42,11 +42,7 @@ export const loadContracts = async () => {
     crowdsalesClientPurchaserWallet
   ] = await ethers.getSigners();
 
-  const BITMarketsTokenFactory = (await ethers.getContractFactory(
-    "BITMarketsToken",
-    companyLiquidityWallet
-  )) as BITMarketsToken__factory;
-
+  const BITMarketsTokenFactory = new BITMarketsToken__factory(companyLiquidityWallet);
   const token = await BITMarketsTokenFactory.deploy({
     initialSupply,
     finalSupply,
@@ -63,20 +59,19 @@ export const loadContracts = async () => {
     feelessAdminWallet: feelessAdminWallet.address,
     companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
   });
-  await token.deployed();
+  await token.waitForDeployment();
 
   const totalSupply = await token.totalSupply();
-  const cap = totalSupply.div(5);
+  const cap = totalSupply / BigInt(5);
 
-  const BITMarketsTokenPrivateSaleFactory = (await ethers.getContractFactory(
-    "BITMarketsTokenPrivateSale",
+  const BITMarketsTokenPrivateSaleFactory = new BITMarketsTokenPrivateSale__factory(
     companyLiquidityWallet
-  )) as BITMarketsTokenPrivateSale__factory;
+  );
   const crowdsale = await BITMarketsTokenPrivateSaleFactory.deploy({
     rate,
     wallet: crowdsalesWallet.address,
     purchaser: crowdsalesClientPurchaserWallet.address,
-    token: token.address,
+    token: token.getAddress(),
     whitelister: whitelisterWallet.address,
     openingTime,
     closingTime,
@@ -85,31 +80,28 @@ export const loadContracts = async () => {
     cliff,
     vestingDuration
   });
-  await crowdsale.deployed();
+  await crowdsale.waitForDeployment();
 
-  await token.connect(feelessAdminWallet).addFeeless(crowdsale.address);
+  await token.connect(feelessAdminWallet).addFeeless(await crowdsale.getAddress());
   await token.connect(feelessAdminWallet).addFeeless(crowdsalesWallet.address);
   await token
     .connect(companyRestrictionWhitelistWallet)
     .addUnrestrictedReceiver(
       companyLiquidityWallet.address,
       crowdsalesWallet.address,
-      ethers.utils.parseEther(`${crowdsalesWalletTokens}`)
+      ethers.parseEther(`${crowdsalesWalletTokens}`)
     );
-  await token.transfer(
-    crowdsalesWallet.address,
-    ethers.utils.parseEther(`${crowdsalesWalletTokens}`)
-  );
+  await token.transfer(crowdsalesWallet.address, ethers.parseEther(`${crowdsalesWalletTokens}`));
   await token
     .connect(companyRestrictionWhitelistWallet)
     .addUnrestrictedReceiver(
       crowdsalesWallet.address,
-      crowdsale.address,
-      ethers.utils.parseEther(`${crowdsalesWalletTokens}`)
+      await crowdsale.getAddress(),
+      ethers.parseEther(`${crowdsalesWalletTokens}`)
     );
-  await token.connect(feelessAdminWallet).addFeelessAdmin(crowdsale.address);
+  await token.connect(feelessAdminWallet).addFeelessAdmin(await crowdsale.getAddress());
 
-  await token.connect(crowdsalesWallet).approve(crowdsale.address, cap);
+  await token.connect(crowdsalesWallet).approve(await crowdsale.getAddress(), cap);
   // await token.transfer(crowdsale.address, cap);
   // await token.increaseAllowance(crowdsale.address, cap);
 

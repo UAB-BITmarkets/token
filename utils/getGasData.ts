@@ -18,8 +18,8 @@ export interface GasStationResponse {
 }
 
 const getGasData = async (): Promise<{
-  maxFeePerGas: ethers.BigNumber;
-  maxPriorityFeePerGas: ethers.BigNumber;
+  maxFeePerGas: bigint;
+  maxPriorityFeePerGas: bigint;
 }> => {
   // return new Promise((resolve, reject) => {
   //   const options = {
@@ -50,9 +50,9 @@ const getGasData = async (): Promise<{
   //       console.log(data);
   //       const body: GasStationResponse = JSON.parse(data);
 
-  const maxFeePerGas = ethers.utils.parseUnits(`${Math.ceil(body.fast.maxFee)}`, "gwei");
+  const maxFeePerGas = ethers.parseUnits(`${Math.ceil(body.fast.maxFee)}`, "gwei");
 
-  const maxPriorityFeePerGas = ethers.utils.parseUnits(
+  const maxPriorityFeePerGas = ethers.parseUnits(
     `${Math.ceil(body.fast.maxPriorityFee)}`,
     "gwei"
   );

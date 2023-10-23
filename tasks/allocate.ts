@@ -41,10 +41,10 @@ if (
 
 const provider =
   process.env.NODE_ENV === "development"
-    ? new ethers.providers.JsonRpcProvider("HTTP://127.0.0.1:8545")
+    ? new ethers.JsonRpcProvider("HTTP://127.0.0.1:8545")
     : process.env.NODE_ENV === "testing"
-    ? new ethers.providers.AlchemyProvider("maticmum", env.ALCHEMY_API_KEY || "")
-    : new ethers.providers.AlchemyProvider("matic", env.ALCHEMY_API_KEY || "");
+    ? new ethers.AlchemyProvider("maticmum", env.ALCHEMY_API_KEY || "")
+    : new ethers.AlchemyProvider("matic", env.ALCHEMY_API_KEY || "");
 
 const allocations = BITMarketsTokenAllocations__factory.connect(
   env.ALLOCATIONS_CONTRACT_ADDRESS || "BITMarketsTokenAllocations",
@@ -75,8 +75,8 @@ task("allocate", "Allocate to team etc.").setAction(
       );
     }
 
-    let maxFeePerGas = ethers.utils.parseEther("0");
-    let maxPriorityFeePerGas = ethers.utils.parseEther("0");
+    let maxFeePerGas = ethers.parseEther("0");
+    let maxPriorityFeePerGas = ethers.parseEther("0");
 
     const fees = await getGasData();
     maxFeePerGas = fees.maxFeePerGas;
@@ -97,7 +97,7 @@ task("allocate", "Allocate to team etc.").setAction(
 
       const tx = await allocations
         .connect(allocationsAdminWallet)
-        .allocate(wallet.address, ethers.utils.parseEther(`${amount}`), 0, {
+        .allocate(wallet.address, ethers.parseEther(`${amount}`), 0, {
           maxFeePerGas,
           maxPriorityFeePerGas
         });
@@ -142,7 +142,7 @@ task("allocate", "Allocate to team etc.").setAction(
 
       const tx = await allocations
         .connect(allocationsAdminWallet)
-        .allocate(wallet.address, ethers.utils.parseEther(`${amount}`), 0, {
+        .allocate(wallet.address, ethers.parseEther(`${amount}`), 0, {
           maxFeePerGas,
           maxPriorityFeePerGas
         });

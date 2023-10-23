@@ -63,8 +63,12 @@ abstract contract IncreasingPrice is TimedSale {
    * @return The number of tokens _weiAmount wei will buy at present time
    */
   function _getTokenAmount(uint256 weiAmount) internal view virtual override returns (uint256) {
-    uint256 currentRate = getCurrentRate();
+    // uint256 currentRate = getCurrentRate();
+    // return currentRate * weiAmount;
+    uint256 elapsedTime = block.timestamp - openingTime();
+    uint256 timeRange = closingTime() - openingTime();
+    uint256 rateRange = _initialRate - _finalRate;
 
-    return currentRate * weiAmount;
+    return weiAmount * _initialRate - (weiAmount * elapsedTime * rateRange) / timeRange;
   }
 }

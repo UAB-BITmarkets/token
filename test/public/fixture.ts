@@ -1,13 +1,13 @@
 import { ethers } from "hardhat";
 
-import type { BITMarketsToken__factory } from "../../typechain-types/factories/contracts/BITMarketsToken__factory";
-import type { BITMarketsTokenPublicSale__factory } from "../../typechain-types/factories/contracts/BITMarketsTokenPublicSale__factory";
+import { BITMarketsToken__factory } from "../../typechain-types/factories/contracts/BITMarketsToken__factory";
+import { BITMarketsTokenPublicSale__factory } from "../../typechain-types/factories/contracts/BITMarketsTokenPublicSale__factory";
 
-export const initialRate = 1000;
-export const finalRate = 10;
+export const initialRate = 6;
+export const finalRate = 5;
 
-export const investorTariff = ethers.utils.parseEther("200.0");
-export const investorCap = ethers.utils.parseEther("1000.0");
+export const investorTariff = ethers.parseEther("500.0");
+export const investorCap = ethers.parseEther("500000.0");
 
 export const cliff = 1; // milliseconds locked
 export const vestingDuration = 1; // milliseconds after cliff for full vesting
@@ -42,11 +42,7 @@ export const loadContracts = async () => {
     crowdsalesClientPurchaserWallet
   ] = await ethers.getSigners();
 
-  const BITMarketsTokenFactory = (await ethers.getContractFactory(
-    "BITMarketsToken",
-    companyLiquidityWallet
-  )) as BITMarketsToken__factory;
-
+  const BITMarketsTokenFactory = new BITMarketsToken__factory(companyLiquidityWallet);
   const token = await BITMarketsTokenFactory.deploy({
     initialSupply,
     finalSupply,
@@ -64,21 +60,20 @@ export const loadContracts = async () => {
     companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
   });
 
-  await token.deployed();
+  await token.waitForDeployment();
 
   const totalSupply = await token.totalSupply();
-  const cap = totalSupply.div(5);
+  const cap = totalSupply / BigInt(5);
 
-  const BITMarketsTokenPublicSaleFactory = (await ethers.getContractFactory(
-    "BITMarketsTokenPublicSale",
+  const BITMarketsTokenPublicSaleFactory = new BITMarketsTokenPublicSale__factory(
     companyLiquidityWallet
-  )) as BITMarketsTokenPublicSale__factory;
+  );
   const crowdsale = await BITMarketsTokenPublicSaleFactory.deploy({
     initialRate,
     finalRate,
     wallet: crowdsalesWallet.address,
     purchaser: crowdsalesClientPurchaserWallet.address,
-    token: token.address,
+    token: await token.getAddress(),
     openingTime,
     closingTime,
     investorTariff,
@@ -86,36 +81,33 @@ export const loadContracts = async () => {
     cliff,
     vestingDuration
   });
-  await crowdsale.deployed();
+  await crowdsale.waitForDeployment();
 
-  await token.connect(feelessAdminWallet).addFeeless(crowdsale.address);
+  await token.connect(feelessAdminWallet).addFeeless(await crowdsale.getAddress());
   await token.connect(feelessAdminWallet).addFeeless(crowdsalesWallet.address);
   await token
     .connect(companyRestrictionWhitelistWallet)
     .addUnrestrictedReceiver(
       companyLiquidityWallet.address,
       crowdsalesWallet.address,
-      ethers.utils.parseEther(`${crowdsalesWalletTokens}`)
+      ethers.parseEther(`${crowdsalesWalletTokens}`)
     );
-  await token.transfer(
-    crowdsalesWallet.address,
-    ethers.utils.parseEther(`${crowdsalesWalletTokens}`)
-  );
+  await token.transfer(crowdsalesWallet.address, ethers.parseEther(`${crowdsalesWalletTokens}`));
   await token
     .connect(companyRestrictionWhitelistWallet)
     .addUnrestrictedReceiver(
       crowdsalesWallet.address,
-      crowdsale.address,
-      ethers.utils.parseEther(`${crowdsalesWalletTokens}`)
+      await crowdsale.getAddress(),
+      ethers.parseEther(`${crowdsalesWalletTokens}`)
     );
-  await token.connect(feelessAdminWallet).addFeelessAdmin(crowdsale.address);
+  await token.connect(feelessAdminWallet).addFeelessAdmin(await crowdsale.getAddress());
 
-  await token.connect(crowdsalesWallet).approve(crowdsale.address, cap);
+  await token.connect(crowdsalesWallet).approve(await crowdsale.getAddress(), cap);
 
-  // await token.approve(crowdsale.address, cap);
+  // await token.approve(crowdsale.getAddress(), cap);
   // await token.addFeeless(companyLiquidityWallet.address);
-  // await token.transfer(crowdsale.address, cap);
-  // await token.increaseAllowance(crowdsale.address, cap);
+  // await token.transfer(crowdsale.getAddress(), cap);
+  // await token.increaseAllowance(crowdsale.getAddress(), cap);
 
   return {
     token,

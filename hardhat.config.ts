@@ -1,9 +1,7 @@
-// import "@nomicfoundation/hardhat-toolbox";
-import "@nomicfoundation/hardhat-chai-matchers";
-import "@nomiclabs/hardhat-etherscan";
-import "@nomiclabs/hardhat-ethers";
-import "@openzeppelin/hardhat-upgrades";
 import "@typechain/hardhat";
+import "@nomicfoundation/hardhat-ethers";
+import "@nomicfoundation/hardhat-chai-matchers";
+import "@nomicfoundation/hardhat-verify";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 
@@ -13,9 +11,9 @@ import { HardhatUserConfig } from "hardhat/config";
 // import { NetworkUserConfig } from 'hardhat/types';
 // import '@nomiclabs/hardhat-web3';
 
-import "./tasks/deploy";
-import "./tasks/deployPreSale";
-import "./tasks/deployPublicSale";
+// import "./tasks/deploy";
+// import "./tasks/deployPreSale";
+// import "./tasks/deployPublicSale";
 // import "./tasks/allocate";
 
 import {
@@ -72,51 +70,51 @@ const config: HardhatUserConfig = {
         accounts: [
           {
             privateKey: companyLiquidityWallet.privateKey,
-            balance: `${10000 * 10 ** 18}`
+            balance: "600000000000000000000000"
           },
           {
             privateKey: randomAccountWithLiquidity1.privateKey,
-            balance: `${10000 * 10 ** 18}`
+            balance: "600000000000000000000000"
           },
           {
             privateKey: randomAccountWithLiquidity2.privateKey,
-            balance: `${10000 * 10 ** 18}`
+            balance: "600000000000000000000000"
           },
           {
             privateKey: allocationsWallet.privateKey,
-            balance: `${10000 * 10 ** 18}`
+            balance: "600000000000000000000000"
           },
           {
             privateKey: crowdsalesWallet.privateKey,
-            balance: `${10000 * 10 ** 18}`
+            balance: "600000000000000000000000"
           },
           {
             privateKey: companyRewardsWallet.privateKey,
-            balance: `${10000 * 10 ** 18}`
+            balance: "600000000000000000000000"
           },
           {
             privateKey: esgFundWallet.privateKey,
-            balance: `${10000 * 10 ** 18}`
+            balance: "600000000000000000000000"
           },
           {
             privateKey: whitelisterWallet.privateKey,
-            balance: `${10000 * 10 ** 18}`
+            balance: "600000000000000000000000"
           },
           {
             privateKey: feelessAdminWallet.privateKey,
-            balance: `${10000 * 10 ** 18}`
+            balance: "600000000000000000000000"
           },
           {
             privateKey: companyRestrictionWhitelistWallet.privateKey,
-            balance: `${10000 * 10 ** 18}`
+            balance: "600000000000000000000000"
           },
           {
             privateKey: allocationsAdminWallet.privateKey,
-            balance: `${10000 * 10 ** 18}`
+            balance: "600000000000000000000000"
           },
           {
             privateKey: crowdsalesClientPurchaserWallet.privateKey,
-            balance: `${10000 * 10 ** 18}`
+            balance: "600000000000000000000000"
           }
         ],
         chainId: 1337, // for metamask

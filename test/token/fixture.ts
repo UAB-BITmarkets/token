@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 
-import type { BITMarketsToken__factory } from "../../typechain-types/factories/contracts/BITMarketsToken__factory";
+import { BITMarketsToken__factory } from "../../typechain-types/factories/contracts/BITMarketsToken__factory";
 
 const initialSupply = 300000000;
 const finalSupply = 200000000;
@@ -29,11 +29,7 @@ export const loadContract = async () => {
   ] = await ethers.getSigners();
 
   // companyLiquidityWallet is the signer
-  const BITMarketsTokenFactory = (await ethers.getContractFactory(
-    "BITMarketsToken",
-    companyLiquidityWallet
-  )) as BITMarketsToken__factory;
-
+  const BITMarketsTokenFactory = new BITMarketsToken__factory(companyLiquidityWallet);
   const token = await BITMarketsTokenFactory.deploy({
     initialSupply,
     finalSupply,
@@ -50,7 +46,7 @@ export const loadContract = async () => {
     feelessAdminWallet: feelessAdminWallet.address,
     companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
   });
-  await token.deployed();
+  await token.waitForDeployment();
 
   return {
     token,

@@ -1,9 +1,9 @@
 import { ethers } from "hardhat";
 
-import type { Wallet } from "ethers";
+import type { HDNodeWallet } from "ethers";
 
-import type { BITMarketsToken__factory } from "../../typechain-types/factories/contracts/BITMarketsToken__factory";
-import type { BITMarketsTokenAllocations__factory } from "../../typechain-types/factories/contracts/BITMarketsTokenAllocations__factory";
+import { BITMarketsToken__factory } from "../../typechain-types/factories/contracts/BITMarketsToken__factory";
+import { BITMarketsTokenAllocations__factory } from "../../typechain-types/factories/contracts/BITMarketsTokenAllocations__factory";
 
 export const cliff = 10; // seconds locked
 export const vestingDuration = 20; // seconds after cliff for full vesting
@@ -22,7 +22,7 @@ const esgFundRate = 1;
 const burnRate = 1; // 1/1000 = 0.1%
 
 const salesWalletsLen = 10;
-const salesWallets: Wallet[] = [];
+const salesWallets: HDNodeWallet[] = [];
 for (let i = 0; i < salesWalletsLen; i++) {
   salesWallets.push(ethers.Wallet.createRandom());
 }
@@ -32,14 +32,14 @@ for (let i = 0; i < salesWalletsLen; i++) {
 // const marketingAllocation = (allocationsWalletTokens * 25) / 100;
 
 const teamWalletsLen = 3;
-const teamWallets: Wallet[] = [];
+const teamWallets: HDNodeWallet[] = [];
 for (let i = 0; i < teamWalletsLen; i++) {
   teamWallets.push(ethers.Wallet.createRandom());
 }
 // const teamAllocationPerWallet = (allocationsWalletTokens * 30) / 100 / teamWalletsLen;
 
 const airdropsWalletsLen = 10;
-const airdropsWallets: Wallet[] = [];
+const airdropsWallets: HDNodeWallet[] = [];
 for (let i = 0; i < airdropsWalletsLen; i++) {
   airdropsWallets.push(ethers.Wallet.createRandom());
 }
@@ -61,11 +61,7 @@ export const loadContracts = async () => {
     crowdsalesClientPurchaserWallet
   ] = await ethers.getSigners();
 
-  const BITMarketsTokenFactory = (await ethers.getContractFactory(
-    "BITMarketsToken",
-    companyLiquidityWallet
-  )) as BITMarketsToken__factory;
-
+  const BITMarketsTokenFactory = new BITMarketsToken__factory(companyLiquidityWallet);
   const token = await BITMarketsTokenFactory.deploy({
     initialSupply,
     finalSupply,
@@ -82,47 +78,43 @@ export const loadContracts = async () => {
     feelessAdminWallet: feelessAdminWallet.address,
     companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
   });
-  await token.deployed();
+  await token.waitForDeployment();
 
   const totalSupply = await token.totalSupply();
-  const cap = totalSupply.div(3);
+  const cap = totalSupply / BigInt(3);
 
-  const BITMarketsTokenAllocationsFactory = (await ethers.getContractFactory(
-    "BITMarketsTokenAllocations",
+  const BITMarketsTokenAllocationsFactory = new BITMarketsTokenAllocations__factory(
     companyLiquidityWallet
-  )) as BITMarketsTokenAllocations__factory;
+  );
   const allocations = await BITMarketsTokenAllocationsFactory.deploy(
     allocationsWallet.address,
     allocationsAdminWallet.address,
-    token.address,
+    await token.getAddress(),
     cliff,
     vestingDuration
   );
-  await allocations.deployed();
+  await allocations.waitForDeployment();
 
-  await token.connect(feelessAdminWallet).addFeeless(allocations.address);
+  await token.connect(feelessAdminWallet).addFeeless(await allocations.getAddress());
   await token.connect(feelessAdminWallet).addFeeless(allocationsWallet.address);
   await token
     .connect(companyRestrictionWhitelistWallet)
     .addUnrestrictedReceiver(
       companyLiquidityWallet.address,
       allocationsWallet.address,
-      ethers.utils.parseEther(`${allocationsWalletTokens}`)
+      ethers.parseEther(`${allocationsWalletTokens}`)
     );
-  await token.transfer(
-    allocationsWallet.address,
-    ethers.utils.parseEther(`${allocationsWalletTokens}`)
-  );
+  await token.transfer(allocationsWallet.address, ethers.parseEther(`${allocationsWalletTokens}`));
   await token
     .connect(companyRestrictionWhitelistWallet)
     .addUnrestrictedReceiver(
       allocationsWallet.address,
-      allocations.address,
-      ethers.utils.parseEther(`${allocationsWalletTokens}`)
+      await allocations.getAddress(),
+      ethers.parseEther(`${allocationsWalletTokens}`)
     );
-  await token.connect(feelessAdminWallet).addFeelessAdmin(allocations.address);
+  await token.connect(feelessAdminWallet).addFeelessAdmin(await allocations.getAddress());
 
-  await token.connect(allocationsWallet).approve(allocations.address, cap);
+  await token.connect(allocationsWallet).approve(await allocations.getAddress(), cap);
   // await token.transfer(crowdsale.address, cap);
   // await token.increaseAllowance(crowdsale.address, cap);
 

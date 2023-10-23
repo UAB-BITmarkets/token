@@ -9,10 +9,10 @@ import {
   allocationsWalletTokens
 } from "./allocations/fixture";
 
-import type { Wallet } from "ethers";
+import type { HDNodeWallet } from "ethers";
 
 const salesWalletsLen = 10;
-const salesWallets: Wallet[] = [];
+const salesWallets: HDNodeWallet[] = [];
 for (let i = 0; i < salesWalletsLen; i++) {
   salesWallets.push(ethers.Wallet.createRandom());
 }
@@ -22,14 +22,14 @@ const marketingWallet = ethers.Wallet.createRandom();
 const marketingAllocation = (allocationsWalletTokens * 25) / 100;
 
 const teamWalletsLen = 3;
-const teamWallets: Wallet[] = [];
+const teamWallets: HDNodeWallet[] = [];
 for (let i = 0; i < teamWalletsLen; i++) {
   teamWallets.push(ethers.Wallet.createRandom());
 }
 const teamAllocationPerWallet = (allocationsWalletTokens * 30) / 100 / teamWalletsLen;
 
 const airdropsWalletsLen = 10;
-const airdropsWallets: Wallet[] = [];
+const airdropsWallets: HDNodeWallet[] = [];
 for (let i = 0; i < airdropsWalletsLen; i++) {
   airdropsWallets.push(ethers.Wallet.createRandom());
 }
@@ -38,11 +38,10 @@ const airdropsAllocationPerWallet = (allocationsWalletTokens * 5) / 100 / airdro
 describe("BITMarkets ERC20 token allocations tests", () => {
   describe("Allocation", () => {
     it("Should be possible to allocate", async () => {
-      const { token, allocations, addr1, allocationsAdminWallet } = await loadFixture(
-        loadContracts
-      );
+      const { token, allocations, addr1, allocationsAdminWallet } =
+        await loadFixture(loadContracts);
 
-      const amount = ethers.utils.parseEther("1.0");
+      const amount = ethers.parseEther("1.0");
 
       await allocations.connect(allocationsAdminWallet).allocate(addr1.address, amount, 0);
 
@@ -52,32 +51,27 @@ describe("BITMarkets ERC20 token allocations tests", () => {
     });
 
     it("Vesting and withdrawals should work as expected", async () => {
-      const { token, allocations, addr1, allocationsAdminWallet } = await loadFixture(
-        loadContracts
-      );
+      const { token, allocations, addr1, allocationsAdminWallet } =
+        await loadFixture(loadContracts);
 
       const openingTime = Date.now();
       await ethers.provider.send("evm_mine", [openingTime]);
 
-      const amount = ethers.utils.parseEther("100.0");
+      const amount = ethers.parseEther("100.0");
 
       await allocations.connect(allocationsAdminWallet).allocate(addr1.address, amount, 0);
 
-      expect(await token.balanceOf(addr1.address)).to.be.equal(ethers.utils.parseEther("0"));
+      expect(await token.balanceOf(addr1.address)).to.be.equal(ethers.parseEther("0"));
 
-      expect(await allocations.vestedAmount(addr1.address)).to.be.equal(
-        ethers.utils.parseEther("0")
-      );
+      expect(await allocations.vestedAmount(addr1.address)).to.be.equal(ethers.parseEther("0"));
 
       await ethers.provider.send("evm_mine", [openingTime + cliff + vestingDuration / 2]);
 
-      expect(await allocations.vestedAmount(addr1.address)).to.be.equal(
-        ethers.utils.parseEther("45")
-      );
+      expect(await allocations.vestedAmount(addr1.address)).to.be.equal(ethers.parseEther("45"));
 
       await allocations.connect(addr1).withdraw(addr1.address);
 
-      expect(await token.balanceOf(addr1.address)).to.be.equal(ethers.utils.parseEther("50"));
+      expect(await token.balanceOf(addr1.address)).to.be.equal(ethers.parseEther("50"));
 
       await ethers.provider.send("evm_mine", [openingTime + cliff + vestingDuration]);
 
@@ -89,7 +83,7 @@ describe("BITMarkets ERC20 token allocations tests", () => {
     it("Should not be possible for a non-allocation admin to allocate.", async () => {
       const { allocations, addr1 } = await loadFixture(loadContracts);
 
-      const amount = ethers.utils.parseEther("1.0");
+      const amount = ethers.parseEther("1.0");
 
       await expect(
         allocations.connect(addr1).allocate(addr1.address, amount, 0)
@@ -99,7 +93,7 @@ describe("BITMarkets ERC20 token allocations tests", () => {
     it("Should be possible for an already allocated wallet to reallocate.", async () => {
       const { allocations, addr1, allocationsAdminWallet } = await loadFixture(loadContracts);
 
-      const amount = ethers.utils.parseEther("1.0");
+      const amount = ethers.parseEther("1.0");
 
       await allocations.connect(allocationsAdminWallet).allocate(addr1.address, amount, 0);
 
@@ -108,11 +102,10 @@ describe("BITMarkets ERC20 token allocations tests", () => {
     });
 
     it("Should be possible to do allocations with different cliffs.", async () => {
-      const { allocations, addr1, addr2, allocationsAdminWallet } = await loadFixture(
-        loadContracts
-      );
+      const { allocations, addr1, addr2, allocationsAdminWallet } =
+        await loadFixture(loadContracts);
 
-      const amount = ethers.utils.parseEther("1.0");
+      const amount = ethers.parseEther("1.0");
 
       await allocations.connect(allocationsAdminWallet).allocate(addr1.address, amount, 0);
 
@@ -132,7 +125,7 @@ describe("BITMarkets ERC20 token allocations tests", () => {
     it("Should not be possible to allocate more than the max amount.", async () => {
       const { allocations, addr1, allocationsAdminWallet } = await loadFixture(loadContracts);
 
-      const amount = ethers.utils.parseEther(`${allocationsWalletTokens + 1}`);
+      const amount = ethers.parseEther(`${allocationsWalletTokens + 1}`);
 
       await expect(
         allocations.connect(allocationsAdminWallet).allocate(addr1.address, amount, 0)
@@ -142,7 +135,7 @@ describe("BITMarkets ERC20 token allocations tests", () => {
     it("Should not be possible to withdraw if not beneficiary.", async () => {
       const { allocations, addr1, allocationsAdminWallet } = await loadFixture(loadContracts);
 
-      const amount = ethers.utils.parseEther(`${allocationsWalletTokens}`);
+      const amount = ethers.parseEther(`${allocationsWalletTokens}`);
 
       await expect(allocations.connect(addr1).withdraw(addr1.address)).to.revertedWith(
         "No vesting wallet"
@@ -175,14 +168,13 @@ describe("BITMarkets ERC20 token allocations tests", () => {
       const { token, allocationsWallet, addr1 } = await loadFixture(loadContracts);
 
       await expect(
-        token.connect(allocationsWallet).transfer(addr1.address, ethers.utils.parseEther("1"))
+        token.connect(allocationsWallet).transfer(addr1.address, ethers.parseEther("1"))
       ).to.revertedWith("Illegal transfer");
     });
 
     it("Should be possible for BITMarkets allocations to happen", async () => {
-      const { token, allocations, allocationsWallet, allocationsAdminWallet } = await loadFixture(
-        loadContracts
-      );
+      const { token, allocations, allocationsWallet, allocationsAdminWallet } =
+        await loadFixture(loadContracts);
 
       expect(
         teamWalletsLen * teamAllocationPerWallet +
@@ -193,35 +185,33 @@ describe("BITMarkets ERC20 token allocations tests", () => {
 
       let i = 0;
 
-      const salesAllocationPerWalletDecimals = ethers.utils.parseEther(
-        `${salesAllocationPerWallet}`
-      );
+      const salesAllocationPerWalletDecimals = ethers.parseEther(`${salesAllocationPerWallet}`);
       for (i = 0; i < salesWalletsLen; i++) {
         await allocations
           .connect(allocationsAdminWallet)
           .allocate(salesWallets[i].address, salesAllocationPerWalletDecimals, 0);
       }
 
-      const teamAllocationPerWalletDecimals = ethers.utils.parseEther(`${teamAllocationPerWallet}`);
+      const teamAllocationPerWalletDecimals = ethers.parseEther(`${teamAllocationPerWallet}`);
       for (i = 0; i < teamWalletsLen; i++) {
         await allocations
           .connect(allocationsAdminWallet)
           .allocate(teamWallets[i].address, teamAllocationPerWalletDecimals, 0);
       }
 
-      const marketingAllocationDecimals = ethers.utils.parseEther(`${marketingAllocation}`);
+      const marketingAllocationDecimals = ethers.parseEther(`${marketingAllocation}`);
       await allocations
         .connect(allocationsAdminWallet)
         .allocate(marketingWallet.address, marketingAllocationDecimals, 0);
 
-      const airdropsAllocationDecimals = ethers.utils.parseEther(`${airdropsAllocationPerWallet}`);
+      const airdropsAllocationDecimals = ethers.parseEther(`${airdropsAllocationPerWallet}`);
       for (i = 0; i < airdropsWalletsLen; i++) {
         await allocations
           .connect(allocationsAdminWallet)
           .allocate(airdropsWallets[i].address, airdropsAllocationDecimals, 0);
       }
 
-      let allocationsWalletTokensVesting = ethers.utils.parseEther("0");
+      let allocationsWalletTokensVesting = ethers.parseEther("0");
 
       expect(await token.balanceOf(allocationsWallet.address)).to.be.equal(
         allocationsWalletTokensVesting
@@ -232,7 +222,7 @@ describe("BITMarkets ERC20 token allocations tests", () => {
 
         const balance = await token.balanceOf(vestingWallet);
 
-        allocationsWalletTokensVesting = allocationsWalletTokensVesting.add(balance);
+        allocationsWalletTokensVesting = allocationsWalletTokensVesting + balance;
       }
 
       for (i = 0; i < teamWalletsLen; i++) {
@@ -240,25 +230,25 @@ describe("BITMarkets ERC20 token allocations tests", () => {
 
         const balance = await token.balanceOf(vestingWallet);
 
-        allocationsWalletTokensVesting = allocationsWalletTokensVesting.add(balance);
+        allocationsWalletTokensVesting = allocationsWalletTokensVesting + balance;
       }
 
       const marketingVestingWallet = await allocations.vestingWallet(marketingWallet.address);
 
       const marketingVestingBalance = await token.balanceOf(marketingVestingWallet);
 
-      allocationsWalletTokensVesting = allocationsWalletTokensVesting.add(marketingVestingBalance);
+      allocationsWalletTokensVesting = allocationsWalletTokensVesting + marketingVestingBalance;
 
       for (i = 0; i < airdropsWalletsLen; i++) {
         const vestingWallet = await allocations.vestingWallet(airdropsWallets[i].address);
 
         const balance = await token.balanceOf(vestingWallet);
 
-        allocationsWalletTokensVesting = allocationsWalletTokensVesting.add(balance);
+        allocationsWalletTokensVesting = allocationsWalletTokensVesting + balance;
       }
 
       expect(allocationsWalletTokensVesting).to.be.equal(
-        ethers.utils.parseEther(`${allocationsWalletTokens}`)
+        ethers.parseEther(`${allocationsWalletTokens}`)
       );
 
       // expect(await crowdsale.remainingTokens()).to.lessThan(

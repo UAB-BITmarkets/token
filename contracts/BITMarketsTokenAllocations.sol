@@ -59,7 +59,11 @@ contract BITMarketsTokenAllocations is IBITMarketsTokenAllocations {
   /**
    * @dev Expects amount converted to 10 ** 18
    */
-  function allocate(address beneficiary, uint256 amount, uint64 cliffSeconds) public virtual override {
+  function allocate(
+    address beneficiary,
+    uint256 amount,
+    uint64 cliffSeconds
+  ) public virtual override {
     require(msg.sender == _allocationsAdmin, "Invalid message sender");
     require(
       amount <=

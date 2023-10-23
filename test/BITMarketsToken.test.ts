@@ -19,7 +19,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const { token, companyLiquidityWallet, addr1, addr2 } = await loadFixture(loadContract);
 
       // Transfer 50 tokens from companyLiquidityWallet to addr1
-      const addr1TransferredAmount = ethers.utils.parseEther("50");
+      const addr1TransferredAmount = ethers.parseEther("50");
 
       // const totalSupplyBefore = await token.totalSupply();
       const companyLiquidityWalletBalanceBefore = await token.balanceOf(
@@ -35,9 +35,9 @@ describe("BITMarkets ERC20 token contract tests", () => {
       // expect(totalSupplyAfter).to.be.lessThan(totalSupplyBefore);
       expect(addr1BalanceBefore).to.be.lessThan(addr1BalanceAfter);
       expect(await token.balanceOf(companyLiquidityWallet.address)).to.be.equal(
-        companyLiquidityWalletBalanceBefore
-          .sub(addr1TransferredAmount)
-          .sub(addr1TransferredAmount.mul(3).div(1000))
+        companyLiquidityWalletBalanceBefore -
+          addr1TransferredAmount -
+          (addr1TransferredAmount * BigInt(3)) / BigInt(1000)
       );
       // expect(addr1BalanceAfter).to.be.equal(addr1BalanceBefore.sub(addr1TransferredAmount));
       // expect(addr1BalanceAfter.lt(addr1TransferredAmount)).to.be.equal(true);
@@ -45,14 +45,14 @@ describe("BITMarkets ERC20 token contract tests", () => {
       // Transfer 50 tokens from addr1 to addr2
       // We use .connect(signer) to send a transaction from another account
       await expect(
-        token.connect(addr1).transfer(addr2.address, ethers.utils.parseEther("49.9"))
+        token.connect(addr1).transfer(addr2.address, ethers.parseEther("49.9"))
       ).to.revertedWith("Not enough to pay");
 
-      const addr2TransferredAmount = ethers.utils.parseEther("40");
+      const addr2TransferredAmount = ethers.parseEther("40");
       await token.connect(addr1).transfer(addr2.address, addr2TransferredAmount);
 
       const addr2Balance = await token.balanceOf(addr2.address);
-      expect(addr2Balance.eq(addr2TransferredAmount)).to.equal(true);
+      expect(addr2Balance === addr2TransferredAmount).to.equal(true);
     });
 
     it("Should fail if sender doesn’t have enough tokens", async () => {
@@ -64,7 +64,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
         token.connect(addr1).transfer(companyLiquidityWallet.address, 1, { from: addr1.address })
       ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
 
-      // const superHighAmount = ethers.utils.parseEther(`${companyWalletTokens + 1}`);
+      // const superHighAmount = ethers.parseEther(`${companyWalletTokens + 1}`);
       // await expect(token.transfer(addr1.address, superHighAmount)).to.be.revertedWith(
       //   "ERC20: transfer amount exceeds balance"
       // );
@@ -83,17 +83,17 @@ describe("BITMarkets ERC20 token contract tests", () => {
 
       await companyLiquidityWallet.sendTransaction({
         to: someRandomWallet.address,
-        value: ethers.utils.parseEther("1.0")
+        value: ethers.parseEther("1.0")
       });
 
       // Transfer 100 tokens from companyLiquidityWallet to addr2. Does not induce fees because companyLiquidityWallet is feeless.
-      await token.transfer(addr2.address, ethers.utils.parseEther("1.0"));
+      await token.transfer(addr2.address, ethers.parseEther("1.0"));
 
       const nextTime = startTime + 10; // 10s
       await ethers.provider.send("evm_mine", [nextTime]);
 
       // Transfer 40 tokens from addr2 to someRandomWallet. Should induce fees.
-      await token.connect(addr2).transfer(someRandomWallet.address, ethers.utils.parseEther("0.4"));
+      await token.connect(addr2).transfer(someRandomWallet.address, ethers.parseEther("0.4"));
 
       const totalSupplyAfter = await token.totalSupply();
 
@@ -111,14 +111,12 @@ describe("BITMarkets ERC20 token contract tests", () => {
 
       const balance = await token.balanceOf(companyLiquidityWallet.address);
 
-      await token
-        .connect(companyLiquidityWallet)
-        .transfer(addr2.address, ethers.utils.parseEther("100"));
-      await token.connect(companyLiquidityWallet).burn(balance.div(3));
+      await token.connect(companyLiquidityWallet).transfer(addr2.address, ethers.parseEther("100"));
+      await token.connect(companyLiquidityWallet).burn(balance / BigInt(3));
 
       const totalSupplyBefore = await token.totalSupply();
 
-      await token.connect(addr2).transfer(addr1.address, ethers.utils.parseEther("50"));
+      await token.connect(addr2).transfer(addr1.address, ethers.parseEther("50"));
 
       const totalSupplyAfter = await token.totalSupply();
 
@@ -128,7 +126,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
     it("Should reverse if not enough for fees and burning from transfers.", async () => {
       const { token, companyLiquidityWallet, addr1, addr2 } = await loadFixture(loadContract);
 
-      const transferBalance = ethers.utils.parseEther("100");
+      const transferBalance = ethers.parseEther("100");
 
       await token.connect(companyLiquidityWallet).transfer(addr2.address, transferBalance);
 
@@ -161,7 +159,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
       );
 
       await expect(
-        token.connect(feelessAdminWallet).addFeeless(ethers.constants.AddressZero)
+        token.connect(feelessAdminWallet).addFeeless(ethers.ZeroAddress)
       ).to.revertedWith("Account is zero");
 
       await expect(
@@ -178,14 +176,14 @@ describe("BITMarkets ERC20 token contract tests", () => {
         .withArgs(someRandomWallet.address);
 
       await expect(
-        token.connect(feelessAdminWallet).removeFeeless(ethers.constants.AddressZero)
+        token.connect(feelessAdminWallet).removeFeeless(ethers.ZeroAddress)
       ).to.revertedWith("Account is zero");
 
       const randomWallet = ethers.Wallet.createRandom();
 
       await token.connect(feelessAdminWallet).addFeeless(randomWallet.address);
 
-      await token.transfer(addr2.address, ethers.utils.parseEther("1.0"), {
+      await token.transfer(addr2.address, ethers.parseEther("1.0"), {
         from: companyLiquidityWallet.address
       });
 
@@ -199,7 +197,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
 
       await token
         .connect(addr2)
-        .transfer(randomWallet.address, ethers.utils.parseEther("0.2"), { from: addr2.address });
+        .transfer(randomWallet.address, ethers.parseEther("0.2"), { from: addr2.address });
 
       const nextNextTime = startTime + 20; // 20s
       await ethers.provider.send("evm_mine", [nextNextTime]);
@@ -243,7 +241,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
 
       const totalSupplyBefore = await token.totalSupply();
 
-      await token.connect(companyLiquidityWallet).burn(ethers.utils.parseEther("1"));
+      await token.connect(companyLiquidityWallet).burn(ethers.parseEther("1"));
 
       const totalSupplyAfter = await token.totalSupply();
 
@@ -266,7 +264,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const startTime = Date.now();
       await ethers.provider.send("evm_mine", [startTime]);
 
-      const approvedLimit = ethers.utils.parseEther("1");
+      const approvedLimit = ethers.parseEther("1");
 
       await token
         .connect(companyRestrictionWhitelistWallet)
@@ -282,10 +280,10 @@ describe("BITMarkets ERC20 token contract tests", () => {
         approvedLimit
       );
       expect(await token.companyLiquidityTransfersLimit()).to.be.equal(
-        ethers.utils.parseEther(`${maxCompanyWalletTransfer}`)
+        ethers.parseEther(`${maxCompanyWalletTransfer}`)
       );
       expect(await token.companyLiquidityTransfersSinceLastLimitReached()).to.be.equal(
-        ethers.utils.parseEther("0")
+        ethers.parseEther("0")
       );
       expect(await token.timeSinceCompanyLiquidityTransferLimitReached()).to.be.lessThanOrEqual(
         Date.now()
@@ -346,16 +344,15 @@ describe("BITMarkets ERC20 token contract tests", () => {
     });
 
     it("Should not be possible to transfer more than 5m tokens for at least 1 month from the company wallet", async () => {
-      const { token, companyLiquidityWallet, feelessAdminWallet, addr1 } = await loadFixture(
-        loadContract
-      );
+      const { token, companyLiquidityWallet, feelessAdminWallet, addr1 } =
+        await loadFixture(loadContract);
 
       const startTime = Date.now();
       await ethers.provider.send("evm_mine", [startTime]);
 
-      const limit = ethers.utils.parseEther(`${maxCompanyWalletTransfer}`);
-      const closeToLimit = limit.sub(3);
-      const closeToLimitPlusTwo = limit.sub(1);
+      const limit = ethers.parseEther(`${maxCompanyWalletTransfer}`);
+      const closeToLimit = limit - BigInt(3);
+      const closeToLimitPlusTwo = limit - BigInt(1);
 
       const totalSupplyBefore = await token.totalSupply();
       const expectedBalanceBefore = await token.balanceOf(companyLiquidityWallet.address);
@@ -370,7 +367,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
       expect(addr1Balance).to.be.equal(closeToLimit);
 
       const companyLiquidityWalletBalance = await token.balanceOf(companyLiquidityWallet.address);
-      const expectedBalanceAfter = expectedBalanceBefore.sub(closeToLimit);
+      const expectedBalanceAfter = expectedBalanceBefore - closeToLimit;
       expect(companyLiquidityWalletBalance).to.be.equal(expectedBalanceAfter);
 
       await expect(token.transfer(addr1.address, 3))
@@ -380,14 +377,12 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const addr1BalanceAfter = await token.balanceOf(addr1.address);
       expect(addr1BalanceAfter).to.be.equal(limit);
 
-      await token
-        .connect(companyLiquidityWallet)
-        .approve(addr1.address, ethers.utils.parseEther("1"));
+      await token.connect(companyLiquidityWallet).approve(addr1.address, ethers.parseEther("1"));
 
       await expect(
         token
           .connect(addr1)
-          .transferFrom(companyLiquidityWallet.address, addr1.address, ethers.utils.parseEther("1"))
+          .transferFrom(companyLiquidityWallet.address, addr1.address, ethers.parseEther("1"))
       ).to.revertedWith("Last max transfer too close");
 
       await expect(token.transfer(addr1.address, closeToLimitPlusTwo)).to.revertedWith(
@@ -398,7 +393,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
       await ethers.provider.send("evm_mine", [startTime + 1.2 * 30 * 24 * 60 * 60]);
       expect(await token.companyLiquidityTransfersAreRestricted()).to.be.equal(false);
 
-      const onTheLimit = ethers.utils.parseEther("500000");
+      const onTheLimit = ethers.parseEther("500000");
 
       await token.transfer(addr1.address, onTheLimit);
 
@@ -407,21 +402,20 @@ describe("BITMarkets ERC20 token contract tests", () => {
       );
 
       expect(companyLiquidityWalletNewBalance).to.be.equal(
-        (await token.totalSupply()).sub(limit.add(onTheLimit))
+        (await token.totalSupply()) - (limit + onTheLimit)
       );
     });
 
     it("Should not be possible to transferFrom more than 5m tokens for at least 1 month from the company wallet", async () => {
-      const { token, companyLiquidityWallet, feelessAdminWallet, addr1, addr2 } = await loadFixture(
-        loadContract
-      );
+      const { token, companyLiquidityWallet, feelessAdminWallet, addr1, addr2 } =
+        await loadFixture(loadContract);
 
       const startTime = Date.now();
       await ethers.provider.send("evm_mine", [startTime]);
 
-      const limit = ethers.utils.parseEther(`${maxCompanyWalletTransfer}`);
-      const closeToLimit = limit.sub(2);
-      const closeToLimitPlusOne = limit.sub(1);
+      const limit = ethers.parseEther(`${maxCompanyWalletTransfer}`);
+      const closeToLimit = limit - BigInt(2);
+      const closeToLimitPlusOne = limit - BigInt(1);
 
       const totalSupplyBefore = await token.totalSupply();
       const expectedBalanceBefore = await token.balanceOf(companyLiquidityWallet.address);
@@ -432,7 +426,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
 
       await token
         .connect(companyLiquidityWallet)
-        .approve(addr1.address, closeToLimitPlusOne.add(2));
+        .approve(addr1.address, closeToLimitPlusOne + BigInt(2));
 
       await token
         .connect(addr1)
@@ -443,7 +437,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
 
       const companyLiquidityWalletBalance = await token.balanceOf(companyLiquidityWallet.address);
 
-      const expectedBalanceAfter = expectedBalanceBefore.sub(closeToLimit);
+      const expectedBalanceAfter = expectedBalanceBefore - closeToLimit;
 
       expect(companyLiquidityWalletBalance).to.be.equal(expectedBalanceAfter);
 
@@ -477,8 +471,8 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const startTime = Date.now();
       await ethers.provider.send("evm_mine", [startTime]);
 
-      const limit = ethers.utils.parseEther(`${maxCompanyWalletTransfer}`);
-      const closeToLimit = limit.sub(2);
+      const limit = ethers.parseEther(`${maxCompanyWalletTransfer}`);
+      const closeToLimit = limit - BigInt(2);
 
       await token.connect(feelessAdminWallet).addFeeless(companyLiquidityWallet.address);
       await token.connect(companyLiquidityWallet).approve(addr2.address, limit);
@@ -494,7 +488,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
         .to.emit(token, "UnrestrictedReceiverAdded")
         .withArgs(companyLiquidityWallet.address, addr2.address, closeToLimit);
 
-      await token.connect(companyLiquidityWallet).approve(addr1.address, limit.mul(3));
+      await token.connect(companyLiquidityWallet).approve(addr1.address, limit * BigInt(3));
 
       const approved = await token.getApprovedReceiver(companyLiquidityWallet.address);
       const lim = await token.getApprovedReceiverLimit(companyLiquidityWallet.address);
@@ -504,13 +498,13 @@ describe("BITMarkets ERC20 token contract tests", () => {
       await expect(
         token
           .connect(addr1)
-          .transferFrom(companyLiquidityWallet.address, addr2.address, limit.mul(4))
+          .transferFrom(companyLiquidityWallet.address, addr2.address, limit * BigInt(4))
       ).to.be.revertedWith("ERC20: insufficient allowance");
 
       await expect(
         token
           .connect(addr1)
-          .transferFrom(companyLiquidityWallet.address, addr2.address, closeToLimit.add(1))
+          .transferFrom(companyLiquidityWallet.address, addr2.address, closeToLimit + BigInt(1))
       ).to.be.revertedWith("Amount > approved limit");
 
       await expect(
@@ -527,13 +521,13 @@ describe("BITMarkets ERC20 token contract tests", () => {
       expect(addr2BalanceAfter).to.be.equal(closeToLimit);
 
       const approvedAfter = await token.getApprovedReceiver(companyLiquidityWallet.address);
-      expect(approvedAfter).to.be.equal(ethers.constants.AddressZero);
+      expect(approvedAfter).to.be.equal(ethers.ZeroAddress);
       expect(await token.companyLiquidityTransfersAreRestricted()).to.be.equal(true);
 
       const remaining = await token.getApprovedReceiverRemaining(companyLiquidityWallet.address);
-      expect(remaining).to.be.equal(ethers.constants.Zero);
+      expect(remaining).to.be.equal(BigInt(0));
 
-      const approvedEths = ethers.utils.parseEther("100000000");
+      const approvedEths = ethers.parseEther("100000000");
       await token
         .connect(companyRestrictionWhitelistWallet)
         .addUnrestrictedReceiver(
@@ -549,7 +543,7 @@ describe("BITMarkets ERC20 token contract tests", () => {
       await expect(
         token
           .connect(addr1)
-          .transferFrom(crowdsalesWallet.address, addr1.address, closeToLimit.add(1))
+          .transferFrom(crowdsalesWallet.address, addr1.address, closeToLimit + BigInt(1))
       ).to.be.revertedWith("Receiver not approved");
     });
 
@@ -565,8 +559,8 @@ describe("BITMarkets ERC20 token contract tests", () => {
       const startTime = Date.now();
       await ethers.provider.send("evm_mine", [startTime]);
 
-      const limit = ethers.utils.parseEther(`${maxCompanyWalletTransfer}`);
-      const closeToLimit = limit.sub(1);
+      const limit = ethers.parseEther(`${maxCompanyWalletTransfer}`);
+      const closeToLimit = limit - BigInt(1);
 
       const totalSupplyBefore = await token.totalSupply();
       const expectedBalanceBefore = await token.balanceOf(companyLiquidityWallet.address);
@@ -593,13 +587,13 @@ describe("BITMarkets ERC20 token contract tests", () => {
         .withArgs(companyLiquidityWallet.address, addr2.address, closeToLimit);
 
       const addr2BalanceAfter = await token.balanceOf(addr2.address);
-      expect(addr2BalanceAfter).to.be.equal(limit.add(closeToLimit));
+      expect(addr2BalanceAfter).to.be.equal(limit + closeToLimit);
 
       const approvedAfter = await token.getApprovedReceiver(companyLiquidityWallet.address);
-      expect(approvedAfter).to.be.equal(ethers.constants.AddressZero);
+      expect(approvedAfter).to.be.equal(ethers.ZeroAddress);
 
       const remaining = await token.getApprovedReceiverRemaining(companyLiquidityWallet.address);
-      expect(remaining).to.be.equal(ethers.constants.Zero);
+      expect(remaining).to.be.equal(BigInt(0));
 
       // await expect(
       //   token.connect(companyLiquidityWallet).transfer(addr2.address, 1)

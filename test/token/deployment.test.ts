@@ -4,7 +4,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { loadContract } from "./fixture";
 
-import type { BITMarketsToken__factory } from "../../typechain-types/factories/contracts/BITMarketsToken__factory";
+import { BITMarketsToken__factory } from "../../typechain-types/factories/contracts/BITMarketsToken__factory";
 
 const initialSupply = 300000000;
 const finalSupply = 200000000;
@@ -33,7 +33,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         companyLiquidityWallet.address,
         allocationsWallet.address
       );
-      expect(await token.totalSupply()).to.equal(balance.mul(3));
+      expect(await token.totalSupply()).to.equal(balance * BigInt(3));
     });
 
     it("Should assign one third of the total supply of tokens to the crowdsales wallet.", async () => {
@@ -42,7 +42,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         companyLiquidityWallet.address,
         crowdsalesWallet.address
       );
-      expect(await token.totalSupply()).to.equal(balance.mul(3));
+      expect(await token.totalSupply()).to.equal(balance * BigInt(3));
     });
 
     it("Should not be possible to deploy with invalid initial funds", async () => {
@@ -56,11 +56,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         companyRestrictionWhitelistWallet
       } = await loadFixture(loadContract);
 
-      const BITMarketsTokenFactory = (await ethers.getContractFactory(
-        "BITMarketsToken",
-        companyLiquidityWallet
-      )) as BITMarketsToken__factory;
-
+      const BITMarketsTokenFactory = new BITMarketsToken__factory(companyLiquidityWallet);
       await expect(
         BITMarketsTokenFactory.deploy({
           initialSupply,
@@ -92,11 +88,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         companyRestrictionWhitelistWallet
       } = await loadFixture(loadContract);
 
-      const BITMarketsTokenFactory = (await ethers.getContractFactory(
-        "BITMarketsToken",
-        companyLiquidityWallet
-      )) as BITMarketsToken__factory;
-
+      const BITMarketsTokenFactory = new BITMarketsToken__factory(companyLiquidityWallet);
       await expect(
         BITMarketsTokenFactory.deploy({
           initialSupply,
@@ -128,11 +120,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         companyRestrictionWhitelistWallet
       } = await loadFixture(loadContract);
 
-      const BITMarketsTokenFactory = (await ethers.getContractFactory(
-        "BITMarketsToken",
-        companyLiquidityWallet
-      )) as BITMarketsToken__factory;
-
+      const BITMarketsTokenFactory = new BITMarketsToken__factory(companyLiquidityWallet);
       await expect(
         BITMarketsTokenFactory.deploy({
           initialSupply,
@@ -166,11 +154,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
         companyRestrictionWhitelistWallet
       } = await loadFixture(loadContract);
 
-      const BITMarketsTokenFactory = (await ethers.getContractFactory(
-        "BITMarketsToken",
-        companyLiquidityWallet
-      )) as BITMarketsToken__factory;
-
+      const BITMarketsTokenFactory = new BITMarketsToken__factory(companyLiquidityWallet);
       await expect(
         BITMarketsTokenFactory.deploy({
           initialSupply,
@@ -240,7 +224,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           burnRate,
           allocationsWallet: allocationsWallet.address,
           crowdsalesWallet: crowdsalesWallet.address,
-          companyRewardsWallet: ethers.constants.AddressZero,
+          companyRewardsWallet: ethers.ZeroAddress,
           esgFundWallet: esgFundWallet.address,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
@@ -260,7 +244,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           allocationsWallet: allocationsWallet.address,
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
-          esgFundWallet: ethers.constants.AddressZero,
+          esgFundWallet: ethers.ZeroAddress,
           feelessAdminWallet: feelessAdminWallet.address,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
@@ -280,7 +264,7 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
           crowdsalesWallet: crowdsalesWallet.address,
           companyRewardsWallet: companyRewardsWallet.address,
           esgFundWallet: esgFundWallet.address,
-          feelessAdminWallet: ethers.constants.AddressZero,
+          feelessAdminWallet: ethers.ZeroAddress,
           companyRestrictionWhitelistWallet: companyRestrictionWhitelistWallet.address
         })
       ).to.revertedWith("Invalid admin wallet");
