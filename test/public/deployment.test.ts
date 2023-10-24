@@ -49,16 +49,6 @@ describe("BITMarkets ERC20 token contract deployment tests", () => {
       await ethers.provider.send("evm_mine", [newNewTimestampInSeconds]);
       expect(await crowdsale.isOpen()).to.equal(false);
       expect(await crowdsale.hasClosed()).to.equal(true);
-      expect(await crowdsale.getCurrentRate()).to.equal(0);
-    });
-
-    it("ICO after opening should have a lower rate than the initial", async () => {
-      const { crowdsale } = await loadFixture(loadContracts);
-      const newTimestampInSeconds = openingTime + 60;
-      await ethers.provider.send("evm_mine", [newTimestampInSeconds]);
-      const rate = await crowdsale.getCurrentRate();
-      expect(rate).to.lessThanOrEqual(initialRate);
-      expect(finalRate).to.lessThanOrEqual(rate);
     });
 
     it("Should revert if increasing price crowdsale has wrong args", async () => {

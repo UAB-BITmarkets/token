@@ -55,32 +55,27 @@ describe("BITMarkets ERC20 token ICO vesting crowdsale contract tests", () => {
     });
 
     it("Should reduce the amount of tokens that two users can raise in different times", async () => {
-      const {
-        // token,
-        crowdsale,
-        addr1,
-        addr2
-      } = await loadFixture(loadContracts);
+      const { token, crowdsale, addr1, addr2 } = await loadFixture(loadContracts);
 
       const weiAmount = ethers.parseEther("600.0");
 
       await ethers.provider.send("evm_mine", [openingTime]);
 
       await crowdsale.connect(addr1).buyTokens(addr1.address, { value: weiAmount });
-
-      // const addr1TokenBalance = await token.balanceOf(addr1.address);
+      const addr1VestingWallet = await crowdsale.connect(addr1).vestingWallet(addr1.address);
+      const addr1TokenBalance = await token.balanceOf(addr1VestingWallet);
 
       const newTimestampInSeconds = openingTime + 60;
       await ethers.provider.send("evm_mine", [newTimestampInSeconds]);
 
       await crowdsale.connect(addr2).buyTokens(addr2.address, { value: weiAmount });
-
-      // const newRate = await crowdsale.getCurrentRate();
-      // const addr2TokenBalance = await token.balanceOf(addr2.address);
+      const addr2VestingWallet = await crowdsale.connect(addr2).vestingWallet(addr2.address);
+      const addr2TokenBalance = await token.balanceOf(addr2VestingWallet);
 
       expect(await crowdsale.weiRaised()).to.equal(weiAmount * BigInt(2));
-      // expect(addr2TokenBalance).to.equal(weiAmount.mul(newRate));
-      // expect(addr2TokenBalance).to.lessThanOrEqual(addr1TokenBalance);
+      expect(addr2TokenBalance).to.lessThan(addr1TokenBalance);
+      expect(addr1TokenBalance).to.lessThan(weiAmount * BigInt(initialRate));
+      expect(weiAmount * BigInt(finalRate)).to.lessThan(addr2TokenBalance);
     });
 
     it("Should enforce tariffs and caps to individual investors", async () => {
