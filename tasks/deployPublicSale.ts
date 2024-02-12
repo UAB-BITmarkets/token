@@ -10,13 +10,13 @@ import getGasData from "../utils/getGasData";
 const publicSaleOpeningTime =
   process.env.NODE_ENV === "production"
     ? // ? Math.trunc(new Date(`2023-09-01T09:00:00`).valueOf() / 1000)
-      Math.trunc((Date.now() + 24 * 60 * 60 * 1000) / 1000) //  1 day
+      Math.trunc((Date.now() + 15 * 60 * 1000) / 1000) //  15 minutes
     : Math.trunc((Date.now() + 5 * 60 * 1000) / 1000); // 5 minutes
 const publicSaleClosingTime =
   process.env.NODE_ENV === "production"
     ? // Math.trunc(new Date("2023-12-23T17:00:00").valueOf() / 1000)
-      Math.trunc((Date.now() + 4 * 30 * 24 * 60 * 60 * 1000) / 1000) // 4 months
-    : Math.trunc((Date.now() + 1 * 60 * 60 * 1000) / 1000); // 1 hour
+      Math.trunc((Date.now() + (4 * 30 + 1) * 24 * 60 * 60 * 1000) / 1000) // 4 months
+    : Math.trunc((Date.now() + 4 * 30 * 24 * 60 * 60 * 1000) / 1000); // 30 days
 
 const investorTariff = ethers.parseEther("500.0"); // 500 matic
 const investorCap = ethers.parseEther("500000.0"); // 500 000 matic
@@ -24,10 +24,10 @@ const investorCap = ethers.parseEther("500000.0"); // 500 000 matic
 const cliff =
   process.env.NODE_ENV === "production"
     ? 5 * 30 * 24 * 60 * 60 // 5 months after purchase
-    : 3 * 60; // 3 minutes after purchase = 3 * 60 seconds locked
+    : 5 * 60; // 5 minutes after purchase
 const vestingDuration =
   process.env.NODE_ENV === "production"
-    ? 5 * 30 * 24 * 60 * 60 // 5 months linear after cliff = 100 days * 24 hours * 60 minutes * 60 seconds
+    ? 5 * 30 * 24 * 60 * 60 // 5 months linear after cliff
     : 100 * 60; // 100 minutes linear after cliff
 
 const initialRate = 6; // 1 MATIC = 17 BTMT //TODO FINAL
@@ -50,7 +50,7 @@ const btmt = BITMarketsToken__factory.connect(btmtAddress, provider);
 const preSaleAddress =
   process.env.NODE_ENV === "production"
     ? "0xd74468FAc200f26Cdb6825aCFdBF41E3111FbA6d"
-    : "0x3985dcd6BDB454b8443Ff5C864154250339f282b";
+    : "0x57e93fAe90d2c6503542F4B42D19A5f5379321E8";
 
 task("deployPublicSale", "Deploy public sale contract and stop presale").setAction(
   async (_, hre: HardhatRuntimeEnvironment): Promise<void> => {
@@ -90,7 +90,7 @@ task("deployPublicSale", "Deploy public sale contract and stop presale").setActi
     const allowance = await btmt.connect(crowdsalesWallet).allowance(
       crowdsalesWallet.address,
       preSaleAddress
-      //   {
+      // {
       //   maxFeePerGas,
       //   maxPriorityFeePerGas,
       // }

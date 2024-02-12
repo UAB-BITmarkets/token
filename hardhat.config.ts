@@ -11,9 +11,9 @@ import { HardhatUserConfig } from "hardhat/config";
 // import { NetworkUserConfig } from 'hardhat/types';
 // import '@nomiclabs/hardhat-web3';
 
-// import "./tasks/deploy";
-// import "./tasks/deployPreSale";
-// import "./tasks/deployPublicSale";
+import "./tasks/deploy";
+import "./tasks/deployPreSale";
+import "./tasks/deployPublicSale";
 // import "./tasks/allocate";
 
 import {

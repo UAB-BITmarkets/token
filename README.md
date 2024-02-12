@@ -256,4 +256,4 @@ The source code is licensed under the terms of the Apache License version 2.0 (s
 
 ## Copyright
 
-Copyright (C) 2023 Unicorn Technologies Ltd. All rights reserved.
+Copyright (C) 2023-2024 Unicorn Technologies Limited. All rights reserved.
